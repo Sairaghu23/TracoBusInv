@@ -54,7 +54,7 @@ export default function Login() {
         </form>
         
         <div className="mt-6 text-center text-xs text-slate-400">
-          Authorized personnel only. Contact IT department for credentials.
+          Authorized personnel only. Contact  R&D Cell for credentials.
         </div>
       </div>
     </div>
