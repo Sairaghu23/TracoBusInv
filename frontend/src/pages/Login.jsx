@@ -25,7 +25,7 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="form-label">Username</label>
+            <label className="form-label">Enter Username</label>
             <input 
               type="text" 
               required
