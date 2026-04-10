@@ -37,7 +37,7 @@ export default function Login() {
           </div>
           
           <div>
-            <label className="form-label">Access Password</label>
+            <label className="form-label">Password</label>
             <input 
               type="password" 
               required
