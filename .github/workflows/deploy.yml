@@ -2,7 +2,7 @@ name: Secure Deploy TracoBus
 
 on:
   push:
-    branches: [ main ] # Only deploys when you push to main
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -18,21 +18,22 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Navigate to your sandbox
+            # 1. Load NVM into this session
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            # 2. Go to project and pull
             cd ~/tracobusinvcicd
-            
-            # 2. Pull the latest code from your private repo
             git pull origin main            
             
             # 3. Build Frontend
             cd frontend
             npm install
             npm run build
-            # Copy build to the folder Nginx looks at
             cp -r dist/* /var/www/tracobusinvcicd/frontend/
             
             # 4. Update Backend
             cd ../backend
             npm install
-            # Restart the process in PM2 (or start if it's the first time)
-            pm2 restart backend || pm2 start server.js --name "backend "
+            # Using the full path for pm2 just in case, or make sure it's in NVM
+            pm2 restart backend || pm2 start server.js --name "backend"
