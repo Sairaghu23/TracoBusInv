@@ -25,7 +25,7 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="form-label">Enter Username</label>
+            <label className="form-label">Username</label>
             <input 
               type="text" 
               required
@@ -42,7 +42,7 @@ export default function Login() {
               type="password" 
               required
               className="form-input" 
-              placeholder="Enter password..." 
+              placeholder="***..." 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
