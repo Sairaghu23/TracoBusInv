@@ -36,7 +36,7 @@ export const updateBus = async (rc_plate_number, busData) => {
         route_id || null, 
         purchase_date, 
         status?.toUpperCase() || 'ACTIVE', 
-        bus_no?.trim().toUpperCase(),
+        bus_no,
         rc_plate_number.trim().toUpperCase()
     ]);
     return result.rows[0];
@@ -62,7 +62,7 @@ export const createBus = async (busData) => {
         route_id || null, 
         purchase_date, 
         status?.toUpperCase() || 'ACTIVE',
-        bus_no?.trim().toUpperCase()
+        bus_no
     ]);
     return result.rows[0];
 };
