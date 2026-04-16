@@ -132,7 +132,7 @@ export default function Students() {
     const fetchArchiveBatches = async (type) => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5002/api/students/archive/${type}/batches`);
+            const response = await fetch(`/api/students/archive/${type}/batches`);
             const result = await response.json();
             if (result.status) setBatches(result.data);
         } catch (error) {
@@ -145,7 +145,7 @@ export default function Students() {
     const fetchArchiveStudents = async (type, start, end) => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5002/api/students/archive/${type}/${start}/${end}`);
+            const response = await fetch(`/api/students/archive/${type}/${start}/${end}`);
             const result = await response.json();
             if (result.status) setStudents(result.data);
         } catch (error) {
@@ -157,7 +157,7 @@ export default function Students() {
 
     const fetchPaymentHistory = async (type, sId) => {
         try {
-            const response = await fetch(`http://localhost:5002/api/students/${type}/history/${sId}`);
+            const response = await fetch(`/api/students/${type}/history/${sId}`);
             const result = await response.json();
             if (result.status) {
                 setPaymentHistory(result.data);
@@ -178,7 +178,7 @@ export default function Students() {
         e.preventDefault();
         const type = 'btech';
         try {
-            const response = await fetch(`http://localhost:5002/api/students/${type}/payment`, {
+            const response = await fetch(`/api/students/${type}/payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -202,8 +202,8 @@ export default function Students() {
         e.preventDefault();
         const type = 'btech';
         const url = isEditMode 
-            ? `http://localhost:5002/api/students/${type}/${editingStudentId}`
-            : `http://localhost:5001/api/students/${type}`;
+            ? `/api/students/${type}/${editingStudentId}`
+            : `/api/students/${type}`;
         const method = isEditMode ? 'PUT' : 'POST';
 
         try {
@@ -231,7 +231,7 @@ export default function Students() {
                 });
                 // Fetch counts and students for current view
                 const fetchCounts = async () => {
-                    const res = await fetch('http://localhost:5002/api/students/summary/counts');
+                    const res = await fetch('/api/students/summary/counts');
                     const r = await res.json();
                     if (r.status) setCounts(r.data);
                 };
