@@ -30,7 +30,8 @@ jobs:
             cd frontend
             npm install
             npm run build
-            cp -r dist/* /var/www/tracobusinvcicd/frontend/
+            # cp -r dist/* /var/www/tracobusinvcicd/frontend/
+            cp -rvf dist/* /var/www/tracobusinvcicd/frontend/
             
             # 4. Update Backend
             cd ../backend
