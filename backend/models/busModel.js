@@ -1,5 +1,8 @@
 import pool from '../config/db.js';
 
+// Helper to convert empty strings to null for int/date columns
+const sanitizeEmpty = (val) => (val === '' ? null : val);
+
 // Get all buses from database
 export const getAllBuses = async () => {
     try {
@@ -31,12 +34,12 @@ export const updateBus = async (rc_plate_number, busData) => {
         WHERE rc_plate_number = $7
         RETURNING *
     `, [
-        seating_capacity, 
+        sanitizeEmpty(seating_capacity), 
         engine_number?.trim().toUpperCase(), 
-        route_id || null, 
-        purchase_date, 
+        sanitizeEmpty(route_id), 
+        sanitizeEmpty(purchase_date), 
         status?.toUpperCase() || 'ACTIVE', 
-        bus_no,
+        sanitizeEmpty(bus_no),
         rc_plate_number.trim().toUpperCase()
     ]);
     return result.rows[0];
@@ -57,12 +60,12 @@ export const createBus = async (busData) => {
         RETURNING *
     `, [
         rc_plate_number.trim().toUpperCase(), 
-        seating_capacity, 
+        sanitizeEmpty(seating_capacity), 
         engine_number?.trim().toUpperCase(), 
-        route_id || null, 
-        purchase_date, 
+        sanitizeEmpty(route_id), 
+        sanitizeEmpty(purchase_date), 
         status?.toUpperCase() || 'ACTIVE',
-        bus_no
+        sanitizeEmpty(bus_no)
     ]);
     return result.rows[0];
 };

@@ -279,12 +279,13 @@ export default function BusList() {
                             <div>
                                 <label className="form-label text-[10px] font-black uppercase tracking-widest text-slate-400">Bus Number</label>
                                 <input
-                                    type="text"
+                                    type="number"
                                     name="bus_no"
                                     className="form-input bg-slate-50 border-slate-100 rounded-xl font-bold text-navy focus:border-navy text-xl"
-                                    placeholder="e.g. BUS-01"
+                                    placeholder="e.g. 1"
                                     value={newBusData.bus_no}
                                     onChange={handleInputChange}
+                                    required
                                 />
                             </div>
                             <div>
@@ -408,7 +409,7 @@ export default function BusList() {
                                     }
                                 }}
                                 className="btn btn-primary"
-                                disabled={!newBusData.rc_plate_number || !newBusData.engine_number}
+                                disabled={!newBusData.rc_plate_number || !newBusData.engine_number || !newBusData.bus_no}
                             >
                                 {isEditMode ? 'Update Record' : 'Save Bus Record'}
                             </button>
