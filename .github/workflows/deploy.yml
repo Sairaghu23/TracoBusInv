@@ -17,27 +17,32 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e  # Crucial: Stop if any command fails!
+         script: |
+            set -e
 
-            # 1. Load NVM into this session
+            # 1. Load NVM
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-            # 2. Go to project and pull
+            # 2. Navigate and Clean
             cd ~/tracobusinvcicd
             
-            # Handle the .env conflict automatically
+            # Remove untracked files (like the dist folder contents) that block merges
+            git clean -fd 
+            
+            # Handle any tracked local changes (like .env if tracked)
             git stash
             git pull origin main
-            git stash pop || true # Re-apply .env changes; ignore if no changes existed
+            git stash pop || true 
             
             # 3. Build Frontend
             cd frontend
             npm install
+            # Ensure binaries are executable
             chmod -R +x node_modules/.bin
             npm run build
-            # We already verified /var/www/tracobusinvcicd/frontend is the correct Nginx root
+            
+            # Sync to the Nginx web root
             cp -rvf dist/* /var/www/tracobusinvcicd/frontend/
             
             # 4. Update Backend
