@@ -12,9 +12,9 @@ export default function Reminders() {
         setLoading(true);
         try {
             const [typesRes, matrixRes, driverRes] = await Promise.all([
-                fetch('http://localhost:5001/api/document-types'),
-                fetch('http://localhost:5001/api/documents/compliance-matrix'),
-                fetch('http://localhost:5001/api/drivers')
+                fetch('/api/document-types'),
+                fetch('/api/documents/compliance-matrix'),
+                fetch('/api/drivers')
             ]);
             const [typesResult, matrixResult, driverResult] = await Promise.all([
                 typesRes.json(), 

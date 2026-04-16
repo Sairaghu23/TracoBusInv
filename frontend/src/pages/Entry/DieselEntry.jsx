@@ -29,7 +29,7 @@ export default function DieselEntry() {
 
         try {
             // Check Odometer status
-            const valRes = await fetch(`http://localhost:5001/api/diesel/validate/${selectedDate}`);
+            const valRes = await fetch(`/api/diesel/validate/${selectedDate}`);
             const valResult = await valRes.json();
 
             if (valResult.status) {
@@ -47,7 +47,7 @@ export default function DieselEntry() {
             }
 
             // Check Fuel Rate
-            const rateRes = await fetch(`http://localhost:5001/api/fuel-rates/${selectedDate}`);
+            const rateRes = await fetch(`/api/fuel-rates/${selectedDate}`);
             const rateResult = await rateRes.json();
             if (rateResult.status && rateResult.data) {
                 setFuelRate(rateResult.data.fuel_rate);
@@ -74,7 +74,7 @@ export default function DieselEntry() {
             return;
         }
         try {
-            const res = await fetch('http://localhost:5001/api/fuel-rates', {
+            const res = await fetch('/api/fuel-rates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ date, rate: fuelRate })
@@ -132,7 +132,7 @@ export default function DieselEntry() {
         }
 
         try {
-            const res = await fetch('http://localhost:5001/api/diesel/bulk', {
+            const res = await fetch('/api/diesel/bulk', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ logs: logsToSave })
@@ -140,7 +140,7 @@ export default function DieselEntry() {
             const result = await res.json();
             if (result.status) {
                 // Fetch report for summary view
-                const repRes = await fetch(`http://localhost:5001/api/diesel/report/${date}`);
+                const repRes = await fetch(`/api/diesel/report/${date}`);
                 const repResult = await repRes.json();
                 
                 // Keep only the buses that had a valid diesel entry logged

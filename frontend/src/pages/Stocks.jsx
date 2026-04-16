@@ -24,7 +24,7 @@ export default function Stocks() {
     const fetchStocks = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:5001/api/spares/stocks');
+            const res = await fetch('/api/spares/stocks');
             const result = await res.json();
             if (result.status) {
                 setStocks(result.data);
@@ -42,7 +42,7 @@ export default function Stocks() {
 
     const handlePurchaseSubmit = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/spares/purchases', {
+            const res = await fetch('/api/spares/purchases', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(purchaseData)
@@ -62,7 +62,7 @@ export default function Stocks() {
 
     const handleAddNewType = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/spares/stocks', {
+            const res = await fetch('/api/spares/stocks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ spare_name: newSpareName })

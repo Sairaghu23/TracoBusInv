@@ -21,7 +21,7 @@ export default function Drivers() {
 
     const fetchDrivers = async () => {
         try {
-            const response = await fetch('http://localhost:5001/api/drivers');
+            const response = await fetch('/api/drivers');
             const result = await response.json();
             if (result.status) setDrivers(result.data);
         } catch (error) {
@@ -34,7 +34,7 @@ export default function Drivers() {
     const handleAddDriver = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:5001/api/drivers', {
+            const response = await fetch('/api/drivers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newDriver)

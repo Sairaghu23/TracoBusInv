@@ -15,13 +15,13 @@ export default function BusDiesel() {
             setLoading(true);
             try {
                 // Fetch Bus Details
-                const busRes = await fetch(`http://localhost:5001/api/buses/${id}`);
+                const busRes = await fetch(`/api/buses/${id}`);
 
                 const busResult = await busRes.json();
 
                 if (busResult.status) {
                     setBus(busResult.data);
-                    const dieselRes = await fetch(`http://localhost:5001/api/buses/${id}/diesel`);
+                    const dieselRes = await fetch(`/api/buses/${id}/diesel`);
                     const dieselResult = await dieselRes.json();
                     if (dieselResult.status) {
                         setBusDiesel(dieselResult.data);

@@ -35,10 +35,10 @@ export default function Analytics() {
         setLoading(true);
         try {
             const [dieselRes, oilsRes, sparesRes, feesRes] = await Promise.all([
-                fetch(`http://localhost:5001/api/analytics/diesel?month=${month}&year=${year}`),
-                fetch(`http://localhost:5001/api/analytics/oils?month=${month}&year=${year}`),
-                fetch(`http://localhost:5001/api/analytics/spares?month=${month}&year=${year}`),
-                fetch(`http://localhost:5001/api/analytics/fees?semester=${semester}`),
+                fetch(`/api/analytics/diesel?month=${month}&year=${year}`),
+                fetch(`/api/analytics/oils?month=${month}&year=${year}`),
+                fetch(`/api/analytics/spares?month=${month}&year=${year}`),
+                fetch(`/api/analytics/fees?semester=${semester}`),
             ]);
             const [d, o, s, f] = await Promise.all([dieselRes.json(), oilsRes.json(), sparesRes.json(), feesRes.json()]);
             setSectionData({

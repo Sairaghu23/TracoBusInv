@@ -27,7 +27,7 @@ export default function BusOils() {
     const checkReadingStatus = async (selectedDate) => {
         setReadingErrorMsg('');
         try {
-            const res = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
+            const res = await fetch(`/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
             const result = await res.json();
 
             if (result.status && result.data) {
@@ -52,9 +52,9 @@ export default function BusOils() {
         setLoading(true);
         try {
             const [busRes, logsRes, typesRes] = await Promise.all([
-                fetch(`http://localhost:5001/api/buses/${rc_plate_number}`),
-                fetch(`http://localhost:5001/api/buses/${rc_plate_number}/oils`),
-                fetch('http://localhost:5001/api/oils/types')
+                fetch(`/api/buses/${rc_plate_number}`),
+                fetch(`/api/buses/${rc_plate_number}/oils`),
+                fetch('/api/oils/types')
             ]);
 
             const busResult = await busRes.json();
@@ -83,7 +83,7 @@ export default function BusOils() {
         setSaving(true);
         setError(null);
         try {
-            const res = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/oils`, {
+            const res = await fetch(`/api/buses/${rc_plate_number}/oils`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(logData)

@@ -27,7 +27,7 @@ export default function BusSpares() {
     const checkReadingStatus = async (selectedDate) => {
         setReadingErrorMsg('');
         try {
-            const res = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
+            const res = await fetch(`/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
             const result = await res.json();
 
             if (result.status && result.data) {
@@ -53,17 +53,17 @@ export default function BusSpares() {
         setLoading(true);
         try {
             // Fetch Bus Details
-            const busRes = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}`);
+            const busRes = await fetch(`/api/buses/${rc_plate_number}`);
             const busResult = await busRes.json();
             if (busResult.status) setBus(busResult.data);
 
             // Fetch Usage History
-            const usageRes = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/spares`);
+            const usageRes = await fetch(`/api/buses/${rc_plate_number}/spares`);
             const usageResult = await usageRes.json();
             if (usageResult.status) setSpares(usageResult.data);
 
             // Fetch Available Stocks (for selection)
-            const stocksRes = await fetch('http://localhost:5001/api/spares/stocks');
+            const stocksRes = await fetch('/api/spares/stocks');
             const stocksResult = await stocksRes.json();
             if (stocksResult.status) setStocks(stocksResult.data);
 
@@ -80,7 +80,7 @@ export default function BusSpares() {
 
     const handleReplacementSubmit = async () => {
         try {
-            const res = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/spares`, {
+            const res = await fetch(`/api/buses/${rc_plate_number}/spares`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(usageData)

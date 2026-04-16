@@ -12,7 +12,7 @@ export default function BusDetails() {
     useEffect(() => {
         const fetchBusDetails = async () => {
             try {
-                const response = await fetch(`http://localhost:5001/api/buses/${encodeURIComponent(rc_plate_number)}`);
+                const response = await fetch(`/api/buses/${encodeURIComponent(rc_plate_number)}`);
                 const result = await response.json();
                 if (result.status) {
                     setBus(result.data);

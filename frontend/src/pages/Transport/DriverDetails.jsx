@@ -21,7 +21,7 @@ export default function DriverDetails() {
 
     const fetchDriverDetails = async () => {
         try {
-            const response = await fetch(`http://localhost:5001/api/drivers/${id}`);
+            const response = await fetch(`/api/drivers/${id}`);
             const result = await response.json();
             if (result.status) {
                 setDriver(result.data);
@@ -41,7 +41,7 @@ export default function DriverDetails() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:5001/api/drivers/${id}`, {
+            const response = await fetch(`/api/drivers/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editData)
@@ -59,7 +59,7 @@ export default function DriverDetails() {
     const handleDelete = async () => {
         if (window.confirm("Are you sure you want to retire this driver from the fleet? This action is permanent.")) {
             try {
-                const response = await fetch(`http://localhost:5001/api/drivers/${id}`, { method: 'DELETE' });
+                const response = await fetch(`/api/drivers/${id}`, { method: 'DELETE' });
                 const result = await response.json();
                 if (result.status) navigate('/drivers');
             } catch (error) {
@@ -83,7 +83,7 @@ export default function DriverDetails() {
         </div>
     );
 
-    const photoUrl = driver.photo_url || "http://localhost:5001/uploads/drivers/default_avatar.png";
+    const photoUrl = driver.photo_url || "/uploads/drivers/default_avatar.png";
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 animate-in zoom-in-95 duration-500">

@@ -12,7 +12,7 @@ const CalendarWidget = () => {
     const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
     useEffect(() => {
-        fetch('http://localhost:5001/api/analytics/calendar-expirations')
+        fetch('/api/analytics/calendar-expirations')
             .then(r => r.json())
             .then(result => { if (result.status) setExpirations(result.data); })
             .catch(console.error);
@@ -169,8 +169,8 @@ export default function Dashboard() {
 
     useEffect(() => {
         Promise.all([
-            fetch('http://localhost:5001/api/buses').then(r => r.json()),
-            fetch('http://localhost:5001/api/students/summary/counts').then(r => r.json()),
+            fetch('/api/buses').then(r => r.json()),
+            fetch('/api/students/summary/counts').then(r => r.json()),
         ]).then(([busRes, studentRes]) => {
             if (busRes.status) setBuses(busRes.data);
             if (studentRes.status) setStudentCounts(studentRes.data);

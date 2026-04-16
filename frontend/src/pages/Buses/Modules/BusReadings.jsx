@@ -25,21 +25,21 @@ export default function BusReadings() {
             setLoading(true);
             try {
                 // Fetch Bus Details
-                const busRes = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}`);
+                const busRes = await fetch(`/api/buses/${rc_plate_number}`);
                 const busResult = await busRes.json();
                 if (busResult.status) {
                     setBus(busResult.data);
                 }
 
                 // Fetch Readings
-                const readingsRes = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/readings`);
+                const readingsRes = await fetch(`/api/buses/${rc_plate_number}/readings`);
                 const readingsResult = await readingsRes.json();
                 if (readingsResult.status) {
                     setReadings(readingsResult.data);
                 }
 
                 // Fetch Latest reading for pre-fill
-                const latestRes = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/readings/latest`);
+                const latestRes = await fetch(`/api/buses/${rc_plate_number}/readings/latest`);
                 const latestResult = await latestRes.json();
                 if (latestResult.status && latestResult.data) {
                     setNewReadingData(prev => ({ 
@@ -71,7 +71,7 @@ export default function BusReadings() {
 
     const handleSaveReading = async () => {
         try {
-            const response = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/readings`, {
+            const response = await fetch(`/api/buses/${rc_plate_number}/readings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newReadingData)
@@ -81,7 +81,7 @@ export default function BusReadings() {
                 alert("Trip log saved successfully!");
                 setIsAddModalOpen(false);
                 // Refresh data
-                const readingsRes = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/readings`);
+                const readingsRes = await fetch(`/api/buses/${rc_plate_number}/readings`);
                 const readingsResult = await readingsRes.json();
                 if (readingsResult.status) setReadings(readingsResult.data);
 

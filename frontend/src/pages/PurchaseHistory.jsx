@@ -16,14 +16,14 @@ export default function PurchaseHistory() {
             // Fetch All Stocks to find the specific spare name (or we could add a specific API for one spare)
             // For efficiency, we'll fetch the purchases first and get names from the first record if available
             // Actually, let's fetch stocks to get the spare name correctly
-            const stocksRes = await fetch('http://localhost:5001/api/spares/stocks');
+            const stocksRes = await fetch('/api/spares/stocks');
             const stocksResult = await stocksRes.json();
             if (stocksResult.status) {
                 const foundSpare = stocksResult.data.find(s => s.spare_id === parseInt(spare_id));
                 setSpare(foundSpare);
             }
 
-            const res = await fetch(`http://localhost:5001/api/spares/${spare_id}/purchases`);
+            const res = await fetch(`/api/spares/${spare_id}/purchases`);
             const result = await res.json();
             if (result.status) {
                 setPurchases(result.data);

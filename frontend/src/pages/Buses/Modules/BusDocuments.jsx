@@ -28,9 +28,9 @@ export default function BusDocuments() {
         setLoading(true);
         try {
             const [busRes, docsRes, typesRes] = await Promise.all([
-                fetch(`http://localhost:5001/api/buses/${id}`),
-                fetch(`http://localhost:5001/api/buses/${id}/documents`),
-                fetch('http://localhost:5001/api/document-types')
+                fetch(`/api/buses/${id}`),
+                fetch(`/api/buses/${id}/documents`),
+                fetch('/api/document-types')
             ]);
             
             const busResult = await busRes.json();
@@ -89,7 +89,7 @@ export default function BusDocuments() {
             payload.append('expiry_date', formData.expiry_date);
             payload.append('document', formData.file);
 
-            const res = await fetch('http://localhost:5001/api/buses/documents', {
+            const res = await fetch('/api/buses/documents', {
                 method: 'POST',
                 body: payload // Note: Do NOT set Content-Type header manually when sending FormData
             });
@@ -207,7 +207,7 @@ export default function BusDocuments() {
                                         </td>
                                         <td className="py-5 pr-8 text-right">
                                             <a
-                                                href={`http://localhost:5001${doc.file_path}`}
+                                                href={`/${doc.file_path}`}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white hover:bg-navy-light rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-navy/10"

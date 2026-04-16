@@ -18,7 +18,7 @@ export default function OdometerEntry() {
     const fetchFleet = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:5001/api/readings/all-latest');
+            const res = await fetch('/api/readings/all-latest');
             const result = await res.json();
             if (result.status) {
                 setFleetData(result.data);
@@ -81,7 +81,7 @@ export default function OdometerEntry() {
         }
 
         try {
-            const res = await fetch('http://localhost:5001/api/readings/bulk', {
+            const res = await fetch('/api/readings/bulk', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ readings: readingsToSave })
