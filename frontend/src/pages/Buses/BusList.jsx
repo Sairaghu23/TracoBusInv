@@ -179,7 +179,11 @@ export default function BusList() {
             {/* Controls */}
             <div className="card flex flex-col sm:flex-row gap-4">
                 <div className="flex-1 flex gap-2 w-full">
+                    <label htmlFor="searchField" className="sr-only">Search Field</label>
                     <select
+                        id="searchField"
+                        name="searchField"
+                        aria-label="Search Field"
                         className="form-input w-40 bg-slate-50"
                         value={searchField}
                         onChange={(e) => setSearchField(e.target.value)}
@@ -189,9 +193,13 @@ export default function BusList() {
                         <option value="engine_number">Engine Number</option>
                     </select>
                     <div className="relative flex-1">
+                        <label htmlFor="searchQuery" className="sr-only">Search Term</label>
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
+                            id="searchQuery"
+                            name="searchQuery"
                             type="text"
+                            aria-label="Search Query"
                             className="form-input pl-10"
                             placeholder="Enter search term..."
                             value={searchTerm}
