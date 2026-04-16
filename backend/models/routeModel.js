@@ -3,16 +3,12 @@ import pool from '../config/db.js';
 export const getAllRoutesWithStops = async () => {
     const query = `
         SELECT r.route_id, r.route_name, 
-               s.stop_id, s.stop_name, 
-               f.fee
+               s.stop_id, s.stop_name, s.stop_fee as fee,
+               rm.map_id
         FROM routes r
-        LEFT JOIN stoppings s ON r.route_id = s.route_id
-        LEFT JOIN (
-            SELECT DISTINCT ON (stop_id) stop_id, fee, created_at
-            FROM stopping_fees
-            ORDER BY stop_id, created_at DESC
-        ) f ON s.stop_id = f.stop_id
-        ORDER BY r.route_id, s.created_at;
+        LEFT JOIN route_stop_map rm ON r.route_id = rm.route_id
+        LEFT JOIN stoppings s ON rm.stop_id = s.stop_id
+        ORDER BY r.route_id, s.stop_name;
     `;
     try {
         const result = await pool.query(query);
@@ -28,7 +24,8 @@ export const getAllRoutesWithStops = async () => {
             }
             if (row.stop_id) {
                 routesMap[row.route_id].stops.push({
-                    id: row.stop_id,
+                    id: row.map_id, // We use map_id as the primary identifier for boardings
+                    stop_id: row.stop_id,
                     name: row.stop_name,
                     fee: parseFloat(row.fee)
                 });

@@ -50,7 +50,19 @@ export default function Students() {
         admission_year: new Date().getFullYear(),
         batch_start_year: new Date().getFullYear(),
         batch_end_year: new Date().getFullYear() + 4,
+        batch_start_year: new Date().getFullYear(),
+        batch_end_year: new Date().getFullYear() + 4,
+        route_id: '',
         stop_id: '',
+        concession: 0
+    });
+
+    const [paymentForm, setPaymentForm] = useState({
+        route_id: '',
+        stop_id: '',
+        amount_paid: '',
+        payment_mode: 'Online',
+        payment_date: new Date().toISOString().split('T')[0],
         concession: 0
     });
 
@@ -221,7 +233,9 @@ export default function Students() {
                     branch_id: '',
                     admission_year: new Date().getFullYear(),
                     batch_start_year: new Date().getFullYear(),
+                    batch_start_year: new Date().getFullYear(),
                     batch_end_year: new Date().getFullYear() + 4,
+                    route_id: '',
                     stop_id: '',
                     concession: 0
                 });
@@ -253,6 +267,7 @@ export default function Students() {
             admission_year: student.admission_year || new Date().getFullYear(),
             batch_start_year: student.batch_start_year || new Date().getFullYear(),
             batch_end_year: student.batch_end_year || new Date().getFullYear() + 4,
+            route_id: '', // Will enforce re-selecting or finding the matching route if complex, but leaving empty prompts user
             stop_id: student.stop_id || '',
             concession: student.concession || 0
         });
@@ -563,7 +578,9 @@ export default function Students() {
                                 branch_id: '',
                                 admission_year: new Date().getFullYear(),
                                 batch_start_year: new Date().getFullYear(),
+                                batch_start_year: new Date().getFullYear(),
                                 batch_end_year: new Date().getFullYear() + 4,
+                                route_id: '',
                                 stop_id: '',
                                 concession: 0
                             });
@@ -677,6 +694,7 @@ export default function Students() {
                                                 onClick={() => {
                                                     setSelectedStudent(student);
                                                     setPaymentForm({
+                                                        route_id: '',
                                                         stop_id: student.stop_id || '',
                                                         amount_paid: '',
                                                         payment_mode: 'Online',
@@ -789,20 +807,31 @@ export default function Students() {
                         <form onSubmit={handleRecordPayment} className="p-8 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Route</label>
+                                    <select 
+                                        required
+                                        value={paymentForm.route_id}
+                                        onChange={(e) => setPaymentForm({...paymentForm, route_id: e.target.value, stop_id: ''})}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-navy focus:outline-none focus:border-orange-500 transition-all appearance-none"
+                                    >
+                                        <option value="">Choose Route...</option>
+                                        {routes.map(route => (
+                                            <option key={route.route_id} value={route.route_id}>{route.route_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Bus Stop</label>
                                     <select 
                                         required
                                         value={paymentForm.stop_id}
                                         onChange={(e) => setPaymentForm({...paymentForm, stop_id: e.target.value})}
                                         className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-navy focus:outline-none focus:border-orange-500 transition-all appearance-none"
+                                        disabled={!paymentForm.route_id}
                                     >
                                         <option value="">Choose Stop...</option>
-                                        {routes.map(route => (
-                                            <optgroup key={route.route_id} label={route.route_name}>
-                                                {route.stops.map(stop => (
-                                                    <option key={stop.id} value={stop.id}>{stop.name} (₹{stop.fee})</option>
-                                                ))}
-                                            </optgroup>
+                                        {paymentForm.route_id && routes.find(r => r.route_id.toString() === paymentForm.route_id.toString())?.stops.map(stop => (
+                                            <option key={stop.id} value={stop.id}>{stop.name} (₹{stop.fee})</option>
                                         ))}
                                     </select>
                                 </div>
@@ -913,20 +942,31 @@ export default function Students() {
                                     </select>
                                 </div>
                                 <div className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Route</label>
+                                    <select 
+                                        required
+                                        value={studentForm.route_id}
+                                        onChange={(e) => setStudentForm({...studentForm, route_id: e.target.value, stop_id: ''})}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-navy focus:outline-none focus:border-blue-500 transition-all"
+                                    >
+                                        <option value="">Select Route...</option>
+                                        {routes.map(r => (
+                                            <option key={r.route_id} value={r.route_id}>{r.route_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Boarding Stop</label>
                                     <select 
                                         required
                                         value={studentForm.stop_id}
                                         onChange={(e) => setStudentForm({...studentForm, stop_id: e.target.value})}
                                         className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-navy focus:outline-none focus:border-blue-500 transition-all"
+                                        disabled={!studentForm.route_id}
                                     >
                                         <option value="">Select Stop...</option>
-                                        {routes.map(r => (
-                                            <optgroup key={r.route_id} label={r.route_name}>
-                                                {r.stops.map(s => (
-                                                    <option key={s.id} value={s.id}>{s.name}</option>
-                                                ))}
-                                            </optgroup>
+                                        {studentForm.route_id && routes.find(r => r.route_id.toString() === studentForm.route_id.toString())?.stops.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name} (₹{s.fee})</option>
                                         ))}
                                     </select>
                                 </div>
