@@ -10,15 +10,16 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-         script: |
+          script: |
             set -e
-
+            
             # 1. Load NVM
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
@@ -26,10 +27,10 @@ jobs:
             # 2. Navigate and Clean
             cd ~/tracobusinvcicd
             
-            # Remove untracked files (like the dist folder contents) that block merges
+            # Remove untracked files to prevent merge conflicts
             git clean -fd 
             
-            # Handle any tracked local changes (like .env if tracked)
+            # Handle local changes
             git stash
             git pull origin main
             git stash pop || true 
@@ -37,11 +38,10 @@ jobs:
             # 3. Build Frontend
             cd frontend
             npm install
-            # Ensure binaries are executable
             chmod -R +x node_modules/.bin
             npm run build
             
-            # Sync to the Nginx web root
+            # Copy to Nginx web root
             cp -rvf dist/* /var/www/tracobusinvcicd/frontend/
             
             # 4. Update Backend
