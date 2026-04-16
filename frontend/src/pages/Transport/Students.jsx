@@ -59,7 +59,7 @@ export default function Students() {
     useEffect(() => {
         const fetchCounts = async () => {
             try {
-                const response = await fetch('http://localhost:5002/api/students/summary/counts');
+                const response = await fetch('/api/students/summary/counts');
                 const result = await response.json();
                 if (result.status) setCounts(result.data);
             } catch (error) {
@@ -70,7 +70,7 @@ export default function Students() {
         
         const fetchRoutes = async () => {
             try {
-                const response = await fetch('http://localhost:5002/api/routes');
+                const response = await fetch('/api/routes');
                 const result = await response.json();
                 if (result.status) setRoutes(result.data);
             } catch (error) {
@@ -80,7 +80,7 @@ export default function Students() {
 
         const fetchBranches = async () => {
             try {
-                const response = await fetch('http://localhost:5002/api/branches');
+                const response = await fetch('/api/branches');
                 const result = await response.json();
                 if (result.status) setBranches(result.data);
             } catch (error) {
@@ -119,7 +119,7 @@ export default function Students() {
         setLoading(true);
         try {
             const yearNum = parseInt(year);
-            const response = await fetch(`http://localhost:5001/api/students/${type}/${yearNum}/semester/${semester}`);
+            const response = await fetch(`/api/students/${type}/${yearNum}/semester/${semester}`);
             const result = await response.json();
             if (result.status) setStudents(result.data);
         } catch (error) {
