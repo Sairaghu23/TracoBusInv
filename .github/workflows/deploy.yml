@@ -18,23 +18,32 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e  # Crucial: Stop if any command fails!
+
             # 1. Load NVM into this session
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
             # 2. Go to project and pull
             cd ~/tracobusinvcicd
-            git pull origin main            
+            
+            # Handle the .env conflict automatically
+            git stash
+            git pull origin main
+            git stash pop || true # Re-apply .env changes; ignore if no changes existed
             
             # 3. Build Frontend
             cd frontend
             npm install
             npm run build
-            # cp -r dist/* /var/www/tracobusinvcicd/frontend/
+            # We already verified /var/www/tracobusinvcicd/frontend is the correct Nginx root
             cp -rvf dist/* /var/www/tracobusinvcicd/frontend/
             
             # 4. Update Backend
             cd ../backend
             npm install
-            # Using the full path for pm2 just in case, or make sure it's in NVM
+            
+            # Restart the backend
             pm2 restart backend || pm2 start server.js --name "backend"
+            
+            echo "Deployment successful!"
