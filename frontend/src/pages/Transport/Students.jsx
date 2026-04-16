@@ -36,6 +36,7 @@ export default function Students() {
 
     // Payment Form State
     const [paymentForm, setPaymentForm] = useState({
+        route_id: '',
         stop_id: '',
         amount_paid: '',
         payment_mode: 'Online',
@@ -50,19 +51,8 @@ export default function Students() {
         admission_year: new Date().getFullYear(),
         batch_start_year: new Date().getFullYear(),
         batch_end_year: new Date().getFullYear() + 4,
-        batch_start_year: new Date().getFullYear(),
-        batch_end_year: new Date().getFullYear() + 4,
         route_id: '',
         stop_id: '',
-        concession: 0
-    });
-
-    const [paymentForm, setPaymentForm] = useState({
-        route_id: '',
-        stop_id: '',
-        amount_paid: '',
-        payment_mode: 'Online',
-        payment_date: new Date().toISOString().split('T')[0],
         concession: 0
     });
 
