@@ -123,7 +123,7 @@ export default function Routes() {
 
     const handleDeleteRoute = async (route) => {
         const confirmed = window.confirm(
-            `⚠️ DELETE ROUTE: "${route.route_name}"?\n\nThis will permanently delete the route and all its associated stops and student boarding assignments (cascade).\n\nThis action CANNOT be undone. Continue?`
+            `⚠️ DELETE ROUTE: "${route.route_name}"?\n\nThis will:\n• Permanently delete this route and all its stops from the network\n• Remove all stop mappings (route_stop_map)\n• Students currently on this route will remain in the system but their boarding assignment will be CLEARED (set to unassigned)\n\nThis action CANNOT be undone. Continue?`
         );
         if (!confirmed) return;
         try {
@@ -142,7 +142,7 @@ export default function Routes() {
 
     const handleDeleteStop = async (stop, routeName) => {
         const confirmed = window.confirm(
-            `⚠️ DELETE STOP: "${stop.name}" from "${routeName}"?\n\nThis will permanently remove the stop and all student boarding records linked to it (cascade).\n\nThis action CANNOT be undone. Continue?`
+            `⚠️ DELETE STOP: "${stop.name}" from "${routeName}"?\n\nThis will:\n• Permanently remove this stop from the route\n• Remove its entry from the stop mapping table\n• Students boarding at this stop will remain in the system but their boarding assignment will be CLEARED (set to unassigned)\n\nThis action CANNOT be undone. Continue?`
         );
         if (!confirmed) return;
         try {
