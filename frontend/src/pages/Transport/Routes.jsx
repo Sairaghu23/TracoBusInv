@@ -98,7 +98,7 @@ export default function Routes() {
     const handleSaveStop = async () => {
         if (!editingStop) return;
         try {
-            const res = await fetch(`/api/stops/${editingStop.stop_id}`, {
+            const res = await fetch(`/api/routes/stops/${editingStop.stop_id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ stop_name: editingStop.name, fee: editingStop.fee })
