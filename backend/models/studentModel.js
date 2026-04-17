@@ -18,7 +18,8 @@ export const getStudentsBySemester = async (type, yearOffset, semester) => {
             COALESCE(h.concession, s.concession, 0) as concession, 
             h.payment_mode, h.payment_date,
             stop.stop_name as stop_name,
-            s.boarding as stop_id,
+            rm.stop_id as stop_id,
+            rm.route_id as route_id,
             stop.stop_fee as total_fee
         FROM ${studentTable} s
         JOIN branch b ON s.branch_id = b.brnach_id
@@ -38,10 +39,17 @@ export const updateStudent = async (type, s_id, studentData) => {
     const { 
         roll_id, s_name, branch_id, 
         admission_year, batch_start_year, batch_end_year, 
-        stop_id, concession 
+        route_id, stop_id, concession 
     } = studentData;
 
-    // stop_id here from frontend refers to the map_id, which we store in 'boarding' column
+    let boarding_map_id = null;
+    if (route_id && stop_id) {
+        const mapRes = await pool.query('SELECT map_id FROM route_stop_map WHERE route_id = $1 AND stop_id = $2', [route_id, stop_id]);
+        if (mapRes.rows.length > 0) {
+            boarding_map_id = mapRes.rows[0].map_id;
+        }
+    }
+
     const query = `
         UPDATE ${studentTable} 
         SET roll_id = $1, s_name = $2, branch_id = $3, 
@@ -54,7 +62,7 @@ export const updateStudent = async (type, s_id, studentData) => {
     const values = [
         roll_id, s_name, branch_id, 
         admission_year, batch_start_year, batch_end_year, 
-        stop_id, concession || 0,
+        boarding_map_id, concession || 0,
         s_id
     ];
     const result = await pool.query(query, values);
@@ -66,10 +74,17 @@ export const addStudent = async (type, studentData) => {
     const { 
         roll_id, s_name, branch_id, 
         admission_year, batch_start_year, batch_end_year, 
-        stop_id, concession 
+        route_id, stop_id, concession 
     } = studentData;
 
-    // stop_id here from frontend refers to the map_id, which we store in 'boarding' column
+    let boarding_map_id = null;
+    if (route_id && stop_id) {
+        const mapRes = await pool.query('SELECT map_id FROM route_stop_map WHERE route_id = $1 AND stop_id = $2', [route_id, stop_id]);
+        if (mapRes.rows.length > 0) {
+            boarding_map_id = mapRes.rows[0].map_id;
+        }
+    }
+
     const query = `
         INSERT INTO ${studentTable} (
             roll_id, s_name, branch_id, 
@@ -82,7 +97,7 @@ export const addStudent = async (type, studentData) => {
     const values = [
         roll_id, s_name, branch_id, 
         admission_year, batch_start_year, batch_end_year, 
-        stop_id, concession || 0
+        boarding_map_id, concession || 0
     ];
     const result = await pool.query(query, values);
     return result.rows[0];

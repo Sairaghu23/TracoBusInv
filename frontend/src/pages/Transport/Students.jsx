@@ -257,7 +257,7 @@ export default function Students() {
             admission_year: student.admission_year || new Date().getFullYear(),
             batch_start_year: student.batch_start_year || new Date().getFullYear(),
             batch_end_year: student.batch_end_year || new Date().getFullYear() + 4,
-            route_id: '', // Will enforce re-selecting or finding the matching route if complex, but leaving empty prompts user
+            route_id: student.route_id || '',
             stop_id: student.stop_id || '',
             concession: student.concession || 0
         });
