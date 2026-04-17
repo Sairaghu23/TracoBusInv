@@ -135,6 +135,68 @@ export const dieselModel = {
             ORDER BY d.created_at DESC;
         `;
         const result = await pool.query(query, [rc_plate_number.trim().toUpperCase()]);
-        return result.rows;
+    },
+
+    // 8. Single Diesel Log for a specific bus
+    addSingleDieselLog: async (logData) => {
+        const { rc_plate_number, liters, rate, refueling_date, KMPL, total_amount, old_reading, new_reading } = logData;
+        const KMPLVal = parseFloat(KMPL) || (new_reading && liters ? (new_reading - old_reading) / liters : 0);
+        
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // Lookup bus
+            const busQuery = await client.query('SELECT bus_id FROM buses WHERE rc_plate_number = $1', [rc_plate_number.trim().toUpperCase()]);
+            if (busQuery.rows.length === 0) throw new Error('Vehicle not found.');
+            const bus_id = busQuery.rows[0].bus_id;
+
+            // Upsert fuel rate
+            const rateQuery = await client.query(`
+                INSERT INTO fuel_rates (rate_date, fuel_rate)
+                VALUES ($1, $2)
+                ON CONFLICT (rate_date) DO UPDATE SET fuel_rate = EXCLUDED.fuel_rate
+                RETURNING rate_id;
+            `, [refueling_date, rate]);
+            const rate_id = rateQuery.rows[0].rate_id;
+
+            // Process Odometer Reading: Check if one exists for the date, otherwise create one
+            let reading_id;
+            let finalNewReading = new_reading;
+            if (new_reading && new_reading > old_reading) {
+                const existingReadingQuery = await client.query('SELECT reading_id, new_reading FROM bus_readings WHERE bus_id = $1 AND end_date::DATE = $2::DATE', [bus_id, refueling_date]);
+                if (existingReadingQuery.rows.length > 0) {
+                    reading_id = existingReadingQuery.rows[0].reading_id;
+                    // Optionally update the existing reading? Just use it.
+                } else {
+                    const distance = parseFloat(new_reading) - parseFloat(old_reading);
+                    const insertReadingQuery = await client.query(`
+                        INSERT INTO bus_readings (bus_id, start_date, end_date, old_reading, new_reading, distance)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                        RETURNING reading_id;
+                    `, [bus_id, refueling_date, refueling_date, old_reading, new_reading, distance]);
+                    reading_id = insertReadingQuery.rows[0].reading_id;
+                }
+            } else {
+                throw new Error("Invalid odometer readings.");
+            }
+
+            // Insert or Update diesel log
+            const dieselQuery = await client.query(`
+                INSERT INTO diesel_logs (bus_id, reading_id, rate_id, liters, created_at, kmpl, total_amount)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                ON CONFLICT (reading_id) DO UPDATE SET 
+                    liters = EXCLUDED.liters, rate_id = EXCLUDED.rate_id, KMPL = EXCLUDED.KMPL, total_amount = EXCLUDED.total_amount
+                RETURNING *;
+            `, [bus_id, reading_id, rate_id, liters, refueling_date, KMPLVal, total_amount || (liters * rate)]);
+
+            await client.query('COMMIT');
+            return dieselQuery.rows[0];
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
     }
 };

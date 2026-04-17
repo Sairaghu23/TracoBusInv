@@ -1,40 +1,101 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, Fuel, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Plus, Fuel, AlertCircle, X, CheckCircle2, Calendar, IndianRupee } from 'lucide-react';
 
 export default function BusDiesel() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [bus, setBus] = useState(null);
-    const [busDiesel, setBusDiesel] = useState([]); // Empty until diesel table is implemented
+    const [busDiesel, setBusDiesel] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    
+    // Form state
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
+    const [lastOdometer, setLastOdometer] = useState(0);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                // Fetch Bus Details
-                const busRes = await fetch(`/api/buses/${id}`);
+    const [logData, setLogData] = useState({
+        refueling_date: new Date().toISOString().split('T')[0],
+        liters: '',
+        rate: '',
+        old_reading: '',
+        new_reading: ''
+    });
 
-                const busResult = await busRes.json();
-
-                if (busResult.status) {
-                    setBus(busResult.data);
-                    const dieselRes = await fetch(`/api/buses/${id}/diesel`);
-                    const dieselResult = await dieselRes.json();
-                    if (dieselResult.status) {
-                        setBusDiesel(dieselResult.data);
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const busRes = await fetch(`/api/buses/${id}`);
+            const busResult = await busRes.json();
+            if (busResult.status) {
+                setBus(busResult.data);
+                const dieselRes = await fetch(`/api/buses/${id}/diesel`);
+                const dieselResult = await dieselRes.json();
+                if (dieselResult.status) {
+                    setBusDiesel(dieselResult.data);
+                    if (dieselResult.data.length > 0) {
+                        const last = dieselResult.data[0].new_reading || 0;
+                        setLastOdometer(last);
+                        setLogData(prev => ({ ...prev, old_reading: last }));
                     }
                 }
-            } catch (err) {
-                console.error("Error fetching diesel data:", err);
-            } finally {
-                setLoading(false);
             }
-        };
+        } catch (err) {
+            console.error("Error fetching diesel data:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
     }, [id]);
+
+    const handleSubmit = async () => {
+        if (!logData.liters || !logData.rate) {
+            setError('Please fill in all fuel fields.');
+            return;
+        }
+        if (logData.old_reading !== '' && parseInt(logData.old_reading) < lastOdometer) {
+            setError(`Opening odometer (${logData.old_reading} km) cannot be less than the last recorded reading (${lastOdometer} km).`);
+            return;
+        }
+        if (logData.new_reading !== '' && parseInt(logData.new_reading) <= parseInt(logData.old_reading)) {
+            setError('Closing odometer must be greater than the opening reading.');
+            return;
+        }
+        
+        setSaving(true);
+        setError(null);
+        try {
+            const res = await fetch(`/api/buses/${id}/diesel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logData)
+            });
+            const result = await res.json();
+            if (result.status) {
+                setSuccess('Diesel logged successfully!');
+                setIsAddModalOpen(false);
+                setLogData({
+                    refueling_date: new Date().toISOString().split('T')[0],
+                    liters: '', rate: '',
+                    old_reading: result.data?.new_reading || lastOdometer,
+                    new_reading: ''
+                });
+                fetchData();
+                setTimeout(() => setSuccess(null), 3000);
+            } else {
+                setError(result.message || 'Failed to save log.');
+            }
+        } catch (err) {
+            setError('Server error. Please try again.');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const totalExpenditure = busDiesel.reduce((sum, record) => sum + (parseFloat(record.total_amount) || 0), 0);
     const avgKMPL = busDiesel.length > 0
@@ -58,10 +119,10 @@ export default function BusDiesel() {
                     Fuel Consumption & Economy
                 </h1>
                 <button
-                    onClick={() => navigate('/entry/diesel')}
+                    onClick={() => setIsAddModalOpen(true)}
                     className="btn btn-primary bg-orange-600 hover:bg-orange-700 border-none shadow-lg shadow-orange-100"
                 >
-                    <Plus size={18} /> Batch Refueling
+                    <Plus size={18} /> Add Diesel Log
                 </button>
             </div>
 
@@ -142,5 +203,124 @@ export default function BusDiesel() {
                 </table>
             </div>
         </div>
+
+        {/* Add Modal */}
+        {isAddModalOpen && (
+            <div className="fixed inset-0 bg-navy/60 backdrop-blur-md flex items-center justify-center z-[110] p-4 animate-in fade-in duration-300">
+                <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                    <div className="p-8 bg-orange-600 text-white flex justify-between items-start">
+                        <div className="flex gap-4">
+                            <div className="p-4 bg-white/10 rounded-2xl">
+                                <Fuel size={32} className="text-orange-200" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-black italic tracking-tight">Record Refueling</h2>
+                                <p className="text-orange-100 text-xs font-bold uppercase tracking-widest">{bus?.rc_plate_number} • {bus?.bus_no}</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setIsAddModalOpen(false)} className="text-white/40 hover:text-white transition-colors">
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    <div className="p-8 space-y-6">
+                        {error && (
+                            <div className="bg-amber-50 text-amber-600 p-4 rounded-2xl flex gap-3 text-sm font-bold items-center border border-amber-100">
+                                <AlertCircle size={20} /> {error}
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Date */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Refueling Date</label>
+                                <div className="relative">
+                                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        type="date"
+                                        value={logData.refueling_date}
+                                        onChange={(e) => setLogData({ ...logData, refueling_date: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-12 pr-4 py-3 text-sm font-bold text-navy focus:outline-none focus:border-orange-500 transition-all"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center justify-between">
+                                    Opening Odometer
+                                    <span className="text-[9px] bg-slate-200 px-2 py-0.5 rounded-md text-slate-500">Auto-filled</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    value={logData.old_reading}
+                                    readOnly
+                                    className="w-full bg-slate-100 border-none cursor-not-allowed rounded-xl px-4 py-3 text-lg font-black text-slate-500 font-mono"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Closing Odometer (New)</label>
+                                <input
+                                    type="number"
+                                    placeholder="Enter closing km..."
+                                    value={logData.new_reading}
+                                    onChange={(e) => setLogData({ ...logData, new_reading: e.target.value })}
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-lg font-black text-navy focus:outline-none focus:border-orange-500 font-mono transition-colors"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Quantity */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Quantity (Liters)</label>
+                                <input
+                                    type="number"
+                                    placeholder="0.0"
+                                    value={logData.liters}
+                                    onChange={(e) => setLogData({ ...logData, liters: e.target.value })}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-navy focus:outline-none focus:border-orange-500 transition-all"
+                                />
+                            </div>
+
+                            {/* Rate */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Rate (₹/Liter)</label>
+                                <div className="relative">
+                                    <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        type="number"
+                                        placeholder="0.00"
+                                        value={logData.rate}
+                                        onChange={(e) => setLogData({ ...logData, rate: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-12 pr-4 py-3 text-sm font-bold text-navy focus:outline-none focus:border-orange-500 transition-all text-right"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleSubmit}
+                            disabled={saving}
+                            className={`w-full py-4 text-white rounded-2xl font-black italic tracking-tight transition-all text-lg flex items-center justify-center gap-2
+                                ${saving ? 'bg-orange-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-100'}`}
+                        >
+                            {saving ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" /> : <><CheckCircle2 size={24} /> Submit Record</>}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Success Alert */}
+        {success && (
+            <div className="fixed bottom-6 right-6 bg-navy text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300 z-50">
+                <CheckCircle2 className="text-emerald-400" size={24} />
+                <span className="font-bold">{success}</span>
+            </div>
+        )}
+    </div>
     );
 }

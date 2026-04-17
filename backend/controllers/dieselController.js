@@ -70,3 +70,13 @@ export const getBusDieselHistoryController = async (req, res) => {
         res.status(500).json({ status: false, message: err.message });
     }
 };
+
+export const addSingleBusDieselController = async (req, res) => {
+    try {
+        const { rc_plate_number } = req.params;
+        const result = await dieselModel.addSingleDieselLog({ ...req.body, rc_plate_number });
+        res.json({ status: true, data: result, message: "Diesel log saved successfully" });
+    } catch (err) {
+        res.status(500).json({ status: false, message: err.message });
+    }
+};
