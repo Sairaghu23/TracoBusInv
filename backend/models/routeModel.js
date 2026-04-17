@@ -56,3 +56,16 @@ export const updateRouteName = async (routeId, routeName) => {
     );
     return result.rows[0];
 };
+
+export const deleteRouteById = async (routeId) => {
+    try {
+        const result = await pool.query(
+            'DELETE FROM routes WHERE route_id = $1 RETURNING *',
+            [routeId]
+        );
+        return result.rows[0];
+    } catch (error) {
+        console.error("Error deleting route:", error);
+        throw error;
+    }
+};

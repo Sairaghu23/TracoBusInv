@@ -1,8 +1,8 @@
 import express from 'express';
-import { 
-    getAllRoutesController, 
-    addRouteController, 
-    updateRouteController, 
+import {
+    getAllRoutesController,
+    addRouteController,
+    updateRouteController,
     updateStopController
 } from '../controllers/routeControllers.js';
 import { getRouteStudentBreakdownController } from '../controllers/studentController.js';

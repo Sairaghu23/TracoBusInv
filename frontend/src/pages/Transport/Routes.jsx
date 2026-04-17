@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Plus, X, Check, Route as RouteIcon, Pencil, Users, BarChart3, GraduationCap, ChevronLeft } from 'lucide-react';
+import { Search, MapPin, Plus, X, Check, Route as RouteIcon, Pencil, Trash2, Users, BarChart3, GraduationCap, ChevronLeft } from 'lucide-react';
 
 export default function Routes() {
     // State for live data
@@ -119,6 +119,44 @@ export default function Routes() {
             const result = await res.json();
             if (result.status) { setEditingRoute(null); fetchRoutes(); }
         } catch (err) { console.error('Error updating route:', err); }
+    };
+
+    const handleDeleteRoute = async (route) => {
+        const confirmed = window.confirm(
+            `⚠️ DELETE ROUTE: "${route.route_name}"?\n\nThis will permanently delete the route and all its associated stops and student boarding assignments (cascade).\n\nThis action CANNOT be undone. Continue?`
+        );
+        if (!confirmed) return;
+        try {
+            const res = await fetch(`/api/routes/${route.route_id}`, { method: 'DELETE' });
+            const result = await res.json();
+            if (result.status) {
+                fetchRoutes();
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+        } catch (err) {
+            console.error('Error deleting route:', err);
+            alert('Connection error. Could not delete route.');
+        }
+    };
+
+    const handleDeleteStop = async (stop, routeName) => {
+        const confirmed = window.confirm(
+            `⚠️ DELETE STOP: "${stop.name}" from "${routeName}"?\n\nThis will permanently remove the stop and all student boarding records linked to it (cascade).\n\nThis action CANNOT be undone. Continue?`
+        );
+        if (!confirmed) return;
+        try {
+            const res = await fetch(`/api/routes/stops/${stop.stop_id}`, { method: 'DELETE' });
+            const result = await res.json();
+            if (result.status) {
+                fetchRoutes();
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+        } catch (err) {
+            console.error('Error deleting stop:', err);
+            alert('Connection error. Could not delete stop.');
+        }
     };
 
     const fetchBreakdown = async (route) => {
@@ -272,8 +310,16 @@ export default function Routes() {
                                             <button
                                                 onClick={() => setEditingRoute({ route_id: route.route_id, route_name: route.route_name })}
                                                 className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-orange-500 transition-all rounded-lg hover:bg-orange-50"
+                                                title="Edit Route"
                                             >
                                                 <Pencil size={13} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteRoute(route)}
+                                                className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all rounded-lg hover:bg-red-50"
+                                                title="Delete Route"
+                                            >
+                                                <Trash2 size={13} />
                                             </button>
                                         </div>
                                     )}
@@ -342,12 +388,22 @@ export default function Routes() {
                                                             {stop.fee === 0 ? 'Free' : `₹${stop.fee?.toLocaleString()}`}
                                                         </td>
                                                         <td className="px-2 py-3">
-                                                            <button
-                                                                onClick={() => setEditingStop({ stop_id: stop.id, name: stop.name, fee: stop.fee })}
-                                                                className="opacity-0 group-hover/row:opacity-100 p-1.5 text-slate-400 hover:text-orange-500 rounded-lg hover:bg-orange-50 transition-all"
-                                                            >
-                                                                <Pencil size={12} />
-                                                            </button>
+                                                            <div className="flex items-center gap-1">
+                                                                <button
+                                                                    onClick={() => setEditingStop({ stop_id: stop.id, name: stop.name, fee: stop.fee })}
+                                                                    className="opacity-0 group-hover/row:opacity-100 p-1.5 text-slate-400 hover:text-orange-500 rounded-lg hover:bg-orange-50 transition-all"
+                                                                    title="Edit Stop"
+                                                                >
+                                                                    <Pencil size={12} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteStop(stop, route.route_name)}
+                                                                    className="opacity-0 group-hover/row:opacity-100 p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all"
+                                                                    title="Delete Stop"
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </>
                                                 )}

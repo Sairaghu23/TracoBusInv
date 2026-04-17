@@ -62,3 +62,16 @@ export const updateStop = async (stopId, stopName, fee) => {
         client.release();
     }
 };
+
+export const deleteStoppingById = async (stopId) => {
+    try {
+        const result = await pool.query(
+            'DELETE FROM stoppings WHERE stop_id = $1 RETURNING *',
+            [stopId]
+        );
+        return result.rows[0];
+    } catch (error) {
+        console.error("Error deleting stop:", error);
+        throw error;
+    }
+};
