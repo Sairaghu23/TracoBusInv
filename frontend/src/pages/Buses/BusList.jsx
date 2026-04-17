@@ -358,6 +358,7 @@ export default function BusList() {
                                     type="date"
                                     name="purchase_date"
                                     className="form-input"
+                                    max={new Date().toISOString().split("T")[0]}
                                     value={newBusData.purchase_date}
                                     onChange={handleInputChange}
                                 />

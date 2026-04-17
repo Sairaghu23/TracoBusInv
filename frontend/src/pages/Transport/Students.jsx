@@ -679,32 +679,23 @@ export default function Students() {
                                 </td>
                                 <td className="pr-8 text-right">
                                     <div className="flex items-center justify-end gap-2">
-                                        {!student.amount_paid && (
-                                            <button 
-                                                onClick={() => {
-                                                    setSelectedStudent(student);
-                                                    setPaymentForm({
-                                                        route_id: '',
-                                                        stop_id: student.stop_id || '',
-                                                        amount_paid: '',
-                                                        payment_mode: 'Online',
-                                                        payment_date: new Date().toISOString().split('T')[0],
-                                                        concession: 0
-                                                    });
-                                                    setPaymentModal(true);
-                                                }}
-                                                className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white transition-all flex items-center justify-center"
-                                                title="Record Payment"
-                                            >
-                                                <Plus size={18} />
-                                            </button>
-                                        )}
                                         <button 
-                                            onClick={() => handleHistoryClick(student)}
-                                            className="w-10 h-10 rounded-xl bg-slate-50 text-navy hover:bg-navy-light transition-all flex items-center justify-center"
-                                            title="Payment History"
+                                            onClick={() => {
+                                                setSelectedStudent(student);
+                                                setPaymentForm({
+                                                    route_id: '',
+                                                    stop_id: student.stop_id || '',
+                                                    amount_paid: '',
+                                                    payment_mode: 'Online',
+                                                    payment_date: new Date().toISOString().split('T')[0],
+                                                    concession: 0
+                                                });
+                                                setPaymentModal(true);
+                                            }}
+                                            className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white transition-all flex items-center justify-center"
+                                            title="Record Payment"
                                         >
-                                            <Clock size={18} />
+                                            <Plus size={18} />
                                         </button>
                                         <button 
                                             onClick={() => handleEditClick(student)}
