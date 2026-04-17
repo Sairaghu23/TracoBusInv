@@ -20,8 +20,11 @@ export default function BusSpares() {
         usage_date: new Date().toISOString().split('T')[0],
         mechanic: '',
         amount: '',
-        quantity: 1
+        quantity: 1,
+        old_reading: '',
+        new_reading: ''
     });
+    const [lastOdometer, setLastOdometer] = useState(0);
 
     // Fetch data when date changes
     const checkReadingStatus = async (selectedDate) => {
@@ -60,7 +63,14 @@ export default function BusSpares() {
             // Fetch Usage History
             const usageRes = await fetch(`/api/buses/${rc_plate_number}/spares`);
             const usageResult = await usageRes.json();
-            if (usageResult.status) setSpares(usageResult.data);
+            if (usageResult.status) {
+                setSpares(usageResult.data);
+                if (usageResult.data.length > 0) {
+                    const last = usageResult.data[0].new_reading || 0;
+                    setLastOdometer(last);
+                    setUsageData(prev => ({ ...prev, old_reading: last }));
+                }
+            }
 
             // Fetch Available Stocks (for selection)
             const stocksRes = await fetch('/api/spares/stocks');
@@ -79,6 +89,14 @@ export default function BusSpares() {
     }, [rc_plate_number]);
 
     const handleReplacementSubmit = async () => {
+        if (usageData.old_reading !== '' && parseInt(usageData.old_reading) < lastOdometer) {
+            alert(`Opening odometer (${usageData.old_reading} km) cannot be less than the last recorded reading (${lastOdometer} km).`);
+            return;
+        }
+        if (usageData.new_reading !== '' && parseInt(usageData.new_reading) <= parseInt(usageData.old_reading)) {
+            alert('Closing odometer must be greater than the opening reading.');
+            return;
+        }
         try {
             const res = await fetch(`/api/buses/${rc_plate_number}/spares`, {
                 method: 'POST',
@@ -89,13 +107,16 @@ export default function BusSpares() {
             if (result.status) {
                 alert("Replacement logged and stock deducted!");
                 setIsAddModalOpen(false);
+                const nextOdo = result.data?.new_reading || lastOdometer;
                 setUsageData({
                     spare_id: '',
                     product_code: '',
                     usage_date: new Date().toISOString().split('T')[0],
                     mechanic: '',
                     amount: '',
-                    quantity: 1
+                    quantity: 1,
+                    old_reading: nextOdo,
+                    new_reading: ''
                 });
                 fetchData();
             } else {
@@ -168,7 +189,8 @@ export default function BusSpares() {
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Product Code</th>
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Units</th>
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Mechanic</th>
-                            <th className="py-4 pr-8 text-right uppercase tracking-widest text-[10px] font-black">Cost (₹)</th>
+                            <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Cost (₹)</th>
+                            <th className="py-4 pr-8 text-right uppercase tracking-widest text-[10px] font-black">Logged At</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -212,11 +234,16 @@ export default function BusSpares() {
                                 <td className="py-4 pr-8 text-right font-black text-navy text-sm whitespace-nowrap">
                                     ₹{parseFloat(record.amount || 0).toLocaleString()}
                                 </td>
+                                <td className="py-4 pr-8 text-right text-xs text-slate-400 font-mono whitespace-nowrap">
+                                    {record.created_at
+                                        ? new Date(record.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                        : '—'}
+                                </td>
                             </tr>
                         ))}
                         {spares.length === 0 && (
                             <tr>
-                                <td colSpan="9" className="py-20 text-center">
+                                <td colSpan="10" className="py-20 text-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <Settings size={48} className="text-slate-100" />
                                         <p className="text-slate-400 font-medium italic">No replacement records found for this vehicle.</p>
@@ -262,13 +289,40 @@ export default function BusSpares() {
                                     <p className="text-red-500 text-xs mt-2 font-bold animate-in fade-in">⚠️ INSUFFICIENT STOCK! Re-enter a smaller amount or restock inventory.</p>
                                 )}
 
-                                <div className="space-y-2">
+                                <div className="space-y-2 mt-4">
                                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Product Code</label>
                                     <input
                                         type="text"
                                         className="form-input"
                                         value={usageData.product_code}
                                         onChange={(e) => setUsageData({ ...usageData, product_code: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Odometer Readings */}
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Opening ODO (km)
+                                        <span className="ml-2 text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold">LOCKED</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        readOnly
+                                        className="form-input bg-slate-100 font-mono cursor-not-allowed text-slate-500"
+                                        value={usageData.old_reading}
+                                        placeholder="Auto-filled"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1 italic">Pre-filled from last spare record.</p>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Closing ODO (km)</label>
+                                    <input
+                                        type="number"
+                                        className="form-input font-mono"
+                                        placeholder="Current reading"
+                                        value={usageData.new_reading}
+                                        onChange={(e) => setUsageData({ ...usageData, new_reading: e.target.value })}
                                     />
                                 </div>
                             </div>

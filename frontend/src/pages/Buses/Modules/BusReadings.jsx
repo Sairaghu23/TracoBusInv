@@ -159,7 +159,8 @@ export default function BusReadings() {
                             <th className="py-4">Trip Period</th>
                             <th>Start Odometer</th>
                             <th>End Odometer</th>
-                            <th className="text-right">Net Distance</th>
+                            <th>Net Distance</th>
+                            <th className="text-right">Logged At</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -177,9 +178,16 @@ export default function BusReadings() {
                                     </td>
                                     <td className="text-slate-500 font-mono">{record.old_reading.toLocaleString()} km</td>
                                     <td className="text-slate-500 font-mono">{record.new_reading.toLocaleString()} km</td>
-                                    <td className="text-right">
+                                    <td>
                                         <span className="inline-block px-4 py-1.5 rounded-lg font-black text-purple-700 bg-purple-50 border border-purple-100">
                                             {distance.toLocaleString()} km
+                                        </span>
+                                    </td>
+                                    <td className="text-right">
+                                        <span className="text-xs text-slate-400 font-mono">
+                                            {record.created_at
+                                                ? new Date(record.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                                : '—'}
                                         </span>
                                     </td>
                                 </tr>
@@ -187,7 +195,7 @@ export default function BusReadings() {
                         })}
                         {readings.length === 0 && (
                             <tr>
-                                <td colSpan="4" className="py-20 text-center">
+                                <td colSpan="5" className="py-20 text-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <Gauge size={48} className="text-slate-200" />
                                         <p className="text-slate-400 font-medium">No trip records found for this vehicle.</p>
@@ -241,17 +249,20 @@ export default function BusReadings() {
 
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Opening Reading</label>
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Opening Reading
+                                        <span className="ml-2 text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold">AUTO-FILLED · LOCKED</span>
+                                    </label>
                                     <div className="relative">
                                         <input
                                             type="number"
                                             name="old_reading"
                                             value={newReadingData.old_reading}
-                                            onChange={handleInputChange}
-                                            className="form-input bg-slate-50 border-slate-200 pr-10 font-mono"
+                                            readOnly
+                                            className="form-input bg-slate-100 border-slate-200 pr-10 font-mono cursor-not-allowed text-slate-500"
                                         />
                                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">km</span>
                                     </div>
+                                    <p className="text-[10px] text-slate-400 italic">Auto-filled from the last recorded trip closing reading.</p>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Closing Reading</label>

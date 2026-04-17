@@ -96,7 +96,8 @@ export default function BusDiesel() {
                             <th className="uppercase tracking-widest text-[10px] font-black">Quantity (L)</th>
                             <th className="uppercase tracking-widest text-[10px] font-black">Rate (₹/L)</th>
                             <th className="uppercase tracking-widest text-[10px] font-black">Amount (₹)</th>
-                            <th className="text-right pr-8 uppercase tracking-widest text-[10px] font-black">Efficiency</th>
+                            <th className="uppercase tracking-widest text-[10px] font-black">Efficiency</th>
+                            <th className="text-right pr-8 uppercase tracking-widest text-[10px] font-black">Logged At</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -120,11 +121,16 @@ export default function BusDiesel() {
                                         {parseFloat(record.kmpl).toFixed(2)} KMPL
                                     </div>
                                 </td>
+                                <td className="text-right pr-8 text-xs text-slate-400 font-mono whitespace-nowrap">
+                                    {record.created_at
+                                        ? new Date(record.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                        : '—'}
+                                </td>
                             </tr>
                         ))}
                         {busDiesel.length === 0 && (
                             <tr>
-                                <td colSpan="6" className="text-center py-24">
+                                <td colSpan="7" className="text-center py-24">
                                     <div className="flex flex-col items-center gap-3 text-slate-400">
                                         <Fuel size={48} className="opacity-10" />
                                         <p className="font-medium italic">No refueling records found for this vehicle.</p>

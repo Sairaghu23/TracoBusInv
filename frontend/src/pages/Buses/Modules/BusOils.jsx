@@ -21,8 +21,11 @@ export default function BusOils() {
         oil_id: '',
         log_date: new Date().toISOString().split('T')[0],
         quantity: '',
-        amount: ''
+        amount: '',
+        old_reading: '',
+        new_reading: ''
     });
+    const [lastOdometer, setLastOdometer] = useState(0);
 
     const checkReadingStatus = async (selectedDate) => {
         setReadingErrorMsg('');
@@ -62,7 +65,15 @@ export default function BusOils() {
             const typesResult = await typesRes.json();
 
             if (busResult.status) setBus(busResult.data);
-            if (logsResult.status) setOilLogs(logsResult.data);
+            if (logsResult.status) {
+                setOilLogs(logsResult.data);
+                // Pre-fill old_reading from last recorded new_reading
+                if (logsResult.data.length > 0) {
+                    const last = logsResult.data[0].new_reading || 0;
+                    setLastOdometer(last);
+                    setLogData(prev => ({ ...prev, old_reading: last }));
+                }
+            }
             if (typesResult.status) setOilTypes(typesResult.data);
         } catch (err) {
             console.error('Error fetching oil data:', err);
@@ -80,6 +91,14 @@ export default function BusOils() {
             setError('Please fill in all fields.');
             return;
         }
+        if (logData.old_reading !== '' && parseInt(logData.old_reading) < lastOdometer) {
+            setError(`Opening odometer (${logData.old_reading} km) cannot be less than the last recorded reading (${lastOdometer} km).`);
+            return;
+        }
+        if (logData.new_reading !== '' && parseInt(logData.new_reading) <= parseInt(logData.old_reading)) {
+            setError('Closing odometer must be greater than the opening reading.');
+            return;
+        }
         setSaving(true);
         setError(null);
         try {
@@ -92,7 +111,7 @@ export default function BusOils() {
             if (result.status) {
                 setSuccess('Oil service logged successfully!');
                 setIsAddModalOpen(false);
-                setLogData({ oil_id: '', log_date: new Date().toISOString().split('T')[0], quantity: '', amount: '' });
+                setLogData({ oil_id: '', log_date: new Date().toISOString().split('T')[0], quantity: '', amount: '', old_reading: result.data?.new_reading || lastOdometer, new_reading: '' });
                 fetchData();
                 setTimeout(() => setSuccess(null), 3000);
             } else {
@@ -179,7 +198,8 @@ export default function BusOils() {
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Distance</th>
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Oil / Fluid Type</th>
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Quantity</th>
-                            <th className="py-4 pr-8 text-right uppercase tracking-widest text-[10px] font-black">Amount (₹)</th>
+                            <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Amount (₹)</th>
+                            <th className="py-4 pr-8 text-right uppercase tracking-widest text-[10px] font-black">Logged At</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -212,11 +232,16 @@ export default function BusOils() {
                                 <td className="py-4 pr-8 text-right font-black text-navy text-sm whitespace-nowrap">
                                     ₹{parseFloat(record.amount || 0).toLocaleString()}
                                 </td>
+                                <td className="py-4 pr-8 text-right text-xs text-slate-400 font-mono whitespace-nowrap">
+                                    {record.created_at
+                                        ? new Date(record.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                        : '—'}
+                                </td>
                             </tr>
                         ))}
                         {oilLogs.length === 0 && (
                             <tr>
-                                <td colSpan="7" className="py-20 text-center">
+                                <td colSpan="8" className="py-20 text-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <Droplet size={48} className="text-slate-100" />
                                         <p className="text-slate-400 font-medium italic">No oil service records found for this vehicle.</p>
@@ -255,6 +280,33 @@ export default function BusOils() {
                                     ⚠️ {readingErrorMsg}
                                 </div>
                             )}
+
+                            {/* Odometer Readings */}
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Opening ODO (km)
+                                        <span className="ml-2 text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold">LOCKED</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        readOnly
+                                        className="form-input bg-slate-100 font-mono cursor-not-allowed text-slate-500"
+                                        value={logData.old_reading}
+                                        placeholder="Auto-filled"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1 italic">Pre-filled from last oil record.</p>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Closing ODO (km)</label>
+                                    <input
+                                        type="number"
+                                        className="form-input font-mono"
+                                        placeholder="Current reading"
+                                        value={logData.new_reading}
+                                        onChange={(e) => setLogData({ ...logData, new_reading: e.target.value })}
+                                    />
+                                </div>
+                            </div>
 
                             {/* Oil Type Dropdown */}
                             <div>
