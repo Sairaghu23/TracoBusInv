@@ -25,6 +25,20 @@ export const getBusByRcPlate = async (rcPlate) => {
     return result.rows[0];
 };
 
+// Check for duplicates by bus_no or engine_number (excluding current rc_plate_number)
+export const getDuplicateBus = async (bus_no, engine_number, current_rc_plate_number = null) => {
+    let query = 'SELECT * FROM buses WHERE (bus_no = $1 OR engine_number = $2)';
+    let params = [sanitizeEmpty(bus_no), engine_number?.trim().toUpperCase()];
+
+    if (current_rc_plate_number) {
+        query += ' AND rc_plate_number != $3';
+        params.push(current_rc_plate_number.trim().toUpperCase());
+    }
+
+    const result = await pool.query(query, params);
+    return result.rows[0];
+};
+
 // Update an existing bus
 export const updateBus = async (rc_plate_number, busData) => {
     const { seating_capacity, engine_number, route_id, purchase_date, status, bus_no } = busData;

@@ -1,4 +1,4 @@
-import { getAllBuses, getBusByRcPlate, createBus, updateBus, deleteBus } from "../models/busModel.js";
+import { getAllBuses, getBusByRcPlate, getDuplicateBus, createBus, updateBus, deleteBus } from "../models/busModel.js";
 
 const handleResponse = (res, statusCode, status, message, data = null) => {
     res.status(statusCode).json({
@@ -35,15 +35,32 @@ export const getBusByRcPlateController = async (req, res, next) => {
 // Controller to add a new bus
 export const addBusController = async (req, res, next) => {
     try {
-        const { rc_plate_number, capacity, seating_capacity, engine_no, engine_number, bus_no } = req.body;
+        const { rc_plate_number, capacity, seating_capacity, engine_no, engine_number, bus_no, purchase_date } = req.body;
 
-        // 1. Check if bus already exists
+        if (purchase_date && new Date(purchase_date) > new Date()) {
+             return handleResponse(res, 400, false, "Purchase date cannot be in the future");
+        }
+
+        // 1. Check if bus already exists by RC Plate
         const existingBus = await getBusByRcPlate(rc_plate_number);
         if (existingBus) {
             return handleResponse(res, 400, false, "Bus with this RC Plate Number already exists");
         }
 
-        // 2. Map fields and store
+        // 2. Check for duplicate bus_no or engine_number
+        if (bus_no || engine_number || engine_no) {
+            const duplicate = await getDuplicateBus(bus_no, engine_number || engine_no);
+            if (duplicate) {
+                 if (String(duplicate.bus_no) === String(bus_no)) {
+                      return handleResponse(res, 400, false, `Bus Number ${bus_no} is already assigned to RC Plate ${duplicate.rc_plate_number}`);
+                 }
+                 if ((engine_number || engine_no) && duplicate.engine_number === (engine_number || engine_no).trim().toUpperCase()) {
+                      return handleResponse(res, 400, false, `Engine Number ${engine_number || engine_no} is already registered to RC Plate ${duplicate.rc_plate_number}`);
+                 }
+            }
+        }
+
+        // 3. Map fields and store
         const busToCreate = {
             ...req.body,
             seating_capacity: seating_capacity || capacity, // Support both during transition
@@ -63,7 +80,23 @@ export const addBusController = async (req, res, next) => {
 export const updateBusController = async (req, res, next) => {
     try {
         const { rc_plate_number } = req.params;
-        const { capacity, seating_capacity, engine_no, engine_number, bus_no } = req.body;
+        const { capacity, seating_capacity, engine_no, engine_number, bus_no, purchase_date } = req.body;
+
+        if (purchase_date && new Date(purchase_date) > new Date()) {
+             return handleResponse(res, 400, false, "Purchase date cannot be in the future");
+        }
+
+        if (bus_no || engine_number || engine_no) {
+            const duplicate = await getDuplicateBus(bus_no, engine_number || engine_no, rc_plate_number);
+            if (duplicate) {
+                 if (String(duplicate.bus_no) === String(bus_no)) {
+                      return handleResponse(res, 400, false, `Bus Number ${bus_no} is already assigned to RC Plate ${duplicate.rc_plate_number}`);
+                 }
+                 if ((engine_number || engine_no) && duplicate.engine_number === (engine_number || engine_no).trim().toUpperCase()) {
+                      return handleResponse(res, 400, false, `Engine Number ${engine_number || engine_no} is already registered to RC Plate ${duplicate.rc_plate_number}`);
+                 }
+            }
+        }
 
         const busData = {
             ...req.body,
