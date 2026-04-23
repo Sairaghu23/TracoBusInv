@@ -4,7 +4,7 @@ import { getBusReadingsController, addBusReadingController, getLatestReadingCont
 import { getBusSparesController, recordUsageController } from '../controllers/spareController.js';
 import { getBusDieselHistoryController, addSingleBusDieselController } from '../controllers/dieselController.js';
 import { getBusOilLogsController, recordOilLogController } from '../controllers/oilController.js';
-import { getBusDocumentsController } from '../controllers/documentController.js';
+import { getBusDocumentsController, uploadBusDocumentController } from '../controllers/documentController.js';
 
 const router = express.Router();
 
@@ -29,6 +29,8 @@ router.post('/:rc_plate_number/diesel', addSingleBusDieselController);
 router.get('/:rc_plate_number/oils', getBusOilLogsController);
 router.post('/:rc_plate_number/oils', recordOilLogController);
 
+router.post('/documents', uploadBusDocumentController);
 router.get('/:id/documents', getBusDocumentsController);
+router.post('/:id/documents', uploadBusDocumentController);
 
 export default router;
