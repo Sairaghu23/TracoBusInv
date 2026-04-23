@@ -139,8 +139,7 @@ export const dieselModel = {
 
     // 8. Single Diesel Log for a specific bus
     addSingleDieselLog: async (logData) => {
-        const { rc_plate_number, liters, rate, refueling_date, KMPL, total_amount, old_reading, new_reading } = logData;
-        const KMPLVal = parseFloat(KMPL) || (new_reading && liters ? (new_reading - old_reading) / liters : 0);
+        const { rc_plate_number, liters, rate, refueling_date, KMPL, total_amount } = logData;
         
         const client = await pool.connect();
         try {
@@ -160,26 +159,14 @@ export const dieselModel = {
             `, [refueling_date, rate]);
             const rate_id = rateQuery.rows[0].rate_id;
 
-            // Process Odometer Reading: Check if one exists for the date, otherwise create one
-            let reading_id;
-            let finalNewReading = new_reading;
-            if (new_reading && new_reading > old_reading) {
-                const existingReadingQuery = await client.query('SELECT reading_id, new_reading FROM bus_readings WHERE bus_id = $1 AND end_date::DATE = $2::DATE', [bus_id, refueling_date]);
-                if (existingReadingQuery.rows.length > 0) {
-                    reading_id = existingReadingQuery.rows[0].reading_id;
-                    // Optionally update the existing reading? Just use it.
-                } else {
-                    const distance = parseFloat(new_reading) - parseFloat(old_reading);
-                    const insertReadingQuery = await client.query(`
-                        INSERT INTO bus_readings (bus_id, start_date, end_date, old_reading, new_reading, distance)
-                        VALUES ($1, $2, $3, $4, $5, $6)
-                        RETURNING reading_id;
-                    `, [bus_id, refueling_date, refueling_date, old_reading, new_reading, distance]);
-                    reading_id = insertReadingQuery.rows[0].reading_id;
-                }
-            } else {
-                throw new Error("Invalid odometer readings.");
+            // Process Odometer Reading: Check if one exists for the date, otherwise throw error
+            const existingReadingQuery = await client.query('SELECT reading_id, distance FROM bus_readings WHERE bus_id = $1 AND end_date::DATE = $2::DATE', [bus_id, refueling_date]);
+            if (existingReadingQuery.rows.length === 0) {
+                throw new Error("No odometer reading recorded for this date. Please log odometer reading first.");
             }
+            const reading_id = existingReadingQuery.rows[0].reading_id;
+            const distance = existingReadingQuery.rows[0].distance;
+            const KMPLVal = parseFloat(KMPL) || (liters && distance ? distance / liters : 0);
 
             // Insert or Update diesel log
             const dieselQuery = await client.query(`

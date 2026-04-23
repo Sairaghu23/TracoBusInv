@@ -89,7 +89,7 @@ export default function BusDocuments() {
             payload.append('expiry_date', formData.expiry_date);
             payload.append('document', formData.file);
 
-            const res = await fetch('/api/buses/documents', {
+            const res = await fetch('/api/documents/upload', {
                 method: 'POST',
                 body: payload // Note: Do NOT set Content-Type header manually when sending FormData
             });

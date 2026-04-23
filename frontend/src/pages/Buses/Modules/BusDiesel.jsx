@@ -58,14 +58,6 @@ export default function BusDiesel() {
             setError('Please fill in all fuel fields.');
             return;
         }
-        if (logData.old_reading !== '' && parseInt(logData.old_reading) < lastOdometer) {
-            setError(`Opening odometer (${logData.old_reading} km) cannot be less than the last recorded reading (${lastOdometer} km).`);
-            return;
-        }
-        if (logData.new_reading !== '' && parseInt(logData.new_reading) <= parseInt(logData.old_reading)) {
-            setError('Closing odometer must be greater than the opening reading.');
-            return;
-        }
         
         setSaving(true);
         setError(null);
@@ -81,9 +73,7 @@ export default function BusDiesel() {
                 setIsAddModalOpen(false);
                 setLogData({
                     refueling_date: new Date().toISOString().split('T')[0],
-                    liters: '', rate: '',
-                    old_reading: result.data?.new_reading || lastOdometer,
-                    new_reading: ''
+                    liters: '', rate: ''
                 });
                 fetchData();
                 setTimeout(() => setSuccess(null), 3000);
@@ -246,31 +236,7 @@ export default function BusDiesel() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center justify-between">
-                                    Opening Odometer
-                                    <span className="text-[9px] bg-slate-200 px-2 py-0.5 rounded-md text-slate-500">Auto-filled</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    value={logData.old_reading}
-                                    readOnly
-                                    className="w-full bg-slate-100 border-none cursor-not-allowed rounded-xl px-4 py-3 text-lg font-black text-slate-500 font-mono"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Closing Odometer (New)</label>
-                                <input
-                                    type="number"
-                                    placeholder="Enter closing km..."
-                                    value={logData.new_reading}
-                                    onChange={(e) => setLogData({ ...logData, new_reading: e.target.value })}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-lg font-black text-navy focus:outline-none focus:border-orange-500 font-mono transition-colors"
-                                />
-                            </div>
-                        </div>
+                            {/* Removed Odometer Readings Grid */}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Quantity */}

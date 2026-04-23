@@ -89,14 +89,6 @@ export default function BusSpares() {
     }, [rc_plate_number]);
 
     const handleReplacementSubmit = async () => {
-        if (usageData.old_reading !== '' && parseInt(usageData.old_reading) < lastOdometer) {
-            alert(`Opening odometer (${usageData.old_reading} km) cannot be less than the last recorded reading (${lastOdometer} km).`);
-            return;
-        }
-        if (usageData.new_reading !== '' && parseInt(usageData.new_reading) <= parseInt(usageData.old_reading)) {
-            alert('Closing odometer must be greater than the opening reading.');
-            return;
-        }
         try {
             const res = await fetch(`/api/buses/${rc_plate_number}/spares`, {
                 method: 'POST',
@@ -114,9 +106,7 @@ export default function BusSpares() {
                     usage_date: new Date().toISOString().split('T')[0],
                     mechanic: '',
                     amount: '',
-                    quantity: 1,
-                    old_reading: nextOdo,
-                    new_reading: ''
+                    quantity: 1
                 });
                 fetchData();
             } else {
@@ -300,32 +290,7 @@ export default function BusSpares() {
                                 </div>
                             </div>
 
-                            {/* Odometer Readings */}
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Opening ODO (km)
-                                        <span className="ml-2 text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold">LOCKED</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        readOnly
-                                        className="form-input bg-slate-100 font-mono cursor-not-allowed text-slate-500"
-                                        value={usageData.old_reading}
-                                        placeholder="Auto-filled"
-                                    />
-                                    <p className="text-[10px] text-slate-400 mt-1 italic">Pre-filled from last spare record.</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Closing ODO (km)</label>
-                                    <input
-                                        type="number"
-                                        className="form-input font-mono"
-                                        placeholder="Current reading"
-                                        value={usageData.new_reading}
-                                        onChange={(e) => setUsageData({ ...usageData, new_reading: e.target.value })}
-                                    />
-                                </div>
-                            </div>
+                            {/* Removed Odometer Readings Grid */}
 
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
