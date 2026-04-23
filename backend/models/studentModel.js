@@ -22,7 +22,7 @@ export const getStudentsBySemester = async (type, yearOffset, semester) => {
             rm.route_id as route_id,
             stop.stop_fee as total_fee
         FROM ${studentTable} s
-        JOIN branch b ON s.branch_id = b.brnach_id
+        JOIN branches b ON s.branch_id = b.branch_id
         LEFT JOIN ${historyTable} h ON s.s_id = h.s_id AND h.semester = $2
         LEFT JOIN route_stop_map rm ON s.boarding = rm.map_id
         LEFT JOIN stoppings stop ON rm.stop_id = stop.stop_id
@@ -104,7 +104,7 @@ export const addStudent = async (type, studentData) => {
 };
 
 export const getAllBranches = async () => {
-    const result = await pool.query("SELECT brnach_id as branch_id, branch_name FROM branch ORDER BY branch_name");
+    const result = await pool.query("SELECT branch_id, branch_name FROM branches ORDER BY branch_name");
     return result.rows;
 };
 
@@ -154,7 +154,7 @@ export const getArchiveStudentsByBatch = async (type, batchStart, batchEnd) => {
             SUM(COALESCE(h.amount_paid, 0)) as total_paid,
             SUM(CASE WHEN h.amount_paid IS NULL THEN 1 ELSE 0 END) as pending_semesters
         FROM ${studentTable} s
-        JOIN branch b ON s.branch_id = b.brnach_id
+        JOIN branches b ON s.branch_id = b.branch_id
         LEFT JOIN ${historyTable} h ON s.s_id = h.s_id
         WHERE s.batch_start_year = $1 AND s.batch_end_year = $2
         GROUP BY s.s_id, s.roll_id, s.s_name, b.branch_name
