@@ -149,7 +149,7 @@ export const getArchiveStudentsByBatch = async (type, batchStart, batchEnd) => {
 
     const query = `
         SELECT 
-            s.s_id, s.roll_id, s.s_name, 
+            s.s_id, s.roll_id, s.s_name, s.branch_id,
             b.branch_name,
             SUM(COALESCE(h.amount_paid, 0)) as total_paid,
             SUM(CASE WHEN h.amount_paid IS NULL THEN 1 ELSE 0 END) as pending_semesters

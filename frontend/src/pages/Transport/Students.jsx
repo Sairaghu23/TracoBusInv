@@ -56,6 +56,8 @@ export default function Students() {
         concession: 0
     });
 
+    const [branchFilter, setBranchFilter] = useState('all');
+
     useEffect(() => {
         const fetchCounts = async () => {
             try {
@@ -222,7 +224,6 @@ export default function Students() {
                     s_name: '',
                     branch_id: '',
                     admission_year: new Date().getFullYear(),
-                    batch_start_year: new Date().getFullYear(),
                     batch_start_year: new Date().getFullYear(),
                     batch_end_year: new Date().getFullYear() + 4,
                     route_id: '',
@@ -528,7 +529,8 @@ export default function Students() {
             : s.s_name?.toLowerCase().includes(searchQuery.toLowerCase());
         const isPaid = parseFloat(s.amount_paid || 0) > 0;
         const matchPayment = paymentFilter === 'all' ? true : paymentFilter === 'paid' ? isPaid : !isPaid;
-        return matchSearch && matchPayment;
+        const matchBranch = branchFilter === 'all' ? true : s.branch_id?.toString() === branchFilter.toString();
+        return matchSearch && matchPayment && matchBranch;
     });
 
     return (
@@ -547,7 +549,7 @@ export default function Students() {
                             <span className={`w-3 h-3 rounded-full ${yearData?.color || 'bg-slate-400'}`} />
                             <h2 className="text-2xl font-black text-navy italic">{yearData?.name} Registry</h2>
                         </div>
-                        <p className="text-slate-500 text-sm font-medium">Session 2024-25 • Financial Oversight</p>
+                        <p className="text-slate-500 text-sm font-medium">Session 2024-25 • {branches.find(b => b.branch_id.toString() === branchFilter.toString())?.branch_name || 'All Disciplines'}</p>
                     </div>
                 </div>
 
@@ -567,7 +569,6 @@ export default function Students() {
                                 s_name: '',
                                 branch_id: '',
                                 admission_year: new Date().getFullYear(),
-                                batch_start_year: new Date().getFullYear(),
                                 batch_start_year: new Date().getFullYear(),
                                 batch_end_year: new Date().getFullYear() + 4,
                                 route_id: '',
@@ -618,9 +619,24 @@ export default function Students() {
                         onChange={(e) => setPaymentFilter(e.target.value)}
                         className="bg-transparent border-none text-sm font-black text-navy focus:outline-none cursor-pointer"
                     >
-                        <option value="all">All Students</option>
+                        <option value="all">All Status</option>
                         <option value="paid">Paid Only</option>
                         <option value="unpaid">Unpaid Only</option>
+                    </select>
+                </div>
+
+                {/* Branch Filter */}
+                <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 focus-within:border-orange-500 transition-all">
+                    <Filter size={18} className="text-slate-400" />
+                    <select
+                        value={branchFilter}
+                        onChange={(e) => setBranchFilter(e.target.value)}
+                        className="bg-transparent border-none text-sm font-black text-navy focus:outline-none cursor-pointer pr-4"
+                    >
+                        <option value="all">All Branches</option>
+                        {branches.map(b => (
+                            <option key={b.branch_id} value={b.branch_id}>{b.branch_name}</option>
+                        ))}
                     </select>
                 </div>
 
