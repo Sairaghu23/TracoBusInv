@@ -95,6 +95,7 @@ export default function BusDiesel() {
     if (loading) return <div className="p-20 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto"></div></div>;
 
     return (
+        <>
         <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
             <button
                 onClick={() => navigate(`/buses/${id}`)}
@@ -287,6 +288,6 @@ export default function BusDiesel() {
                 <span className="font-bold">{success}</span>
             </div>
         )}
-    </div>
+        </>
     );
 }
