@@ -34,9 +34,10 @@ export default function BusDiesel() {
                 const dieselRes = await fetch(`/api/buses/${id}/diesel`);
                 const dieselResult = await dieselRes.json();
                 if (dieselResult.status) {
-                    setBusDiesel(dieselResult.data);
-                    if (dieselResult.data.length > 0) {
-                        const last = dieselResult.data[0].new_reading || 0;
+                    const logs = dieselResult.data || [];
+                    setBusDiesel(logs);
+                    if (logs.length > 0) {
+                        const last = logs[0].new_reading || 0;
                         setLastOdometer(last);
                         setLogData(prev => ({ ...prev, old_reading: last }));
                     }
@@ -87,9 +88,9 @@ export default function BusDiesel() {
         }
     };
 
-    const totalExpenditure = busDiesel.reduce((sum, record) => sum + (parseFloat(record.total_amount) || 0), 0);
-    const avgKMPL = busDiesel.length > 0
-        ? (busDiesel.reduce((sum, r) => sum + parseFloat(r.kmpl), 0) / busDiesel.length)
+    const totalExpenditure = (busDiesel || []).reduce((sum, record) => sum + (parseFloat(record.total_amount) || 0), 0);
+    const avgKMPL = (busDiesel || []).length > 0
+        ? ((busDiesel || []).reduce((sum, r) => sum + (parseFloat(r.kmpl) || 0), 0) / (busDiesel || []).length)
         : 0;
 
     if (loading) return <div className="p-20 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto"></div></div>;

@@ -135,6 +135,7 @@ export const dieselModel = {
             ORDER BY d.created_at DESC;
         `;
         const result = await pool.query(query, [rc_plate_number.trim().toUpperCase()]);
+        return result.rows;
     },
 
     // 8. Single Diesel Log for a specific bus
