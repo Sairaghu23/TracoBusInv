@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, FileText, AlertCircle, X, Download, FileCheck2, FileWarning } from 'lucide-react';
+import { ChevronLeft, Plus, FileText, AlertCircle, X, Download, FileCheck2, FileWarning, Trash2 } from 'lucide-react';
+
+const API_BASE = 'https://tracobusinvcicd.duckdns.org';
 
 export default function BusDocuments() {
     const { id } = useParams(); // bus_id
@@ -28,9 +30,9 @@ export default function BusDocuments() {
         setLoading(true);
         try {
             const [busRes, docsRes, typesRes] = await Promise.all([
-                fetch(`/api/buses/${id}`),
-                fetch(`/api/buses/${id}/documents`),
-                fetch('/api/document-types')
+                fetch(`${API_BASE}/api/buses/${id}`),
+                fetch(`${API_BASE}/api/buses/${id}/documents`),
+                fetch(`${API_BASE}/api/documents/types`)
             ]);
             
             const busResult = await busRes.json();
@@ -89,7 +91,7 @@ export default function BusDocuments() {
             payload.append('expiry_date', formData.expiry_date);
             payload.append('document', formData.file);
 
-            const res = await fetch('/api/documents/upload', {
+            const res = await fetch(`${API_BASE}/api/documents/upload`, {
                 method: 'POST',
                 body: payload // Note: Do NOT set Content-Type header manually when sending FormData
             });
@@ -207,7 +209,7 @@ export default function BusDocuments() {
                                         </td>
                                         <td className="py-5 pr-8 text-right">
                                             <a
-                                                href={`/${doc.file_path}`}
+                                                href={`${API_BASE}${doc.file_path}`}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white hover:bg-navy-light rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-navy/10"

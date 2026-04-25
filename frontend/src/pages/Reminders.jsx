@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { FileX, AlertTriangle, Calendar, AlertCircle, FileCheck2, Clock, Search, User, Car } from 'lucide-react';
+
+const API_BASE = 'https://tracobusinvcicd.duckdns.org';
 
 export default function Reminders() {
     const [duration, setDuration] = useState(30);
@@ -12,9 +13,9 @@ export default function Reminders() {
         setLoading(true);
         try {
             const [typesRes, matrixRes, driverRes] = await Promise.all([
-                fetch('/api/document-types'),
-                fetch('/api/documents/compliance-matrix'),
-                fetch('/api/drivers')
+                fetch(`${API_BASE}/api/document-types`),
+                fetch(`${API_BASE}/api/documents/compliance-matrix`),
+                fetch(`${API_BASE}/api/drivers`)
             ]);
             const [typesResult, matrixResult, driverResult] = await Promise.all([
                 typesRes.json(), 

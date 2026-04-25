@@ -49,11 +49,10 @@ export const recordPurchase = async (purchaseData) => {
 
 export const getUsageByBus = async (rc_plate_number) => {
     const result = await pool.query(`
-        SELECT u.*, s.spare_name, r.old_reading, r.new_reading 
+        SELECT u.*, s.spare_name
         FROM spare_usage u
         JOIN spare_stocks s ON u.spare_id = s.spare_id
         JOIN buses b ON u.bus_id = b.bus_id
-        LEFT JOIN bus_readings r ON u.bus_id = r.bus_id AND u.usage_date::DATE = r.end_date::DATE
         WHERE b.rc_plate_number = $1
         ORDER BY u.usage_date DESC
     `, [rc_plate_number.trim().toUpperCase()]);
@@ -61,7 +60,7 @@ export const getUsageByBus = async (rc_plate_number) => {
 };
 
 export const recordUsage = async (usageData) => {
-    const { rc_plate_number, spare_id, product_code, usage_date, mechanic, amount, quantity } = usageData;
+    const { rc_plate_number, spare_id, product_code, usage_date, mechanic, amount, quantity, old_reading, new_reading } = usageData;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -79,8 +78,8 @@ export const recordUsage = async (usageData) => {
 
         // 2. Record the usage mapping variable components securely over Native DB schemas
         const usageResult = await client.query(
-            'INSERT INTO spare_usage (bus_id, spare_id, usage_date, mechanic, amount, quantity, product_code) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-            [active_bus, spare_id, usage_date, mechanic?.trim().toUpperCase(), amount, quantity, product_code]
+            'INSERT INTO spare_usage (bus_id, spare_id, usage_date, mechanic, amount, quantity, product_code, old_reading, new_reading) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+            [active_bus, spare_id, usage_date, mechanic?.trim().toUpperCase(), amount, quantity, product_code, old_reading, new_reading]
         );
 
         // 3. Decrement the specific requested metric mapping inventory calculations globally

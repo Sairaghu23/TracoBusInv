@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Plus, X, Check, Route as RouteIcon, Pencil, Trash2, Users, BarChart3, GraduationCap, ChevronLeft } from 'lucide-react';
+
+const API_BASE = 'https://tracobusinvcicd.duckdns.org';
 
 export default function Routes() {
     // State for live data
@@ -10,7 +11,7 @@ export default function Routes() {
     const fetchRoutes = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/api/routes');
+            const response = await fetch(`${API_BASE}/api/routes`);
             const result = await response.json();
             if (result.status) {
                 setRoutes(result.data);
@@ -50,7 +51,7 @@ export default function Routes() {
         if (!newRouteName) return;
         setRouteError('');
         try {
-            const response = await fetch('/api/routes', {
+            const response = await fetch(`${API_BASE}/api/routes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ route_name: newRouteName })
@@ -75,7 +76,7 @@ export default function Routes() {
         e.preventDefault();
         if (!newStop.name || !newStop.routeId || !newStop.fee) return;
         try {
-            const response = await fetch('/api/routes/stops', {
+            const response = await fetch(`${API_BASE}/api/routes/stops`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -98,7 +99,7 @@ export default function Routes() {
     const handleSaveStop = async () => {
         if (!editingStop) return;
         try {
-            const res = await fetch(`/api/routes/stops/${editingStop.stop_id}`, {
+            const res = await fetch(`${API_BASE}/api/routes/stops/${editingStop.stop_id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ stop_name: editingStop.name, fee: editingStop.fee })
@@ -111,7 +112,7 @@ export default function Routes() {
     const handleSaveRoute = async () => {
         if (!editingRoute) return;
         try {
-            const res = await fetch(`/api/routes/${editingRoute.route_id}`, {
+            const res = await fetch(`${API_BASE}/api/routes/${editingRoute.route_id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ route_name: editingRoute.route_name })
@@ -127,7 +128,7 @@ export default function Routes() {
         );
         if (!confirmed) return;
         try {
-            const res = await fetch(`/api/routes/${route.route_id}`, { method: 'DELETE' });
+            const res = await fetch(`${API_BASE}/api/routes/${route.route_id}`, { method: 'DELETE' });
             const result = await res.json();
             if (result.status) {
                 fetchRoutes();
@@ -146,7 +147,7 @@ export default function Routes() {
         );
         if (!confirmed) return;
         try {
-            const res = await fetch(`/api/routes/stops/${stop.stop_id}`, { method: 'DELETE' });
+            const res = await fetch(`${API_BASE}/api/routes/stops/${stop.stop_id}`, { method: 'DELETE' });
             const result = await res.json();
             if (result.status) {
                 fetchRoutes();
@@ -164,7 +165,7 @@ export default function Routes() {
         setCurrentView('breakdown');
         setBreakdownLoading(true);
         try {
-            const response = await fetch(`/api/routes/${route.route_id}/student-breakdown`);
+            const response = await fetch(`${API_BASE}/api/routes/${route.route_id}/student-breakdown`);
             const result = await response.json();
             if (result.status) {
                 setBreakdownData(result.data);

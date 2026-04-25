@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter, LayoutGrid, List, MoreVertical, Edit2, Trash2, Bus, AlertTriangle, X, CheckCircle2, MoreHorizontal } from 'lucide-react';
+
+const API_BASE = 'https://tracobusinvcicd.duckdns.org';
 
 export default function BusList() {
     const navigate = useNavigate();
@@ -44,7 +44,7 @@ export default function BusList() {
     const fetchBuses = async () => {
         setLoadingBuses(true);
         try {
-            const response = await fetch('/api/buses');
+            const response = await fetch(`${API_BASE}/api/buses`);
             const result = await response.json();
             if (result.status) {
                 setBuses(result.data);
@@ -73,7 +73,7 @@ export default function BusList() {
     const handleDelete = async (rc_plate_number) => {
         if (window.confirm(`Are you sure you want to delete bus ${rc_plate_number}?`)) {
             try {
-                const response = await fetch(`/api/buses/${rc_plate_number}`, {
+                const response = await fetch(`${API_BASE}/api/buses/${rc_plate_number}`, {
                     method: 'DELETE'
                 });
 
@@ -105,7 +105,7 @@ export default function BusList() {
         const fetchRoutes = async () => {
             setLoadingRoutes(true);
             try {
-                const response = await fetch('/api/routes');
+                const response = await fetch(`${API_BASE}/api/routes`);
                 const result = await response.json();
                 if (result.status) {
                     setRoutes(result.data);
@@ -388,8 +388,8 @@ export default function BusList() {
                                 onClick={async () => {
                                     try {
                                         const url = isEditMode
-                                            ? `/api/buses/${newBusData.rc_plate_number}`
-                                            : '/api/buses';
+                                            ? `${API_BASE}/api/buses/${newBusData.rc_plate_number}`
+                                            : `${API_BASE}/api/buses`;
 
                                         const response = await fetch(url, {
                                             method: isEditMode ? 'PUT' : 'POST',

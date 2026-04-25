@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const API_BASE = 'https://tracobusinvcicd.duckdns.org';
 import { 
     User, Search, Plus, FileText, ChevronLeft, 
     Download, Phone, ShieldCheck, Filter, UserPlus, X, Trash2, Edit2
@@ -21,7 +22,7 @@ export default function Drivers() {
 
     const fetchDrivers = async () => {
         try {
-            const response = await fetch('/api/drivers');
+            const response = await fetch(`${API_BASE}/api/drivers`);
             const result = await response.json();
             if (result.status) setDrivers(result.data);
         } catch (error) {
@@ -34,7 +35,7 @@ export default function Drivers() {
     const handleAddDriver = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('/api/drivers', {
+            const response = await fetch(`${API_BASE}/api/drivers`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newDriver)

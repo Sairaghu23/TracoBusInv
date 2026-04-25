@@ -45,11 +45,8 @@ export default function BusOils() {
         }
     };
 
-    useEffect(() => {
-        if (logData.log_date) {
-            checkReadingStatus(logData.log_date);
-        }
-    }, [logData.log_date, rc_plate_number]);
+    // useEffect dependency on date check removed
+
 
     const fetchData = async () => {
         setLoading(true);
@@ -267,13 +264,36 @@ export default function BusOils() {
                                     <AlertCircle size={16} /> {error}
                                 </div>
                             )}
-                            {readingErrorMsg && (
-                                <div className="p-3 bg-red-50 text-red-600 text-sm font-bold border border-red-200 rounded-xl animate-pulse">
-                                    ⚠️ {readingErrorMsg}
-                                </div>
-                            )}
+                            {/* Odometer Readings Grid */}
 
-                            {/* Removed Odometer Readings Grid */}
+                            {/* Odometer Readings Grid */}
+                            <div className="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Previous ODO</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            className="form-input bg-white font-bold text-navy border-slate-200"
+                                            value={logData.old_reading}
+                                            onChange={(e) => setLogData({ ...logData, old_reading: e.target.value })}
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase">KM</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">Current ODO</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            className="form-input bg-white font-bold text-navy border-blue-200 focus:border-blue-500"
+                                            placeholder="Enter reading"
+                                            value={logData.new_reading}
+                                            onChange={(e) => setLogData({ ...logData, new_reading: e.target.value })}
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-blue-300 uppercase">KM</span>
+                                    </div>
+                                </div>
+                            </div>
 
                             {/* Oil Type Dropdown */}
                             <div>
@@ -336,8 +356,8 @@ export default function BusOils() {
                             <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 font-bold text-slate-400 hover:text-slate-600">Discard</button>
                             <button
                                 onClick={handleSubmit}
-                                disabled={saving || !logData.oil_id || !logData.quantity || !logData.amount || !readingExists}
-                                className={`btn px-10 rounded-2xl transition-all ${saving || !logData.oil_id || !logData.quantity || !logData.amount || !readingExists
+                                disabled={saving || !logData.oil_id || !logData.quantity || !logData.amount || !logData.new_reading}
+                                className={`btn px-10 rounded-2xl transition-all ${saving || !logData.oil_id || !logData.quantity || !logData.amount || !logData.new_reading
                                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
                                         : 'btn-primary shadow-xl shadow-blue-100 hover:scale-[1.02]'
                                     }`}

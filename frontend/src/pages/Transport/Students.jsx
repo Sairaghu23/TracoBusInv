@@ -1,13 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { 
-    Users, Search, Plus, FileText, ChevronLeft, 
-    Download, GraduationCap, School, BookOpen, 
-    Award, ShieldCheck, Filter, UserPlus, X, Check,
-    Clock, CreditCard, MapPin, Pencil
-} from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+
+const API_BASE = 'https://tracobusinvcicd.duckdns.org';
 
 export default function Students() {
     // 1. UI State
@@ -61,7 +54,7 @@ export default function Students() {
     useEffect(() => {
         const fetchCounts = async () => {
             try {
-                const response = await fetch('/api/students/summary/counts');
+                const response = await fetch(`${API_BASE}/api/students/summary/counts`);
                 const result = await response.json();
                 if (result.status) setCounts(result.data);
             } catch (error) {
@@ -72,7 +65,7 @@ export default function Students() {
         
         const fetchRoutes = async () => {
             try {
-                const response = await fetch('/api/routes');
+                const response = await fetch(`${API_BASE}/api/routes`);
                 const result = await response.json();
                 if (result.status) setRoutes(result.data);
             } catch (error) {
@@ -82,7 +75,7 @@ export default function Students() {
 
         const fetchBranches = async () => {
             try {
-                const response = await fetch('/api/branches');
+                const response = await fetch(`${API_BASE}/api/branches`);
                 const result = await response.json();
                 if (result.status) setBranches(result.data);
             } catch (error) {
@@ -121,7 +114,7 @@ export default function Students() {
         setLoading(true);
         try {
             const yearNum = parseInt(year);
-            const response = await fetch(`/api/students/${type}/${yearNum}/semester/${semester}`);
+            const response = await fetch(`${API_BASE}/api/students/${type}/${yearNum}/semester/${semester}`);
             const result = await response.json();
             if (result.status) setStudents(result.data);
         } catch (error) {
@@ -134,7 +127,7 @@ export default function Students() {
     const fetchArchiveBatches = async (type) => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/students/archive/${type}/batches`);
+            const response = await fetch(`${API_BASE}/api/students/archive/${type}/batches`);
             const result = await response.json();
             if (result.status) setBatches(result.data);
         } catch (error) {
@@ -147,7 +140,7 @@ export default function Students() {
     const fetchArchiveStudents = async (type, start, end) => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/students/archive/${type}/${start}/${end}`);
+            const response = await fetch(`${API_BASE}/api/students/archive/${type}/${start}/${end}`);
             const result = await response.json();
             if (result.status) setStudents(result.data);
         } catch (error) {
@@ -159,7 +152,7 @@ export default function Students() {
 
     const fetchPaymentHistory = async (type, sId) => {
         try {
-            const response = await fetch(`/api/students/${type}/history/${sId}`);
+            const response = await fetch(`${API_BASE}/api/students/${type}/history/${sId}`);
             const result = await response.json();
             if (result.status) {
                 setPaymentHistory(result.data);
@@ -180,7 +173,7 @@ export default function Students() {
         e.preventDefault();
         const type = 'btech';
         try {
-            const response = await fetch(`/api/students/${type}/payment`, {
+            const response = await fetch(`${API_BASE}/api/students/${type}/payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -204,8 +197,8 @@ export default function Students() {
         e.preventDefault();
         const type = 'btech';
         const url = isEditMode 
-            ? `/api/students/${type}/${editingStudentId}`
-            : `/api/students/${type}`;
+            ? `${API_BASE}/api/students/${type}/${editingStudentId}`
+            : `${API_BASE}/api/students/${type}`;
         const method = isEditMode ? 'PUT' : 'POST';
 
         try {
@@ -232,7 +225,7 @@ export default function Students() {
                 });
                 // Fetch counts and students for current view
                 const fetchCounts = async () => {
-                    const res = await fetch('/api/students/summary/counts');
+                    const res = await fetch(`${API_BASE}/api/students/summary/counts`);
                     const r = await res.json();
                     if (r.status) setCounts(r.data);
                 };
