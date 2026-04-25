@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Bus, Users, UserSquare2, ChevronLeft, ChevronRight, FileX, BarChart3, AlertCircle, ShieldAlert, Car } from 'lucide-react';
 
 const API_BASE = 'https://tracobusinvcicd.duckdns.org';

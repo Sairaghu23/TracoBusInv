@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Plus, X, Check, Route as RouteIcon, Pencil, Trash2, Users, BarChart3, GraduationCap, ChevronLeft } from 'lucide-react';
 
 const API_BASE = 'https://tracobusinvcicd.duckdns.org';

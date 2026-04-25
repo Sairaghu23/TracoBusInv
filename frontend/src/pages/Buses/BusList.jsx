@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter, LayoutGrid, List, MoreVertical, Edit2, Trash2, Bus, AlertTriangle, X, CheckCircle2, MoreHorizontal } from 'lucide-react';
 
 const API_BASE = 'https://tracobusinvcicd.duckdns.org';

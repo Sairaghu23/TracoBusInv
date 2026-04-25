@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Droplet, Settings, FileSearch, Navigation, Gauge, Bus as BusIconBase } from 'lucide-react';
 
 const API_BASE = 'https://tracobusinvcicd.duckdns.org';

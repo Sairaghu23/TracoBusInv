@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { FileX, AlertTriangle, Calendar, AlertCircle, FileCheck2, Clock, Search, User, Car } from 'lucide-react';
 
 const API_BASE = 'https://tracobusinvcicd.duckdns.org';
