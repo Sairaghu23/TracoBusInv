@@ -15,7 +15,7 @@ export const getStudentsBySemester = async (type, yearOffset, semester) => {
             b.branch_name,
             COALESCE(h.semester, $2) as semester, 
             COALESCE(h.amount_paid, 0) as amount_paid, 
-            COALESCE(h.concession, s.concession, 0) as concession, 
+            COALESCE(h.concession, 0) as concession, 
             h.payment_mode, h.payment_date,
             stop.stop_name as stop_name,
             rm.stop_id as stop_id,
@@ -24,7 +24,7 @@ export const getStudentsBySemester = async (type, yearOffset, semester) => {
         FROM ${studentTable} s
         JOIN branch b ON s.branch_id = b.branch_id
         LEFT JOIN ${historyTable} h ON s.s_id = h.s_id AND h.semester = $2
-        LEFT JOIN route_stop_map rm ON s.boarding = rm.map_id
+        LEFT JOIN route_stop_map rm ON h.boarding = rm.map_id
         LEFT JOIN stoppings stop ON rm.stop_id = stop.stop_id
         WHERE s.batch_end_year = $1
         ORDER BY s.roll_id;
@@ -53,16 +53,14 @@ export const updateStudent = async (type, s_id, studentData) => {
     const query = `
         UPDATE ${studentTable} 
         SET roll_id = $1, s_name = $2, branch_id = $3, 
-            admission_year = $4, batch_start_year = $5, batch_end_year = $6, 
-            boarding = $7, concession = $8
-        WHERE s_id = $9
+            admission_year = $4, batch_start_year = $5, batch_end_year = $6
+        WHERE s_id = $7
         RETURNING *;
     `;
 
     const values = [
         roll_id, s_name, branch_id, 
         admission_year, batch_start_year, batch_end_year, 
-        boarding_map_id, concession || 0,
         s_id
     ];
     const result = await pool.query(query, values);
@@ -88,16 +86,14 @@ export const addStudent = async (type, studentData) => {
     const query = `
         INSERT INTO ${studentTable} (
             roll_id, s_name, branch_id, 
-            admission_year, batch_start_year, batch_end_year, 
-            boarding, concession
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            admission_year, batch_start_year, batch_end_year
+        ) VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *;
     `;
 
     const values = [
         roll_id, s_name, branch_id, 
-        admission_year, batch_start_year, batch_end_year, 
-        boarding_map_id, concession || 0
+        admission_year, batch_start_year, batch_end_year
     ];
     const result = await pool.query(query, values);
     return result.rows[0];
@@ -110,20 +106,29 @@ export const getAllBranches = async () => {
 
 export const recordPayment = async (type, paymentData) => {
     const historyTable = type === 'mtech' ? 'mtech_students_bus_fee_history' : 'btech_students_bus_fee_history';
-    const { s_id, payment_date, semester, amount_paid, payment_mode, concession } = paymentData;
+    const { s_id, payment_date, semester, amount_paid, payment_mode, concession, route_id, stop_id } = paymentData;
+
+    let boarding_map_id = null;
+    if (route_id && stop_id) {
+        const mapRes = await pool.query('SELECT map_id FROM route_stop_map WHERE route_id = $1 AND stop_id = $2', [route_id, stop_id]);
+        if (mapRes.rows.length > 0) {
+            boarding_map_id = mapRes.rows[0].map_id;
+        }
+    }
 
     const query = `
-        INSERT INTO ${historyTable} (s_id, payment_date, semester, amount_paid, payment_mode, concession)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO ${historyTable} (s_id, payment_date, semester, amount_paid, payment_mode, concession, boarding)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (s_id, semester) DO UPDATE SET
             payment_date = EXCLUDED.payment_date,
             amount_paid = EXCLUDED.amount_paid,
             payment_mode = EXCLUDED.payment_mode,
-            concession = EXCLUDED.concession
+            concession = EXCLUDED.concession,
+            boarding = EXCLUDED.boarding
         RETURNING *;
     `;
 
-    const values = [s_id, payment_date, semester, amount_paid, payment_mode, concession || 0];
+    const values = [s_id, payment_date, semester, amount_paid, payment_mode, concession || 0, boarding_map_id];
     const result = await pool.query(query, values);
     return result.rows[0];
 };
@@ -176,7 +181,7 @@ export const getStudentPaymentHistory = async (type, sId) => {
             stop.stop_name
         FROM ${historyTable} h
         JOIN ${studentTable} s ON h.s_id = s.s_id
-        LEFT JOIN route_stop_map rm ON s.boarding = rm.map_id
+        LEFT JOIN route_stop_map rm ON h.boarding = rm.map_id
         LEFT JOIN stoppings stop ON rm.stop_id = stop.stop_id
         WHERE h.s_id = $1
         ORDER BY h.semester DESC;
@@ -225,7 +230,12 @@ export const getRouteStudentBreakdown = async (routeId) => {
             COUNT(st.s_id) as total
         FROM stoppings s
         LEFT JOIN route_stop_map rm ON s.stop_id = rm.stop_id
-        LEFT JOIN btech_students st ON rm.map_id = st.boarding
+        LEFT JOIN (
+            SELECT h.*, st.batch_end_year 
+            FROM btech_students_bus_fee_history h
+            JOIN btech_students st ON h.s_id = st.s_id
+            -- We assume we're looking at current active semester based on breakdown logic
+        ) st ON rm.map_id = st.boarding
         WHERE rm.route_id = $2
         GROUP BY s.stop_id, s.stop_name
         ORDER BY s.stop_name;
