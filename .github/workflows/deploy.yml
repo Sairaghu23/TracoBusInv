@@ -24,24 +24,25 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-            # 2. Navigate and Clean
+            # 2. Navigate
             cd ~/tracobusinvcicd
             
-            # Remove untracked files to prevent merge conflicts
-            git clean -fd 
+            # Force the server to match the GitHub repository
+            # This replaces 'git pull' and 'git stash'
+            git fetch origin main
+            git reset --hard origin/main
             
-            # Handle local changes
-            git stash
-            git pull origin main
-            git stash pop || true 
+            # Remove any untracked files (build artifacts/node_modules leftovers)
+            git clean -fd
             
             # 3. Build Frontend
             cd frontend
             npm install
+            # Ensure permissions are correct
             chmod -R +x node_modules/.bin
             npm run build
             
-            # Copy to Nginx web root
+            # Copy to Nginx web root (Ensure your CI/CD user has write permissions here)
             cp -rvf dist/* /var/www/tracobusinvcicd/frontend/
             
             # 4. Update Backend
