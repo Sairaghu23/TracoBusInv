@@ -1,17 +1,25 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { getDocumentTypes, getBusDocuments, createBusDocument, deleteBusDocument, getExpiringDocumentsInfo, getComplianceMatrix } from '../models/documentModel.js';
+
+// Resolve absolute path to the uploads directory at the project root
+// This file is at: backend/controllers/documentController.js
+// Project root is two levels up: ../../
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const UPLOADS_DIR = path.resolve(__dirname, '..', '..', 'uploads');
 
 // Configure multer storage
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadPath = 'uploads';
-        // Create directory if it doesn't exist
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
+        // Use absolute path so files always go to project_root/uploads/
+        // regardless of the Node process's working directory
+        if (!fs.existsSync(UPLOADS_DIR)) {
+            fs.mkdirSync(UPLOADS_DIR, { recursive: true });
         }
-        cb(null, uploadPath);
+        cb(null, UPLOADS_DIR);
     },
     filename: function (req, file, cb) {
         // Fallback to 'BUS' if bus_id is not yet available in req.body
@@ -109,11 +117,10 @@ export const deleteBusDocumentController = async (req, res, next) => {
             return res.status(404).json({ status: false, message: 'Document not found' });
         }
 
-        // Also delete the physical file from disk
+        // Delete the physical file from disk using the absolute UPLOADS_DIR
         if (deleted.file_path) {
-            // Strip the /api/uploads prefix to get the relative path on disk
             const filename = path.basename(deleted.file_path);
-            const filePath = path.resolve('uploads', filename);
+            const filePath = path.join(UPLOADS_DIR, filename);
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
             }
