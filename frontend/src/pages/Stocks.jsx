@@ -211,18 +211,18 @@ export default function Stocks() {
             {/* MODAL: Minimal Elegant Form */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-navy/60 backdrop-blur-xl z-50 flex items-center justify-center p-4 animate-in fade-in duration-500">
-                    <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 duration-500 border border-white/20">
-                        <div className="p-10 space-y-10">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <h2 className="text-3xl font-black text-navy italic tracking-tighter uppercase">New Stock Entry</h2>
-                                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2">Initialize hardware tokens in ledger</p>
-                                </div>
-                                <button onClick={() => setIsAddModalOpen(false)} className="p-3 bg-slate-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-all shadow-sm">
-                                    <X size={20} />
-                                </button>
+                    <div className="bg-white w-full max-w-2xl max-h-[92vh] flex flex-col rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 duration-500 border border-white/20">
+                        <div className="p-10 pb-4 flex justify-between items-start shrink-0">
+                            <div>
+                                <h2 className="text-3xl font-black text-navy italic tracking-tighter uppercase">New Stock Entry</h2>
+                                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2">Initialize hardware tokens in ledger</p>
                             </div>
+                            <button onClick={() => setIsAddModalOpen(false)} className="p-3 bg-slate-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-all shadow-sm">
+                                <X size={20} />
+                            </button>
+                        </div>
 
+                        <div className="flex-1 overflow-y-auto p-10 pt-0 space-y-10 custom-scrollbar">
                             <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
                                 {/* Selection Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -329,20 +329,23 @@ export default function Stocks() {
                                         )}
                                     </div>
                                 </div>
-
-                                <button
-                                    onClick={handlePurchaseSubmit}
-                                    disabled={!purchaseData.spare_id || purchaseData.quantity <= 0 || !purchaseData.amount}
-                                    className={`w-full py-5 rounded-3xl font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl flex items-center justify-center gap-3
-                                        ${(!purchaseData.spare_id || purchaseData.quantity <= 0 || !purchaseData.amount) 
-                                            ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
-                                            : 'bg-navy text-white hover:scale-105 shadow-navy/20 active:scale-95'}
-                                    `}
-                                >
-                                    Confirm & Dispatch Load <ArrowRight size={18} />
-                                </button>
                             </form>
                         </div>
+
+                        <div className="p-10 pt-4 bg-slate-50/50 border-t border-slate-100 shrink-0">
+                            <button
+                                onClick={handlePurchaseSubmit}
+                                disabled={!purchaseData.spare_id || purchaseData.quantity <= 0 || !purchaseData.amount}
+                                className={`w-full py-5 rounded-3xl font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl flex items-center justify-center gap-3
+                                    ${(!purchaseData.spare_id || purchaseData.quantity <= 0 || !purchaseData.amount) 
+                                        ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
+                                        : 'bg-navy text-white hover:scale-105 shadow-navy/20 active:scale-95'}
+                                `}
+                            >
+                                Confirm & Dispatch Load <ArrowRight size={18} />
+                            </button>
+                        </div>
+                    </div>
                     </div>
                 </div>
             )}

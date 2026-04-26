@@ -218,9 +218,9 @@ export default function BusDocuments() {
             {/* Upload Modal Overlay */}
             {isUploadModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/40 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden scale-in-center border-2 border-white/20">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden scale-in-center border-2 border-white/20">
                         {/* Modal Header */}
-                        <div className="bg-navy p-6 flex items-center justify-between text-white relative overflow-hidden">
+                        <div className="bg-navy p-6 flex items-center justify-between text-white shrink-0 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 pointer-events-none" />
                             <div className="flex items-center gap-3 relative z-10">
                                 <div className="p-2 bg-white/10 rounded-xl">
@@ -244,7 +244,7 @@ export default function BusDocuments() {
                         </div>
                         
                         {/* Form */}
-                        <div className="p-8">
+                        <div className="p-8 overflow-y-auto flex-1 custom-scrollbar">
                             {uploadError && (
                                 <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-2xl text-sm font-bold flex items-center gap-3 animate-in slide-in-from-top-2">
                                     <AlertCircle size={18} className="shrink-0" />

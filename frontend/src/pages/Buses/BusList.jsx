@@ -260,8 +260,8 @@ export default function BusList() {
             {/* Add Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-                        <div className="flex justify-between items-center p-6 border-b border-slate-200">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+                        <div className="flex justify-between items-center p-6 border-b border-slate-200 shrink-0">
                             <h2 className="text-lg font-bold text-navy">
                                 {isEditMode ? 'Update Vehicle Details' : 'Register New Vehicle'}
                             </h2>
@@ -269,7 +269,7 @@ export default function BusList() {
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
                             <div>
                                 <label className="form-label text-[10px] font-black uppercase tracking-widest text-slate-400">Bus Number</label>
                                 <input
@@ -368,7 +368,7 @@ export default function BusList() {
                                 </div>
                             </div>
                         </div>
-                        <div className="p-6 border-t border-slate-200 flex justify-end gap-3 bg-slate-50">
+                        <div className="p-6 border-t border-slate-200 flex justify-end gap-3 bg-slate-50 shrink-0">
                             <button onClick={resetForm} className="btn btn-outline">Cancel</button>
                             <button
                                 onClick={async () => {
