@@ -38,8 +38,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve static files for uploaded documents under /api to ensure proxy routing consistency
-app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve static files for uploaded documents
+// We serve at both mount points to be compatible with proxies that may or may not strip the /api prefix
+app.use('/api/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 
 // Use centralized API router
 app.use('/api', apiRouter);

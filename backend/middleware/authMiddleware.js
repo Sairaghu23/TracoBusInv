@@ -1,6 +1,11 @@
 import jwt from 'jsonwebtoken';
 
 const authMiddleware = (req, res, next) => {
+    // Skip auth for public static files if they fall through to here
+    if (req.path.startsWith('/uploads') || req.path.startsWith('/api/uploads')) {
+        return next();
+    }
+
     // Get token from header
     const authHeader = req.header('Authorization');
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
