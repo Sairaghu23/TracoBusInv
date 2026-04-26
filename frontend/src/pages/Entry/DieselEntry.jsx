@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Fuel, Calendar, Save, AlertCircle, CheckCircle2, FileText, Plus, ChevronRight, Gauge, TrendingUp, IndianRupee } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../utils/api';
 
 export default function DieselEntry() {
     const navigate = useNavigate();
@@ -29,29 +30,27 @@ export default function DieselEntry() {
 
         try {
             // Check Odometer status
-            const valRes = await fetch(`/api/diesel/validate/${selectedDate}`);
-            const valResult = await valRes.json();
+            const valResult = await api.get(`/api/diesel/validate/${selectedDate}`);
 
-            if (valResult.status) {
+            if (valResult.data?.status) {
                 setValidationStatus({ missing: false, checked: true, list: [] });
-                setFleetData(valResult.data);
+                setFleetData(valResult.data.data);
 
                 // Initialize liters input
                 const initial = {};
-                valResult.data.forEach(bus => {
+                valResult.data.data.forEach(bus => {
                     initial[bus.rc_plate_number] = bus.liters || '';
                 });
                 setLitersData(initial);
-            } else if (valResult.missing) {
-                setValidationStatus({ missing: true, checked: true, list: valResult.data });
+            } else if (valResult.data?.missing) {
+                setValidationStatus({ missing: true, checked: true, list: valResult.data.data });
             }
 
             // Check Fuel Rate
-            const rateRes = await fetch(`/api/fuel-rates/${selectedDate}`);
-            const rateResult = await rateRes.json();
-            if (rateResult.status && rateResult.data) {
-                setFuelRate(rateResult.data.fuel_rate);
-                setRateId(rateResult.data.rate_id);
+            const rateResult = await api.get(`/api/fuel-rates/${selectedDate}`);
+            if (rateResult.data?.status && rateResult.data.data) {
+                setFuelRate(rateResult.data.data.fuel_rate);
+                setRateId(rateResult.data.data.rate_id);
             } else {
                 setFuelRate('');
                 setRateId(null);
@@ -74,14 +73,9 @@ export default function DieselEntry() {
             return;
         }
         try {
-            const res = await fetch('/api/fuel-rates', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date, rate: fuelRate })
-            });
-            const result = await res.json();
-            if (result.status) {
-                setRateId(result.data.rate_id);
+            const result = await api.post('/api/fuel-rates', { date, rate: fuelRate });
+            if (result.data?.status) {
+                setRateId(result.data.data.rate_id);
                 setSuccess("Fuel rate updated for " + date);
                 setTimeout(() => setSuccess(null), 3000);
             }
@@ -132,24 +126,19 @@ export default function DieselEntry() {
         }
 
         try {
-            const res = await fetch('/api/diesel/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ logs: logsToSave })
-            });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.post('/api/diesel/bulk', { logs: logsToSave });
+            if (result.data?.status) {
                 // Fetch report for summary view
-                const repRes = await fetch(`/api/diesel/report/${date}`);
-                const repResult = await repRes.json();
+                const repResult = await api.get(`/api/diesel/report/${date}`);
                 
-                // Keep only the buses that had a valid diesel entry logged
-                const activeEntries = repResult.data.filter(r => r.liters !== null && r.liters !== undefined && parseFloat(r.liters) > 0);
-                
-                setReportData(activeEntries);
-                setViewMode('summary');
+                if (repResult.data?.status) {
+                    // Keep only the buses that had a valid diesel entry logged
+                    const activeEntries = repResult.data.data.filter(r => r.liters !== null && r.liters !== undefined && parseFloat(r.liters) > 0);
+                    setReportData(activeEntries);
+                    setViewMode('summary');
+                }
             } else {
-                setError(result.message);
+                setError(result.data?.message || "Operation failed");
             }
         } catch (err) {
             setError("An error occurred while saving.");

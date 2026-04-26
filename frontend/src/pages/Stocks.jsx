@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, Plus, Search, AlertCircle } from 'lucide-react';
+import api from '../utils/api';
 
 export default function Stocks() {
     const navigate = useNavigate();
@@ -24,10 +25,9 @@ export default function Stocks() {
     const fetchStocks = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/spares/stocks');
-            const result = await res.json();
-            if (result.status) {
-                setStocks(result.data);
+            const result = await api.get('/api/spares/stocks');
+            if (result.data?.status) {
+                setStocks(result.data.data);
             }
         } catch (err) {
             console.error("Error fetching stocks:", err);
@@ -42,18 +42,13 @@ export default function Stocks() {
 
     const handlePurchaseSubmit = async () => {
         try {
-            const res = await fetch('/api/spares/purchases', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(purchaseData)
-            });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.post('/api/spares/purchases', purchaseData);
+            if (result.data?.status) {
                 alert("Purchase recorded successfully!");
                 setIsAddModalOpen(false);
                 fetchStocks();
             } else {
-                alert(result.message);
+                alert(result.data?.message || "Operation failed");
             }
         } catch (err) {
             console.error("Error recording purchase:", err);
@@ -62,19 +57,14 @@ export default function Stocks() {
 
     const handleAddNewType = async () => {
         try {
-            const res = await fetch('/api/spares/stocks', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ spare_name: newSpareName })
-            });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.post('/api/spares/stocks', { spare_name: newSpareName });
+            if (result.data?.status) {
                 alert("New spare type added!");
                 setIsNewTypeModalOpen(false);
                 setNewSpareName('');
                 fetchStocks();
             } else {
-                alert(result.message);
+                alert(result.data?.message || "Operation failed");
             }
         } catch (err) {
             console.error("Error adding spare type:", err);

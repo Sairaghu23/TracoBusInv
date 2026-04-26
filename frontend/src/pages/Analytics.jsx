@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Fuel, Droplet, Settings, BarChart3, IndianRupee, ChevronLeft, Users, CheckCircle2, XCircle, GraduationCap, Bus } from 'lucide-react';
+import api from '../utils/api';
 
 const MONTHS = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -35,17 +36,16 @@ export default function Analytics() {
         setLoading(true);
         try {
             const [dieselRes, oilsRes, sparesRes, feesRes] = await Promise.all([
-                fetch(`/api/analytics/diesel?month=${month}&year=${year}`),
-                fetch(`/api/analytics/oils?month=${month}&year=${year}`),
-                fetch(`/api/analytics/spares?month=${month}&year=${year}`),
-                fetch(`/api/analytics/fees?semester=${semester}`),
+                api.get(`/api/analytics/diesel?month=${month}&year=${year}`),
+                api.get(`/api/analytics/oils?month=${month}&year=${year}`),
+                api.get(`/api/analytics/spares?month=${month}&year=${year}`),
+                api.get(`/api/analytics/fees?semester=${semester}`),
             ]);
-            const [d, o, s, f] = await Promise.all([dieselRes.json(), oilsRes.json(), sparesRes.json(), feesRes.json()]);
             setSectionData({
-                diesel: d.status ? d.data : [],
-                oils:   o.status ? o.data : [],
-                spares: s.status ? s.data : [],
-                fees:   f.status ? f.data : [],
+                diesel: dieselRes.data?.status ? dieselRes.data.data : [],
+                oils:   oilsRes.data?.status ? oilsRes.data.data : [],
+                spares: sparesRes.data?.status ? sparesRes.data.data : [],
+                fees:   feesRes.data?.status ? feesRes.data.data : [],
             });
         } catch (err) {
             console.error('Analytics fetch error:', err);

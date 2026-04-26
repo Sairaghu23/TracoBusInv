@@ -373,30 +373,27 @@ export default function BusList() {
                             <button
                                 onClick={async () => {
                                     try {
-                                        const url = isEditMode
-                                            ? `${API_BASE}/api/buses/${newBusData.rc_plate_number}`
-                                            : `${API_BASE}/api/buses`;
-
-                                        const response = await fetch(url, {
-                                            method: isEditMode ? 'PUT' : 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                bus_no: newBusData.bus_no,
-                                                rc_plate_number: newBusData.rc_plate_number,
-                                                seating_capacity: newBusData.seating_capacity,
-                                                engine_number: newBusData.engine_number,
-                                                route_id: newBusData.route_id,
-                                                purchase_date: newBusData.purchase_date,
-                                                status: newBusData.status
-                                            })
+                                        const endpoint = isEditMode
+                                            ? `/api/buses/${newBusData.rc_plate_number}`
+                                            : `/api/buses`;
+                                        
+                                        const method = isEditMode ? 'put' : 'post';
+                                        const result = await api[method](endpoint, {
+                                            bus_no: newBusData.bus_no,
+                                            rc_plate_number: newBusData.rc_plate_number,
+                                            seating_capacity: newBusData.seating_capacity,
+                                            engine_number: newBusData.engine_number,
+                                            route_id: newBusData.route_id,
+                                            purchase_date: newBusData.purchase_date,
+                                            status: newBusData.status
                                         });
-                                        const result = await response.json();
-                                        if (result.status) {
+
+                                        if (result.data?.status) {
                                             alert(isEditMode ? "Bus updated successfully!" : "Bus registered successfully!");
                                             resetForm();
                                             fetchBuses(); // Refresh list
                                         } else {
-                                            alert(result.message || "Operation failed");
+                                            alert(result.data?.message || "Operation failed");
                                         }
                                     } catch (error) {
                                         console.error("Error saving bus:", error);

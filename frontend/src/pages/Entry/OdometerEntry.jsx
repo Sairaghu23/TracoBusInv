@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Gauge, Calendar, Save, AlertCircle, CheckCircle2, FileText, Plus } from 'lucide-react';
+import api from '../../utils/api';
 
 export default function OdometerEntry() {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -18,13 +19,12 @@ export default function OdometerEntry() {
     const fetchFleet = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/readings/all-latest');
-            const result = await res.json();
-            if (result.status) {
-                setFleetData(result.data);
+            const result = await api.get('/api/readings/all-latest');
+            if (result.data?.status) {
+                setFleetData(result.data.data);
                 // Initialize newReadings with empty strings
                 const initial = {};
-                result.data.forEach(bus => {
+                result.data.data.forEach(bus => {
                     initial[bus.rc_plate_number] = '';
                 });
                 setNewReadings(initial);
@@ -81,19 +81,14 @@ export default function OdometerEntry() {
         }
 
         try {
-            const res = await fetch('/api/readings/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ readings: readingsToSave })
-            });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.post('/api/readings/bulk', { readings: readingsToSave });
+            if (result.data?.status) {
                 setSuccess(`Successfully saved ${readingsToSave.length} readings.`);
                 setSavedData(readingsToSave);
                 setViewMode('summary');
                 fetchFleet(); // Refresh latest readings
             } else {
-                setError(result.message);
+                setError(result.data?.message || "Operation failed");
             }
         } catch (err) {
             console.error("Error saving bulk readings:", err);

@@ -4,6 +4,7 @@ import {
     User, Phone, ShieldCheck, MapPin, Calendar, 
     Edit2, Trash2, ChevronLeft, Check, X, Camera, FileText
 } from 'lucide-react';
+import api from '../../utils/api';
 
 export default function DriverDetails() {
     const { id } = useParams();
@@ -21,13 +22,12 @@ export default function DriverDetails() {
 
     const fetchDriverDetails = async () => {
         try {
-            const response = await fetch(`/api/drivers/${id}`);
-            const result = await response.json();
-            if (result.status) {
-                setDriver(result.data);
+            const result = await api.get(`/api/drivers/${id}`);
+            if (result.data?.status) {
+                setDriver(result.data.data);
                 const formattedData = {
-                    ...result.data,
-                    joining_date: result.data.joining_date ? new Date(result.data.joining_date).toISOString().split('T')[0] : ''
+                    ...result.data.data,
+                    joining_date: result.data.data.joining_date ? new Date(result.data.data.joining_date).toISOString().split('T')[0] : ''
                 };
                 setEditData(formattedData);
             }
@@ -41,14 +41,9 @@ export default function DriverDetails() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`/api/drivers/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editData)
-            });
-            const result = await response.json();
-            if (result.status) {
-                setDriver(result.data);
+            const result = await api.put(`/api/drivers/${id}`, editData);
+            if (result.data?.status) {
+                setDriver(result.data.data);
                 setIsEditing(false);
             }
         } catch (error) {
@@ -59,9 +54,8 @@ export default function DriverDetails() {
     const handleDelete = async () => {
         if (window.confirm("Are you sure you want to retire this driver from the fleet? This action is permanent.")) {
             try {
-                const response = await fetch(`/api/drivers/${id}`, { method: 'DELETE' });
-                const result = await response.json();
-                if (result.status) navigate('/drivers');
+                const result = await api.delete(`/api/drivers/${id}`);
+                if (result.data?.status) navigate('/drivers');
             } catch (error) {
                 console.error("Error deleting driver:", error);
             }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ShoppingBag, Calendar, User, ArrowRight } from 'lucide-react';
+import api from '../utils/api';
 
 export default function PurchaseHistory() {
     const { spare_id } = useParams();
@@ -13,20 +14,15 @@ export default function PurchaseHistory() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch All Stocks to find the specific spare name (or we could add a specific API for one spare)
-            // For efficiency, we'll fetch the purchases first and get names from the first record if available
-            // Actually, let's fetch stocks to get the spare name correctly
-            const stocksRes = await fetch('/api/spares/stocks');
-            const stocksResult = await stocksRes.json();
-            if (stocksResult.status) {
-                const foundSpare = stocksResult.data.find(s => s.spare_id === parseInt(spare_id));
+            const stocksResult = await api.get('/api/spares/stocks');
+            if (stocksResult.data?.status) {
+                const foundSpare = stocksResult.data.data.find(s => s.spare_id === parseInt(spare_id));
                 setSpare(foundSpare);
             }
 
-            const res = await fetch(`/api/spares/${spare_id}/purchases`);
-            const result = await res.json();
-            if (result.status) {
-                setPurchases(result.data);
+            const result = await api.get(`/api/spares/${spare_id}/purchases`);
+            if (result.data?.status) {
+                setPurchases(result.data.data);
             }
         } catch (err) {
             console.error("Error fetching purchase history:", err);
