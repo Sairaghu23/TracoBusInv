@@ -44,6 +44,19 @@ export const createBusDocument = async (rcPlateNumber, documentTypeId, filePath,
     }
 };
 
+export const deleteBusDocument = async (documentId) => {
+    try {
+        const result = await pool.query(
+            'DELETE FROM bus_documents WHERE bus_document_id = $1 RETURNING file_path',
+            [documentId]
+        );
+        return result.rows[0]; // Returns { file_path } so controller can delete the physical file
+    } catch (error) {
+        console.error("Error deleting bus document:", error);
+        throw error;
+    }
+};
+
 export const getExpiringDocumentsInfo = async (days) => {
     try {
         const query = `

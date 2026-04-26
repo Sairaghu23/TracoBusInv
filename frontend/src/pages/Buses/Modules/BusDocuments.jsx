@@ -104,6 +104,22 @@ export default function BusDocuments() {
         }
     };
 
+    const handleDeleteDocument = async (documentId, documentName) => {
+        if (!window.confirm(`Are you sure you want to permanently delete "${documentName}"? This cannot be undone.`)) return;
+
+        try {
+            const result = await api.delete(`/api/documents/${documentId}`);
+            if (result.data?.status) {
+                fetchData(); // Refresh list
+            } else {
+                alert(result.data?.message || 'Failed to delete document.');
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+            alert('An error occurred while deleting the document.');
+        }
+    };
+
     // Calculate document status
     const getStatus = (expiryDate) => {
         const today = new Date();
@@ -198,14 +214,23 @@ export default function BusDocuments() {
                                             </span>
                                         </td>
                                         <td className="py-5 pr-8 text-right">
-                                            <a
-                                                href={`${api.defaults.baseURL}${doc.file_path}`}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white hover:bg-navy-light rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-navy/10"
-                                            >
-                                                <Download size={14} /> View PDF
-                                            </a>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <a
+                                                    href={`${api.defaults.baseURL}${doc.file_path}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white hover:bg-navy-light rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-navy/10"
+                                                >
+                                                    <Download size={14} /> View PDF
+                                                </a>
+                                                <button
+                                                    onClick={() => handleDeleteDocument(doc.bus_document_id, doc.document_name)}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-red-100 hover:border-red-500"
+                                                    title="Delete document"
+                                                >
+                                                    <Trash2 size={13} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );

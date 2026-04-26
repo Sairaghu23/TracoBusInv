@@ -3,6 +3,7 @@ import {
     getDocumentTypesController, 
     getBusDocumentsController, 
     uploadBusDocumentController, 
+    deleteBusDocumentController,
     getExpiringDocumentsController, 
     getComplianceMatrixController 
 } from '../controllers/documentController.js';
@@ -14,6 +15,7 @@ router.get('/', getDocumentTypesController); // Alias for flat /api/document-typ
 router.get('/reminders', getExpiringDocumentsController);
 router.get('/compliance-matrix', getComplianceMatrixController);
 router.post('/upload', uploadBusDocumentController);
+router.delete('/:documentId', deleteBusDocumentController);
 // Note: /api/buses/:id/documents is handled in busRoutes.js as a nested resource
 
 export default router;

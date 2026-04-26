@@ -1,7 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { getDocumentTypes, getBusDocuments, createBusDocument, getExpiringDocumentsInfo, getComplianceMatrix } from '../models/documentModel.js';
+import { getDocumentTypes, getBusDocuments, createBusDocument, deleteBusDocument, getExpiringDocumentsInfo, getComplianceMatrix } from '../models/documentModel.js';
 
 // Configure multer storage
 const storage = multer.diskStorage({
@@ -98,6 +98,31 @@ export const uploadBusDocumentController = (req, res, next) => {
             next(error);
         }
     });
+};
+
+export const deleteBusDocumentController = async (req, res, next) => {
+    try {
+        const { documentId } = req.params;
+        const deleted = await deleteBusDocument(documentId);
+
+        if (!deleted) {
+            return res.status(404).json({ status: false, message: 'Document not found' });
+        }
+
+        // Also delete the physical file from disk
+        if (deleted.file_path) {
+            // Strip the /api/uploads prefix to get the relative path on disk
+            const filename = path.basename(deleted.file_path);
+            const filePath = path.resolve('uploads', filename);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        res.status(200).json({ status: true, message: 'Document deleted successfully' });
+    } catch (err) {
+        next(err);
+    }
 };
 
 export const getExpiringDocumentsController = async (req, res, next) => {
