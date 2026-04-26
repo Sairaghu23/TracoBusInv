@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
     ChevronLeft, Plus, Settings, Calendar, User, 
     ShoppingBag, ShoppingCart, Search, X, Check, ArrowRight,
-    Wrench, Gauge, CreditCard, Trash2, CheckCircle2, Package
+    Wrench, Gauge, CreditCard, Trash2, CheckCircle2, Package,
+    Zap, Hash
 } from 'lucide-react';
 import api from '../../../utils/api';
 
@@ -22,7 +23,8 @@ export default function BusSpares() {
     const [availableItems, setAvailableItems] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [cart, setCart] = useState([]);
-    
+    const [unitCost, setUnitCost] = useState(0); // auto-calculated from purchases
+
     const [usageForm, setUsageForm] = useState({
         usage_date: new Date().toISOString().split('T')[0],
         mechanic: '',
@@ -64,8 +66,15 @@ export default function BusSpares() {
         if (!spareId) return;
         setLoadingItems(true);
         try {
-            const res = await api.get(`/api/spares/inventory/${spareId}?status=AVAILABLE`);
-            if (res.data?.status) setAvailableItems(res.data.data);
+            const [itemsRes, costRes] = await Promise.all([
+                api.get(`/api/spares/inventory/${spareId}?status=AVAILABLE`),
+                api.get(`/api/spares/${spareId}/cost`)
+            ]);
+            if (itemsRes.data?.status) setAvailableItems(itemsRes.data.data);
+            if (costRes.data?.status) {
+                const u = parseFloat(costRes.data.data?.unit_cost || 0);
+                setUnitCost(u);
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -76,8 +85,23 @@ export default function BusSpares() {
     useEffect(() => { fetchData(); }, [rc_plate_number]);
 
     useEffect(() => {
-        if (selectedCategory) fetchAvailableItems(selectedCategory);
+        if (selectedCategory) {
+            setCart([]);
+            fetchAvailableItems(selectedCategory);
+        } else {
+            setAvailableItems([]);
+            setUnitCost(0);
+        }
     }, [selectedCategory]);
+
+    // Auto-update spare_cost whenever cart changes
+    useEffect(() => {
+        if (unitCost > 0 && cart.length > 0) {
+            setUsageForm(prev => ({ ...prev, spare_cost: (unitCost * cart.length).toFixed(2) }));
+        } else {
+            setUsageForm(prev => ({ ...prev, spare_cost: '' }));
+        }
+    }, [cart, unitCost]);
 
     const addToCart = (item) => {
         if (cart.find(c => c.item_id === item.item_id)) return;
@@ -93,7 +117,6 @@ export default function BusSpares() {
         if (!usageForm.new_reading || !usageForm.mechanic) return alert("Complete the technical details first.");
 
         try {
-            // Payload needs to match model: rc_plate_number, spare_id, item_ids, quantity, etc.
             const payload = {
                 ...usageForm,
                 rc_plate_number,
@@ -118,6 +141,7 @@ export default function BusSpares() {
 
     const filteredItems = availableItems.filter(i => i.product_code.toLowerCase().includes(searchQuery.toLowerCase()));
     const totalExpenditure = sparesHistory.reduce((sum, r) => sum + parseFloat(r.total_amount || 0), 0);
+    const totalCost = (parseFloat(usageForm.spare_cost || 0) + parseFloat(usageForm.service_charge || 0));
 
     if (loading) return (
         <div className="flex items-center justify-center p-20">
@@ -236,12 +260,12 @@ export default function BusSpares() {
                 </div>
             </section>
 
-            {/* AMAZON CART STYLE MODAL OVERHAUL */}
+            {/* SERVICE CART MODAL */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-navy/80 backdrop-blur-2xl z-50 flex items-center justify-center p-4 animate-in fade-in duration-500">
                     <div className="bg-white w-full max-w-[1200px] h-[92vh] rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-500 border border-white/20">
-                        {/* Header Modal */}
-                        <div className="px-10 py-8 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                        {/* Header */}
+                        <div className="px-10 py-8 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-navy rounded-2xl text-white shadow-lg shadow-navy/20">
                                     <ShoppingCart size={24} />
@@ -260,9 +284,10 @@ export default function BusSpares() {
                         </div>
 
                         <div className="flex-1 flex overflow-hidden">
-                            {/* LEFT SIDE: AVAILABLE ITEMS BROWSER */}
-                            <div className="flex-1 flex flex-col border-r border-slate-100 bg-white">
-                                <div className="p-8 space-y-6">
+                            {/* LEFT: AVAILABLE ITEMS BROWSER */}
+                            <div className="flex-1 flex flex-col border-r border-slate-100 bg-white overflow-hidden">
+                                {/* Category + Search */}
+                                <div className="p-8 space-y-4 shrink-0">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Select Hardware Category</label>
@@ -293,9 +318,18 @@ export default function BusSpares() {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Unit cost badge */}
+                                    {selectedCategory && unitCost > 0 && (
+                                        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-widest">
+                                            <CreditCard size={14} />
+                                            Avg. Unit Cost: ₹{unitCost.toLocaleString()} — Selecting {cart.length} unit{cart.length !== 1 ? 's' : ''} = <span className="text-emerald-600">₹{(unitCost * cart.length).toLocaleString()}</span>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="flex-1 overflow-y-auto px-8 pb-10">
+                                {/* Items Grid */}
+                                <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
                                     {!selectedCategory ? (
                                         <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4 opacity-50">
                                             <Package size={64} strokeWidth={1} />
@@ -307,43 +341,30 @@ export default function BusSpares() {
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Querying Warehouse Index...</p>
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                                             {filteredItems.map(item => {
                                                 const isInCart = cart.some(c => c.item_id === item.item_id);
                                                 return (
                                                     <button 
                                                         key={item.item_id}
                                                         onClick={() => isInCart ? removeFromCart(item.item_id) : addToCart(item)}
-                                                        className={`group relative p-6 rounded-3xl border-2 transition-all duration-500 text-left overflow-hidden
+                                                        className={`group relative p-4 rounded-2xl border-2 transition-all duration-300 text-left flex items-center gap-3
                                                             ${isInCart 
-                                                                ? 'bg-navy border-navy text-white shadow-xl scale-[0.98]' 
-                                                                : 'bg-white border-slate-100 hover:border-navy text-navy hover:-translate-y-1'}
+                                                                ? 'bg-navy border-navy text-white shadow-lg' 
+                                                                : 'bg-white border-slate-100 hover:border-navy text-navy hover:shadow-md'}
                                                         `}
                                                     >
-                                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-4 transition-all
+                                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all
                                                             ${isInCart ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-navy/5 group-hover:text-navy'}
                                                         `}>
-                                                            <Package size={16} />
+                                                            {isInCart ? <Check size={16} strokeWidth={3} /> : <Hash size={14} />}
                                                         </div>
-                                                        <p className={`text-[9px] font-black uppercase mb-1 ${isInCart ? 'text-blue-300' : 'text-slate-400'}`}>Unit Identity</p>
-                                                        <h4 className="font-black text-lg tracking-tight font-mono">{item.product_code}</h4>
-                                                        
-                                                        {isInCart && (
-                                                            <div className="absolute right-4 top-4 bg-emerald-500 rounded-full p-1 border-2 border-navy">
-                                                                <Check size={12} strokeWidth={4} />
-                                                            </div>
-                                                        )}
-                                                        
-                                                        {!isInCart && (
-                                                            <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                                                                <Plus size={16} className="text-navy" />
-                                                            </div>
-                                                        )}
+                                                        <span className="font-black text-sm tracking-tight font-mono">{item.product_code}</span>
                                                     </button>
                                                 );
                                             })}
                                             {filteredItems.length === 0 && (
-                                                <div className="col-span-full py-20 text-center bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-100">
+                                                <div className="col-span-full py-16 text-center bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100">
                                                     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest italic">Inventory Depleted or No Matching Serial</p>
                                                 </div>
                                             )}
@@ -352,103 +373,120 @@ export default function BusSpares() {
                                 </div>
                             </div>
 
-                            {/* RIGHT SIDE: SELECTED CART & USAGE FORM */}
-                            <div className="w-[450px] flex flex-col bg-slate-50/50 h-full overflow-hidden">
-                                <div className="p-8 flex-1 overflow-y-auto space-y-10">
+                            {/* RIGHT: CART + FORM */}
+                            <div className="w-[430px] flex flex-col bg-slate-50/50 h-full overflow-hidden shrink-0">
+                                <div className="p-8 flex-1 overflow-y-auto space-y-8 custom-scrollbar">
+                                    
                                     {/* Cart Section */}
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         <div className="flex justify-between items-center">
-                                            <h3 className="text-lg font-black text-navy uppercase tracking-tighter flex items-center gap-2">
-                                                <ShoppingCart size={20} className="text-emerald-500" /> Service Cart
+                                            <h3 className="text-sm font-black text-navy uppercase tracking-tighter flex items-center gap-2">
+                                                <ShoppingCart size={18} className="text-emerald-500" /> Service Cart
                                             </h3>
-                                            <span className="px-4 py-1 bg-navy text-white text-[10px] font-black rounded-full uppercase tracking-widest">{cart.length} Selected</span>
+                                            <span className="px-3 py-1 bg-navy text-white text-[10px] font-black rounded-full uppercase tracking-widest">{cart.length} Selected</span>
                                         </div>
 
-                                        <div className="space-y-2 min-h-[100px]">
+                                        <div className="space-y-2 min-h-[80px]">
                                             {cart.map(item => (
-                                                <div key={item.item_id} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm animate-in slide-in-from-right-4 duration-300">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                                                            <CheckCircle2 size={14} />
+                                                <div key={item.item_id} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm animate-in slide-in-from-right-4 duration-300">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500">
+                                                            <CheckCircle2 size={12} />
                                                         </div>
-                                                        <span className="font-mono text-sm font-bold text-navy uppercase">{item.product_code}</span>
+                                                        <span className="font-mono text-xs font-bold text-navy uppercase">{item.product_code}</span>
                                                     </div>
-                                                    <button onClick={() => removeFromCart(item.item_id)} className="text-slate-300 hover:text-red-500 transition-colors p-2">
-                                                        <Trash2 size={16} />
+                                                    <button onClick={() => removeFromCart(item.item_id)} className="text-slate-300 hover:text-red-500 transition-colors p-1">
+                                                        <Trash2 size={14} />
                                                     </button>
                                                 </div>
                                             ))}
                                             {cart.length === 0 && (
-                                                <div className="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-slate-300 gap-3">
-                                                    <ShoppingCart size={32} strokeWidth={1} />
+                                                <div className="bg-white/50 border-2 border-dashed border-slate-200 rounded-[1.5rem] py-10 flex flex-col items-center justify-center text-slate-300 gap-2">
+                                                    <ShoppingCart size={24} strokeWidth={1} />
                                                     <p className="text-[10px] font-black uppercase tracking-widest italic">Awaiting Hardware Selection</p>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* Tech Data Form */}
-                                    <div className="space-y-6 pt-10 border-t border-slate-200">
-                                        <h3 className="text-lg font-black text-navy uppercase tracking-tighter flex items-center gap-2">
-                                            <Settings size={20} className="text-blue-500" /> Engineering Protocol
+                                    {/* Engineering Protocol Form */}
+                                    <div className="space-y-5 pt-6 border-t border-slate-200">
+                                        <h3 className="text-sm font-black text-navy uppercase tracking-tighter flex items-center gap-2">
+                                            <Settings size={18} className="text-blue-500" /> Engineering Protocol
                                         </h3>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        {/* Odometer Readings — both now editable */}
+                                        <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-1.5">
-                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Previous ODO</label>
-                                                <input disabled className="w-full h-12 bg-white/50 border border-slate-100 rounded-xl px-4 font-bold text-slate-400" value={usageForm.old_reading} />
+                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Previous ODO</label>
+                                                <input 
+                                                    type="number"
+                                                    className="w-full h-12 bg-white border border-slate-100 rounded-xl px-4 font-bold text-slate-600 outline-none focus:border-navy transition-all"
+                                                    value={usageForm.old_reading}
+                                                    onChange={(e) => setUsageForm({...usageForm, old_reading: e.target.value})}
+                                                    placeholder="0"
+                                                />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <label className="text-[9px] font-black text-blue-500 uppercase tracking-widest px-2">Current ODO (New)</label>
+                                                <label className="text-[9px] font-black text-blue-500 uppercase tracking-widest px-1">Current ODO</label>
                                                 <input 
                                                     type="number" 
                                                     className="w-full h-12 bg-white border border-blue-100 rounded-xl px-4 font-black text-navy focus:ring-2 ring-blue-100 outline-none transition-all"
                                                     value={usageForm.new_reading}
                                                     onChange={(e) => setUsageForm({...usageForm, new_reading: e.target.value})}
+                                                    placeholder="Current KM"
                                                 />
                                             </div>
                                         </div>
 
+                                        {/* Mechanic */}
                                         <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Mechanic / Service Charge Point</label>
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Assigned Mechanic</label>
                                             <div className="relative">
                                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                                                 <input 
                                                     type="text" 
-                                                    placeholder="Assigned Mechanic" 
-                                                    className="w-full h-12 bg-white border border-slate-100 rounded-xl pl-10 pr-4 font-black text-navy text-xs"
+                                                    placeholder="Mechanic name" 
+                                                    className="w-full h-12 bg-white border border-slate-100 rounded-xl pl-10 pr-4 font-black text-navy text-xs outline-none focus:border-navy transition-all"
                                                     value={usageForm.mechanic}
                                                     onChange={(e) => setUsageForm({...usageForm, mechanic: e.target.value})}
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        {/* Costs */}
+                                        <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-1.5">
-                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Parts Cost (₹)</label>
-                                                <input 
-                                                    type="number" 
-                                                    className="w-full h-12 bg-white border border-slate-100 rounded-xl px-4 font-black text-navy text-sm"
-                                                    value={usageForm.spare_cost}
-                                                    onChange={(e) => setUsageForm({...usageForm, spare_cost: e.target.value})}
-                                                />
+                                                <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest px-1">Parts Cost (₹) — Auto</label>
+                                                <div className="relative">
+                                                    <Zap size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
+                                                    <input 
+                                                        type="number" 
+                                                        className="w-full h-12 bg-emerald-50/50 border border-emerald-100 rounded-xl pl-9 pr-3 font-black text-navy text-sm outline-none focus:border-emerald-300 transition-all"
+                                                        value={usageForm.spare_cost}
+                                                        onChange={(e) => setUsageForm({...usageForm, spare_cost: e.target.value})}
+                                                        placeholder="Auto"
+                                                    />
+                                                </div>
                                             </div>
                                             <div className="space-y-1.5">
-                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Labor Charges (₹)</label>
+                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Labor Charges (₹)</label>
                                                 <input 
                                                     type="number" 
-                                                    className="w-full h-12 bg-white border border-slate-100 rounded-xl px-4 font-black text-navy text-sm"
+                                                    className="w-full h-12 bg-white border border-slate-100 rounded-xl px-4 font-black text-navy text-sm outline-none focus:border-navy transition-all"
                                                     value={usageForm.service_charge}
                                                     onChange={(e) => setUsageForm({...usageForm, service_charge: e.target.value})}
+                                                    placeholder="0"
                                                 />
                                             </div>
                                         </div>
 
+                                        {/* Date */}
                                         <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Maintenance Date</label>
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Maintenance Date</label>
                                             <input 
                                                 type="date" 
-                                                className="w-full h-12 bg-white border border-slate-100 rounded-xl px-4 font-bold text-navy"
+                                                className="w-full h-12 bg-white border border-slate-100 rounded-xl px-4 font-bold text-navy outline-none focus:border-navy transition-all"
                                                 value={usageForm.usage_date}
                                                 onChange={(e) => setUsageForm({...usageForm, usage_date: e.target.value})}
                                             />
@@ -456,16 +494,21 @@ export default function BusSpares() {
                                     </div>
                                 </div>
 
-                                {/* Summary & Actions */}
-                                <div className="p-8 bg-sky-950 text-white flex flex-col gap-6">
+                                {/* Summary Footer */}
+                                <div className="p-8 bg-sky-950 text-white flex flex-col gap-5 shrink-0">
                                     <div className="flex justify-between items-center">
                                         <div>
                                             <p className="text-[9px] font-black uppercase tracking-widest text-blue-300 opacity-60">Impact Valuation</p>
-                                            <h4 className="text-4xl font-black italic">₹{(parseFloat(usageForm.spare_cost || 0) + parseFloat(usageForm.service_charge || 0)).toLocaleString()}</h4>
+                                            <h4 className="text-4xl font-black italic">₹{totalCost.toLocaleString()}</h4>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-300 opacity-60">Estimated KM Delta</p>
-                                            <p className="text-2xl font-black italic">{(usageForm.new_reading - lastOdometer) || 0} <span className="text-xs opacity-40 uppercase not-italic ml-1">km</span></p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-300 opacity-60">KM Delta</p>
+                                            <p className="text-2xl font-black italic">
+                                                {usageForm.new_reading && usageForm.old_reading 
+                                                    ? Math.max(0, parseInt(usageForm.new_reading) - parseInt(usageForm.old_reading)).toLocaleString()
+                                                    : 0
+                                                } <span className="text-xs opacity-40 uppercase not-italic ml-1">km</span>
+                                            </p>
                                         </div>
                                     </div>
                                     <button 

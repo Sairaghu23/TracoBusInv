@@ -180,3 +180,21 @@ export const getProductCodesByUsage = async (usage_id) => {
     );
     return result.rows;
 };
+
+// --- COST CALCULATION ---
+// Returns the average cost per unit for a spare based on purchase history
+export const getCostPerUnit = async (spare_id) => {
+    const result = await pool.query(
+        `SELECT 
+            COALESCE(SUM(amount), 0) as total_amount,
+            COALESCE(SUM(quantity), 0) as total_quantity,
+            CASE 
+                WHEN COALESCE(SUM(quantity), 0) > 0 
+                THEN ROUND(SUM(amount)::numeric / SUM(quantity), 2)
+                ELSE 0
+            END as unit_cost
+         FROM spare_purchases WHERE spare_id = $1`,
+        [parseInt(spare_id)]
+    );
+    return result.rows[0];
+};

@@ -106,3 +106,13 @@ export const getUsageCodesController = async (req, res, next) => {
         next(err);
     }
 };
+
+export const getCostPerUnitController = async (req, res, next) => {
+    try {
+        const { spare_id } = req.params;
+        const cost = await spareModel.getCostPerUnit(spare_id);
+        handleResponse(res, 200, true, "Cost data retrieved", cost);
+    } catch (err) {
+        next(err);
+    }
+};

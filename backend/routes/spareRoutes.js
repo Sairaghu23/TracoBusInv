@@ -6,7 +6,8 @@ import {
     getSparePurchasesController,
     getInventoryController,
     getPurchaseCodesController,
-    getUsageCodesController
+    getUsageCodesController,
+    getCostPerUnitController
 } from '../controllers/spareController.js';
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.get('/stocks', getStocksController);
 router.post('/stocks', addSpareTypeController);
 router.post('/purchases', recordPurchaseController);
 router.get('/:spare_id/purchases', getSparePurchasesController);
+router.get('/:spare_id/cost', getCostPerUnitController);
 
 // Inventory & Codes
 router.get('/inventory/:spare_id', getInventoryController);
