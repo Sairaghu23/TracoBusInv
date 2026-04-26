@@ -23,10 +23,15 @@ export const recordPurchase = async (purchaseData) => {
     try {
         await client.query('BEGIN');
 
+        // Cast to appropriate types for safety
+        const s_id = parseInt(spare_id);
+        const qty = parseFloat(quantity);
+        const amt = parseFloat(amount);
+
         // 1. Record the purchase
         const purchaseResult = await client.query(
             'INSERT INTO spare_purchases (spare_id, purchase_date, amount, vendor, quantity) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [spare_id, purchase_date, amount, vendor?.trim().toUpperCase(), quantity]
+            [s_id, purchase_date, amt, vendor?.trim().toUpperCase(), qty]
         );
         const purchase_id = purchaseResult.rows[0].purchase_id;
 
@@ -35,7 +40,7 @@ export const recordPurchase = async (purchaseData) => {
             for (const code of product_codes) {
                 await client.query(
                     'INSERT INTO spare_items (spare_id, purchase_id, product_code, status) VALUES ($1, $2, $3, $4)',
-                    [spare_id, purchase_id, code.trim().toUpperCase(), 'AVAILABLE']
+                    [s_id, purchase_id, code.trim().toUpperCase(), 'AVAILABLE']
                 );
             }
         }
@@ -43,14 +48,15 @@ export const recordPurchase = async (purchaseData) => {
         // 3. Update the stock quantity in spare_stocks
         await client.query(
             'UPDATE spare_stocks SET quantity = (SELECT COUNT(*) FROM spare_items WHERE spare_id = $1 AND status = $2) WHERE spare_id = $1',
-            [spare_id, 'AVAILABLE']
+            [s_id, 'AVAILABLE']
         );
 
         await client.query('COMMIT');
         return purchaseResult.rows[0];
-    } catch (error) {
+    } catch (err) {
         await client.query('ROLLBACK');
-        throw error;
+        console.error("CRITICAL PURCHASE ERROR:", err);
+        throw err;
     } finally {
         client.release();
     }
@@ -90,7 +96,17 @@ export const recordUsage = async (usageData) => {
         // 1. Record the usage
         const usageResult = await client.query(
             'INSERT INTO spare_usage (bus_id, spare_id, usage_date, mechanic, quantity, service_charge, spare_cost, old_reading, new_reading) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-            [active_bus, spare_id, usage_date, mechanic?.trim().toUpperCase(), quantity, service_charge, spare_cost, old_reading, new_reading]
+            [
+                parseInt(active_bus), 
+                parseInt(spare_id), 
+                usage_date, 
+                mechanic?.trim().toUpperCase(), 
+                parseInt(quantity), 
+                parseFloat(service_charge || 0), 
+                parseFloat(spare_cost || 0), 
+                parseInt(old_reading), 
+                parseInt(new_reading)
+            ]
         );
         const usage_id = usageResult.rows[0].usage_id;
 
