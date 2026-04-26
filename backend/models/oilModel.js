@@ -9,7 +9,8 @@ export const getAllOilTypes = async () => {
 // Get all oil logs for a specific bus (by rc_plate_number)
 export const getOilLogsByBus = async (rc_plate_number) => {
     const result = await pool.query(`
-        SELECT ol.*, os.oil_type
+        SELECT ol.*, os.oil_type,
+               (ol.new_reading - ol.old_reading) as distance
         FROM oil_logs ol
         JOIN oil_stocks os ON ol.oil_id = os.oil_id
         JOIN buses b ON ol.bus_id = b.bus_id

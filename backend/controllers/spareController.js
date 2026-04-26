@@ -73,3 +73,36 @@ export const getSparePurchasesController = async (req, res, next) => {
         next(err);
     }
 };
+
+// --- INVENTORY / CODES ---
+
+export const getInventoryController = async (req, res, next) => {
+    try {
+        const { spare_id } = req.params;
+        const { status } = req.query; // AVAILABLE, USED, ALL
+        const inventory = await spareModel.getInventoryBySpare(spare_id, status);
+        handleResponse(res, 200, true, "Inventory retrieved", inventory);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getPurchaseCodesController = async (req, res, next) => {
+    try {
+        const { purchase_id } = req.params;
+        const codes = await spareModel.getProductCodesByPurchase(purchase_id);
+        handleResponse(res, 200, true, "Purchase codes retrieved", codes);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getUsageCodesController = async (req, res, next) => {
+    try {
+        const { usage_id } = req.params;
+        const codes = await spareModel.getProductCodesByUsage(usage_id);
+        handleResponse(res, 200, true, "Usage codes retrieved", codes);
+    } catch (err) {
+        next(err);
+    }
+};

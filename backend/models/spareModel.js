@@ -18,7 +18,7 @@ export const addSpareType = async (spare_name) => {
 // --- PURCHASES (Restock) ---
 
 export const recordPurchase = async (purchaseData) => {
-    const { spare_id, purchase_date, amount, vendor, quantity } = purchaseData;
+    const { spare_id, purchase_date, amount, vendor, quantity, product_codes } = purchaseData;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -28,11 +28,22 @@ export const recordPurchase = async (purchaseData) => {
             'INSERT INTO spare_purchases (spare_id, purchase_date, amount, vendor, quantity) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [spare_id, purchase_date, amount, vendor?.trim().toUpperCase(), quantity]
         );
+        const purchase_id = purchaseResult.rows[0].purchase_id;
 
-        // 2. Update the stock quantity
+        // 2. Insert individual product codes into spare_inventory
+        if (product_codes && Array.isArray(product_codes)) {
+            for (const code of product_codes) {
+                await client.query(
+                    'INSERT INTO spare_inventory (spare_id, purchase_id, product_code, status) VALUES ($1, $2, $3, $4)',
+                    [spare_id, purchase_id, code.trim().toUpperCase(), 'AVAILABLE']
+                );
+            }
+        }
+
+        // 3. Update the stock quantity
         await client.query(
-            'UPDATE spare_stocks SET quantity = quantity + $1 WHERE spare_id = $2',
-            [quantity, spare_id]
+            'UPDATE spare_stocks SET quantity = (SELECT COUNT(*) FROM spare_inventory WHERE spare_id = $1 AND status = $2) WHERE spare_id = $1',
+            [spare_id, 'AVAILABLE']
         );
 
         await client.query('COMMIT');
@@ -49,43 +60,54 @@ export const recordPurchase = async (purchaseData) => {
 
 export const getUsageByBus = async (rc_plate_number) => {
     const result = await pool.query(`
-        SELECT u.*, s.spare_name
+        SELECT u.*, s.spare_name,
+               (u.new_reading - u.old_reading) as distance,
+               string_agg(i.product_code, \', \') as product_codes
         FROM spare_usage u
         JOIN spare_stocks s ON u.spare_id = s.spare_id
         JOIN buses b ON u.bus_id = b.bus_id
+        LEFT JOIN spare_inventory i ON u.usage_id = i.usage_id
         WHERE b.rc_plate_number = $1
+        GROUP BY u.usage_id, s.spare_name
         ORDER BY u.usage_date DESC
     `, [rc_plate_number.trim().toUpperCase()]);
     return result.rows;
 };
 
 export const recordUsage = async (usageData) => {
-    const { rc_plate_number, spare_id, product_code, usage_date, mechanic, amount, quantity, old_reading, new_reading } = usageData;
+    const { rc_plate_number, spare_id, item_ids, usage_date, mechanic, labor_charges, parts_cost, quantity, old_reading, new_reading } = usageData;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
 
-        // 0. Extract corresponding bus_id securely avoiding hard dependencies
+        // 0. Extract corresponding bus_id
         const busQuery = await client.query('SELECT bus_id FROM buses WHERE rc_plate_number = $1', [rc_plate_number.trim().toUpperCase()]);
         if (busQuery.rows.length === 0) throw new Error('Vehicle Identity Authentication Failure.');
         const active_bus = busQuery.rows[0].bus_id;
 
-        // 1. Check if stock exists matching validated constraints limits
-        const stockCheck = await client.query('SELECT quantity FROM spare_stocks WHERE spare_id = $1', [spare_id]);
-        if (stockCheck.rows.length === 0 || stockCheck.rows[0].quantity < quantity || quantity < 1) {
-            throw new Error('Insufficient stock for this spare part.');
+        // 1. Record the usage
+        // Note: amount is total cost (parts + labor)
+        const total_amount = parseFloat(parts_cost || 0) + parseFloat(labor_charges || 0);
+        const usageResult = await client.query(
+            'INSERT INTO spare_usage (bus_id, spare_id, usage_date, mechanic, amount, quantity, labor_charges, parts_cost, old_reading, new_reading) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+            [active_bus, spare_id, usage_date, mechanic?.trim().toUpperCase(), total_amount, quantity, labor_charges, parts_cost, old_reading, new_reading]
+        );
+        const usage_id = usageResult.rows[0].usage_id;
+
+        // 2. Mark items as USED and link to usage
+        if (item_ids && Array.isArray(item_ids)) {
+            for (const item_id of item_ids) {
+                await client.query(
+                    'UPDATE spare_inventory SET status = $1, usage_id = $2 WHERE item_id = $3',
+                    ['USED', usage_id, item_id]
+                );
+            }
         }
 
-        // 2. Record the usage mapping variable components securely over Native DB schemas
-        const usageResult = await client.query(
-            'INSERT INTO spare_usage (bus_id, spare_id, usage_date, mechanic, amount, quantity, product_code, old_reading, new_reading) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-            [active_bus, spare_id, usage_date, mechanic?.trim().toUpperCase(), amount, quantity, product_code, old_reading, new_reading]
-        );
-
-        // 3. Decrement the specific requested metric mapping inventory calculations globally
+        // 3. Decrement the stock quantity
         await client.query(
-            'UPDATE spare_stocks SET quantity = quantity - $1 WHERE spare_id = $2',
-            [quantity, spare_id]
+            'UPDATE spare_stocks SET quantity = (SELECT COUNT(*) FROM spare_inventory WHERE spare_id = $1 AND status = $2) WHERE spare_id = $1',
+            [spare_id, 'AVAILABLE']
         );
 
         await client.query('COMMIT');
@@ -104,6 +126,32 @@ export const getPurchasesBySpare = async (spare_id) => {
     const result = await pool.query(
         'SELECT * FROM spare_purchases WHERE spare_id = $1 ORDER BY purchase_date DESC',
         [spare_id]
+    );
+    return result.rows;
+};
+
+// --- INVENTORY HELPERS ---
+
+export const getInventoryBySpare = async (spare_id, status = 'AVAILABLE') => {
+    const result = await pool.query(
+        'SELECT * FROM spare_inventory WHERE spare_id = $1 AND ($2 = \'ALL\' OR status = $2) ORDER BY product_code ASC',
+        [spare_id, status]
+    );
+    return result.rows;
+};
+
+export const getProductCodesByPurchase = async (purchase_id) => {
+    const result = await pool.query(
+        'SELECT * FROM spare_inventory WHERE purchase_id = $1 ORDER BY product_code ASC',
+        [purchase_id]
+    );
+    return result.rows;
+};
+
+export const getProductCodesByUsage = async (usage_id) => {
+    const result = await pool.query(
+        'SELECT * FROM spare_inventory WHERE usage_id = $1 ORDER BY product_code ASC',
+        [usage_id]
     );
     return result.rows;
 };

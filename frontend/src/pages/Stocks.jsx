@@ -15,7 +15,8 @@ export default function Stocks() {
         purchase_date: new Date().toISOString().split('T')[0],
         amount: '',
         vendor: '',
-        quantity: ''
+        quantity: '',
+        product_codes: []
     });
 
     const [newSpareName, setNewSpareName] = useState('');
@@ -40,12 +41,36 @@ export default function Stocks() {
         fetchStocks();
     }, []);
 
+    const handleQuantityChange = (qty) => {
+        const count = parseInt(qty) || 0;
+        const codes = Array(count).fill('');
+        setPurchaseData({ ...purchaseData, quantity: qty, product_codes: codes });
+    };
+
+    const handleCodeChange = (index, value) => {
+        const newCodes = [...purchaseData.product_codes];
+        newCodes[index] = value;
+        setPurchaseData({ ...purchaseData, product_codes: newCodes });
+    };
+
     const handlePurchaseSubmit = async () => {
+        if (purchaseData.product_codes.some(c => !c.trim())) {
+            alert("Please provide product codes for all units.");
+            return;
+        }
         try {
             const result = await api.post('/api/spares/purchases', purchaseData);
             if (result.data?.status) {
-                alert("Purchase recorded successfully!");
+                alert("Purchase recorded and individual items registered!");
                 setIsAddModalOpen(false);
+                setPurchaseData({
+                    spare_id: '',
+                    purchase_date: new Date().toISOString().split('T')[0],
+                    amount: '',
+                    vendor: '',
+                    quantity: '',
+                    product_codes: []
+                });
                 fetchStocks();
             } else {
                 alert(result.data?.message || "Operation failed");
@@ -173,74 +198,116 @@ export default function Stocks() {
             {/* New Purchase Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-6 bg-navy text-white">
-                            <h2 className="text-xl font-bold">Record Cargo Stock Purchase</h2>
-                            <p className="text-blue-100 text-xs opacity-75">Update inventory after supply arrival.</p>
-                        </div>
-                        <div className="p-8 space-y-4">
-                            <div>
-                                <label className="form-label">Part Classification</label>
-                                <select 
-                                    className="form-input"
-                                    value={purchaseData.spare_id}
-                                    onChange={(e) => setPurchaseData({...purchaseData, spare_id: e.target.value})}
-                                >
-                                    <option value="">-- Select Spare Type --</option>
-                                    {stocks.map(s => <option key={s.spare_id} value={s.spare_id}>{s.spare_name}</option>)}
-                                </select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col md:flex-row max-h-[80vh]">
+                        {/* Summary Column */}
+                        <div className="p-6 bg-navy text-white w-full md:w-80 flex-shrink-0">
+                            <h2 className="text-xl font-bold mb-2">Inventory Restock</h2>
+                            <p className="text-blue-100 text-xs opacity-75 mb-6 italic">Record individual product codes for better tracking.</p>
+                            
+                            <div className="space-y-6">
                                 <div>
-                                    <label className="form-label">Purchase Date</label>
+                                    <label className="text-[10px] font-black uppercase text-blue-200 tracking-widest mb-1 block">Selected Category</label>
+                                    <p className="font-bold text-lg">{stocks.find(s => s.spare_id === parseInt(purchaseData.spare_id))?.spare_name || 'Not Selected'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-blue-200 tracking-widest mb-1 block">Expected Units</label>
+                                    <p className="font-black text-4xl italic">{purchaseData.quantity || 0}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Form Column */}
+                        <div className="flex-1 flex flex-col overflow-hidden bg-white">
+                            <div className="p-8 overflow-y-auto space-y-6 flex-1">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="form-label">Part Classification</label>
+                                        <select 
+                                            className="form-input"
+                                            value={purchaseData.spare_id}
+                                            onChange={(e) => setPurchaseData({...purchaseData, spare_id: e.target.value})}
+                                        >
+                                            <option value="">-- Select Spare Type --</option>
+                                            {stocks.map(s => <option key={s.spare_id} value={s.spare_id}>{s.spare_name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Purchase Date</label>
+                                        <input 
+                                            type="date" 
+                                            className="form-input" 
+                                            value={purchaseData.purchase_date}
+                                            onChange={(e) => setPurchaseData({...purchaseData, purchase_date: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="form-label">Quantity (Units)</label>
+                                        <input 
+                                            type="number" 
+                                            className="form-input font-bold" 
+                                            placeholder="0" 
+                                            value={purchaseData.quantity}
+                                            onChange={(e) => handleQuantityChange(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="form-label text-navy font-black">Total Invoice Amount (₹)</label>
+                                        <input 
+                                            type="number" 
+                                            className="form-input border-blue-200 bg-blue-50 font-bold"
+                                            placeholder="0.00" 
+                                            value={purchaseData.amount}
+                                            onChange={(e) => setPurchaseData({...purchaseData, amount: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="form-label">Supplier / Vendor</label>
                                     <input 
-                                        type="date" 
+                                        type="text" 
                                         className="form-input" 
-                                        value={purchaseData.purchase_date}
-                                        onChange={(e) => setPurchaseData({...purchaseData, purchase_date: e.target.value})}
+                                        placeholder="e.g. City Auto Distribution" 
+                                        value={purchaseData.vendor}
+                                        onChange={(e) => setPurchaseData({...purchaseData, vendor: e.target.value})}
                                     />
                                 </div>
-                                <div>
-                                    <label className="form-label">Quantity (Units)</label>
-                                    <input 
-                                        type="number" 
-                                        className="form-input font-bold" 
-                                        placeholder="0" 
-                                        value={purchaseData.quantity}
-                                        onChange={(e) => setPurchaseData({...purchaseData, quantity: e.target.value})}
-                                    />
-                                </div>
+
+                                {/* Dynamic Product Codes */}
+                                {purchaseData.product_codes.length > 0 && (
+                                    <div className="space-y-3 pt-6 border-t border-slate-100">
+                                        <label className="text-xs font-black text-navy uppercase tracking-widest block mb-4">Enter Product Codes / Serial Numbers</label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {purchaseData.product_codes.map((code, idx) => (
+                                                <div key={idx} className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">#{idx + 1}</span>
+                                                    <input 
+                                                        type="text"
+                                                        value={code}
+                                                        onChange={(e) => handleCodeChange(idx, e.target.value)}
+                                                        className="form-input pl-10 text-xs font-bold uppercase"
+                                                        placeholder="CODE"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <div>
-                                <label className="form-label">Supplier / Vendor</label>
-                                <input 
-                                    type="text" 
-                                    className="form-input" 
-                                    placeholder="e.g. City Auto Distribution" 
-                                    value={purchaseData.vendor}
-                                    onChange={(e) => setPurchaseData({...purchaseData, vendor: e.target.value})}
-                                />
+
+                            <div className="p-6 bg-slate-50 flex justify-end gap-3 border-t border-slate-100">
+                                <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-2 font-bold text-slate-400">Cancel</button>
+                                <button 
+                                    onClick={handlePurchaseSubmit} 
+                                    className="btn btn-primary px-8"
+                                    disabled={!purchaseData.spare_id || !purchaseData.quantity || !purchaseData.amount}
+                                >
+                                    Confirm Purchase
+                                </button>
                             </div>
-                            <div>
-                                <label className="form-label text-navy font-black">Total Invoice Amount (₹)</label>
-                                <input 
-                                    type="number" 
-                                    className="form-input border-blue-200 bg-blue-50 font-black text-blue-800"
-                                    placeholder="0.00" 
-                                    value={purchaseData.amount}
-                                    onChange={(e) => setPurchaseData({...purchaseData, amount: e.target.value})}
-                                />
-                            </div>
-                        </div>
-                        <div className="p-6 pt-0 border-t border-slate-50 flex justify-end gap-3">
-                            <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-2 font-bold text-slate-400">Cancel</button>
-                            <button 
-                                onClick={handlePurchaseSubmit} 
-                                className="btn btn-primary px-8"
-                                disabled={!purchaseData.spare_id || !purchaseData.quantity || !purchaseData.amount}
-                            >
-                                Confirm Purchase
-                            </button>
                         </div>
                     </div>
                 </div>
