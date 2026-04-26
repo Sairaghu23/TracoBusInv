@@ -21,6 +21,15 @@ import Students from './pages/Transport/Students';
 import Drivers from './pages/Transport/Drivers';
 import DriverDetails from './pages/Transport/DriverDetails';
 
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 // Placeholders for subsequent routes
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -38,7 +47,11 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         {/* Protected Dashboard Layout Routes */}
-        <Route path="/" element={<MainLayout />}>
+        <Route path="/" element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Dashboard />} />
           
           <Route path="buses">

@@ -5,8 +5,12 @@ import { getBusSparesController, recordUsageController } from '../controllers/sp
 import { getBusDieselHistoryController, addSingleBusDieselController } from '../controllers/dieselController.js';
 import { getBusOilLogsController, recordOilLogController } from '../controllers/oilController.js';
 import { getBusDocumentsController, uploadBusDocumentController } from '../controllers/documentController.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// Apply auth protection to all bus routes
+router.use(authMiddleware);
 
 router.get('/', getAllBusesController);
 router.get('/:rc_plate_number', getBusByRcPlateController);

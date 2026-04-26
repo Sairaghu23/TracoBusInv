@@ -1,15 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Simulate authentication
-    navigate('/');
+    setError('');
+    setLoading(true);
+    
+    try {
+      const response = await api.post('/auth/login', { username, password });
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -24,6 +41,12 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg text-center animate-shake">
+              {error}
+            </div>
+          )}
+          
           <div>
             <label className="form-label">Username</label>
             <input
@@ -48,8 +71,12 @@ export default function Login() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary w-full py-3 text-base shadow-sm">
-            Sign In to Dashboard
+          <button 
+            type="submit" 
+            disabled={loading}
+            className={`btn btn-primary w-full py-3 text-base shadow-sm ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            {loading ? 'Verifying...' : 'Sign In to Dashboard'}
           </button>
         </form>
 

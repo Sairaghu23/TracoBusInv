@@ -11,8 +11,16 @@ import spareRoutes from './spareRoutes.js';
 import fuelRoutes from './fuelRoutes.js';
 import oilRoutes from './oilRoutes.js';
 import documentRoutes from './documentRoutes.js';
+import authRoutes from './authRoutes.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// Public routes
+router.use('/auth', authRoutes);
+
+// Protected routes (All endpoints below require a valid JWT)
+router.use(authMiddleware);
 
 // Register all routes with correct API prefixes
 router.use('/routes', routeRoutes);
