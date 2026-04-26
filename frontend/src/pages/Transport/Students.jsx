@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import { 
+    School, BookOpen, Award, GraduationCap, Users, Search, 
+    Plus, X, ChevronLeft, FileText, Download, UserPlus, 
+    Clock, Filter, MapPin, CreditCard, Pencil, Trash2 
+} from 'lucide-react';
 
 const API_BASE = 'https://tracobusinvcicd.duckdns.org';
 
