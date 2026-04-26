@@ -89,7 +89,7 @@ export const getSpareAnalytics = async (month, year) => {
             b.bus_no,
             b.rc_plate_number,
             SUM(su.quantity) AS quantity,
-            SUM(su.amount) AS amount
+            SUM(su.spare_cost + su.service_charge) AS amount
         FROM spare_usage su
         JOIN buses b ON su.bus_id = b.bus_id
         WHERE EXTRACT(MONTH FROM su.usage_date) = $1

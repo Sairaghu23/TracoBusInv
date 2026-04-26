@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, Search, AlertCircle } from 'lucide-react';
+import { 
+    Package, Plus, Search, AlertCircle, ShoppingCart, 
+    Calendar, User, CreditCard, ChevronRight, CheckCircle2, 
+    X, Clipboard, Zap, Trash2, ArrowRight 
+} from 'lucide-react';
 import api from '../utils/api';
 
 export default function Stocks() {
@@ -8,43 +12,50 @@ export default function Stocks() {
     const [stocks, setStocks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isNewTypeModalOpen, setIsNewTypeModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [newSpareName, setNewSpareName] = useState('');
     
+    // Purchase Entry State
     const [purchaseData, setPurchaseData] = useState({
         spare_id: '',
         purchase_date: new Date().toISOString().split('T')[0],
         amount: '',
         vendor: '',
-        quantity: '',
+        quantity: 0,
         product_codes: []
     });
 
-    const [newSpareName, setNewSpareName] = useState('');
-    const [isNewTypeModalOpen, setIsNewTypeModalOpen] = useState(false);
+    const [isBulkMode, setIsBulkMode] = useState(false);
+    const [bulkInput, setBulkInput] = useState('');
+    const codeInputsRef = useRef([]);
 
-    // Fetch Stocks
     const fetchStocks = async () => {
         setLoading(true);
         try {
             const result = await api.get('/api/spares/stocks');
-            if (result.data?.status) {
-                setStocks(result.data.data);
-            }
+            if (result.data?.status) setStocks(result.data.data);
         } catch (err) {
-            console.error("Error fetching stocks:", err);
+            console.error("Fetch failure:", err);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchStocks();
-    }, []);
+    useEffect(() => { fetchStocks(); }, []);
 
-    const handleQuantityChange = (qty) => {
-        const count = parseInt(qty) || 0;
-        const codes = Array(count).fill('');
-        setPurchaseData({ ...purchaseData, quantity: qty, product_codes: codes });
+    // Quantity Change Logic
+    const handleQuantityChange = (val) => {
+        const qty = parseInt(val) || 0;
+        setPurchaseData(prev => {
+            const newCodes = [...prev.product_codes];
+            if (qty > newCodes.length) {
+                for (let i = newCodes.length; i < qty; i++) newCodes.push('');
+            } else {
+                newCodes.splice(qty);
+            }
+            return { ...prev, quantity: qty, product_codes: newCodes };
+        });
     };
 
     const handleCodeChange = (index, value) => {
@@ -53,259 +64,399 @@ export default function Stocks() {
         setPurchaseData({ ...purchaseData, product_codes: newCodes });
     };
 
+    const handleBulkPaste = (e) => {
+        const text = e.target.value;
+        setBulkInput(text);
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+        setPurchaseData(prev => {
+            const newCodes = [...prev.product_codes];
+            lines.forEach((line, idx) => {
+                if (idx < prev.quantity) newCodes[idx] = line.trim();
+            });
+            return { ...prev, product_codes: newCodes };
+        });
+    };
+
     const handlePurchaseSubmit = async () => {
-        if (purchaseData.product_codes.some(c => !c.trim())) {
-            alert("Please provide product codes for all units.");
-            return;
-        }
+        const hasEmpty = purchaseData.product_codes.some(c => !c.trim());
+        const hasDuplicates = new Set(purchaseData.product_codes).size !== purchaseData.product_codes.length;
+
+        if (hasEmpty) return alert("All product codes must be filled.");
+        if (hasDuplicates) return alert("Duplicate product codes detected in this batch!");
+
         try {
-            const result = await api.post('/api/spares/purchases', purchaseData);
-            if (result.data?.status) {
-                alert("Purchase recorded and individual items registered!");
+            const res = await api.post('/api/spares/purchases', purchaseData);
+            if (res.data?.status) {
+                alert("Inventory updated successfully!");
                 setIsAddModalOpen(false);
                 setPurchaseData({
                     spare_id: '',
                     purchase_date: new Date().toISOString().split('T')[0],
                     amount: '',
                     vendor: '',
-                    quantity: '',
+                    quantity: 0,
                     product_codes: []
                 });
                 fetchStocks();
-            } else {
-                alert(result.data?.message || "Operation failed");
             }
         } catch (err) {
-            console.error("Error recording purchase:", err);
+            console.error("Purchase error:", err);
+            alert("Internal System Fault. Verification Failed.");
         }
     };
 
     const handleAddNewType = async () => {
         try {
-            const result = await api.post('/api/spares/stocks', { spare_name: newSpareName });
-            if (result.data?.status) {
-                alert("New spare type added!");
+            const res = await api.post('/api/spares/stocks', { spare_name: newSpareName });
+            if (res.data?.status) {
                 setIsNewTypeModalOpen(false);
                 setNewSpareName('');
                 fetchStocks();
-            } else {
-                alert(result.data?.message || "Operation failed");
             }
-        } catch (err) {
-            console.error("Error adding spare type:", err);
-        }
+        } catch (err) { console.error(err); }
     };
 
-    const filteredStocks = stocks.filter(s => 
-        s.spare_name.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredStocks = stocks.filter(s => s.spare_name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const lowStockItems = stocks.filter(s => s.quantity < 5);
+
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 border-4 border-navy border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-navy font-black uppercase tracking-widest text-xs">Syncing Inventory Index...</p>
+            </div>
+        </div>
     );
 
-    const lowStockCount = stocks.filter(s => s.quantity < 10).length;
-
-    if (loading) return <div className="p-20 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto"></div></div>;
-
     return (
-        <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl font-bold text-navy flex items-center gap-3">
-                    <Package className="text-emerald-500" /> 
-                    Global Inventory Stocks
-                </h1>
-                <div className="flex gap-3">
-                    <button onClick={() => setIsNewTypeModalOpen(true)} className="btn btn-outline">
-                        Register New Part Type
+        <div className="max-w-[1400px] mx-auto p-4 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            
+            {/* Premium Header */}
+            <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-navy rounded-lg text-white">
+                            <Package size={24} />
+                        </div>
+                        <h1 className="text-3xl font-black text-navy tracking-tight uppercase italic">Warehouse Registry</h1>
+                    </div>
+                    <p className="text-slate-500 font-medium">Enterprise Spare Parts Management & Lifecycle Tracking</p>
+                </div>
+                
+                <div className="flex gap-4 w-full lg:w-auto">
+                    <button 
+                        onClick={() => setIsNewTypeModalOpen(true)}
+                        className="flex-1 lg:flex-none px-6 py-3 bg-white border-2 border-slate-100 rounded-2xl font-bold text-navy hover:border-navy transition-all flex items-center justify-center gap-2"
+                    >
+                        <Plus size={18} /> New Category
                     </button>
-                    <button onClick={() => setIsAddModalOpen(true)} className="btn btn-primary">
-                        <Plus size={18} /> Record Purchase
+                    <button 
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex-1 lg:flex-none px-8 py-3 bg-navy text-white rounded-2xl font-black shadow-xl shadow-navy/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                        <Zap size={18} className="text-emerald-400 fill-emerald-400" /> Record Purchase
                     </button>
                 </div>
-            </div>
+            </header>
 
-            {/* Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="card flex items-center gap-6 border-l-4 border-l-emerald-500 bg-emerald-50">
-                    <div className="p-4 bg-white rounded-xl shadow-sm text-emerald-600">
-                        <Package size={32} />
+            {/* Smart Metrics Dashboard */}
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-6 group hover:shadow-xl hover:shadow-blue-50 transition-all duration-500">
+                    <div className="w-16 h-16 bg-navy/5 rounded-2xl flex items-center justify-center text-navy group-hover:bg-navy group-hover:text-white transition-all">
+                        <ShoppingCart size={32} />
                     </div>
                     <div>
-                        <p className="text-sm font-semibold text-emerald-600 uppercase tracking-wider mb-1">Total Unique Part Categories</p>
-                        <h2 className="text-3xl font-bold text-slate-800">{stocks.length}</h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total SKU Count</p>
+                        <h3 className="text-4xl font-black text-navy">{stocks.length}</h3>
                     </div>
                 </div>
 
-                <div className={`card flex flex-col justify-center border-l-4 ${lowStockCount > 0 ? 'border-l-red-500 bg-red-50' : 'border-l-blue-500 bg-blue-50'}`}>
-                    <p className={`text-sm font-semibold uppercase tracking-wider mb-1 ${lowStockCount > 0 ? 'text-red-600' : 'text-blue-600'}`}>
-                        {lowStockCount > 0 ? 'Attention Required' : 'Inventory Healthy'}
-                    </p>
-                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        {lowStockCount > 0 ? `${lowStockCount} items critically low on stock` : 'All items sufficiently stocked'}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1">Maintenance threshold: 10 units</p>
+                <div className={`p-8 rounded-[2rem] border transition-all duration-500 flex items-center gap-6 group
+                    ${lowStockItems.length > 0 ? 'bg-red-50/50 border-red-100 hover:shadow-red-50 shadow-sm' : 'bg-emerald-50/50 border-emerald-100 shadow-sm'}
+                `}>
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all
+                        ${lowStockItems.length > 0 ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}
+                    `}>
+                        <AlertCircle size={32} />
+                    </div>
+                    <div>
+                        <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${lowStockItems.length > 0 ? 'text-red-500' : 'text-emerald-600'}`}>Stock Health</p>
+                        <h3 className="text-xl font-black text-slate-800">
+                            {lowStockItems.length > 0 ? `${lowStockItems.length} Items Critically Low` : 'Optimal Inventory'}
+                        </h3>
+                    </div>
                 </div>
-            </div>
 
-            {/* Controls */}
-            <div className="card flex items-center gap-4">
-                <div className="relative flex-1 max-w-md">
-                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
-                        type="text" 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="form-input pl-10" 
-                        placeholder="Search spare parts inventory..."
-                    />
+                <div className="bg-navy p-8 rounded-[2rem] shadow-2xl shadow-navy/20 flex flex-col justify-center relative overflow-hidden group">
+                    <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                        <Package size={140} />
+                    </div>
+                    <p className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-2">Live Registry Search</p>
+                    <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300" size={18} />
+                        <input 
+                            type="text" 
+                            placeholder="Filter by name..." 
+                            className="w-full bg-white/10 border-none h-14 rounded-2xl pl-12 text-white placeholder:text-blue-300/50 font-bold focus:ring-2 ring-blue-400 transition-all"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            {/* Table */}
-            <div className="table-container shadow-md rounded-xl overflow-hidden">
-                <table className="admin-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Spare Part Name</th>
-                            <th>Available Quantity</th>
-                            <th className="text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                        {filteredStocks.map((stock) => (
-                            <tr key={stock.spare_id} className="hover:bg-slate-50">
-                                <td className="font-mono text-slate-400 text-xs">#SP-{stock.spare_id}</td>
-                                <td className="font-semibold text-navy">{stock.spare_name}</td>
-                                <td>
-                                    <span className={`px-4 py-1.5 rounded-full font-black text-sm border
-                                        ${stock.quantity < 10 ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}
-                                    `}>
-                                        {stock.quantity} Units
-                                    </span>
-                                </td>
-                                <td className="text-right">
-                                    <button 
-                                        onClick={() => navigate(`/stocks/${stock.spare_id}/purchases`)}
-                                        className="text-blue-600 hover:text-blue-800 text-sm font-bold"
-                                    >
-                                        Purchase Logs
-                                    </button>
-                                </td>
+            {/* Inventory Index Table */}
+            <section className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-slate-50/50 border-b border-slate-100">
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Serial Index</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Stock</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Activity</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {filteredStocks.map((stock) => (
+                                <tr key={stock.spare_id} className="group hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-8 py-6">
+                                        <span className="font-mono text-[11px] font-black text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg">#SP-{stock.spare_id}</span>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <p className="font-black text-navy text-lg group-hover:translate-x-1 transition-transform">{stock.spare_name}</p>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-2xl font-black text-slate-700">{stock.quantity}</span>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Units in bin</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        {stock.quantity < 5 ? (
+                                            <span className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-tighter">
+                                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Critical Restock
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-tighter">
+                                                <div className="w-2 h-2 rounded-full bg-emerald-500" /> Healthy
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-8 py-6 text-right">
+                                        <button 
+                                            onClick={() => navigate(`/stocks/${stock.spare_id}/purchases`)}
+                                            className="p-3 hover:bg-navy hover:text-white rounded-xl transition-all text-slate-400"
+                                        >
+                                            <ChevronRight size={20} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-            {/* New Purchase Modal */}
+            {/* MODAL: Purchase Entry Overhaul */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col md:flex-row max-h-[80vh]">
-                        {/* Summary Column */}
-                        <div className="p-6 bg-navy text-white w-full md:w-80 flex-shrink-0">
-                            <h2 className="text-xl font-bold mb-2">Inventory Restock</h2>
-                            <p className="text-blue-100 text-xs opacity-75 mb-6 italic">Record individual product codes for better tracking.</p>
-                            
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="text-[10px] font-black uppercase text-blue-200 tracking-widest mb-1 block">Selected Category</label>
-                                    <p className="font-bold text-lg">{stocks.find(s => s.spare_id === parseInt(purchaseData.spare_id))?.spare_name || 'Not Selected'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black uppercase text-blue-200 tracking-widest mb-1 block">Expected Units</label>
-                                    <p className="font-black text-4xl italic">{purchaseData.quantity || 0}</p>
-                                </div>
-                            </div>
-                        </div>
+                <div className="fixed inset-0 bg-navy/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 animate-in fade-in duration-500">
+                    <div className="bg-white w-full max-w-6xl h-[90vh] rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col lg:flex-row relative animate-in zoom-in-95 duration-500">
+                        <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-8 z-10 p-3 bg-slate-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-all shadow-sm">
+                            <X size={20} />
+                        </button>
 
-                        {/* Form Column */}
-                        <div className="flex-1 flex flex-col overflow-hidden bg-white">
-                            <div className="p-8 overflow-y-auto space-y-6 flex-1">
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="form-label">Part Classification</label>
+                        {/* Left Pane: Core Details */}
+                        <div className="lg:w-1/3 bg-slate-50/50 p-10 border-r border-slate-100 flex flex-col justify-between overflow-y-auto">
+                            <div className="space-y-10">
+                                <div>
+                                    <div className="w-16 h-16 bg-navy rounded-3xl flex items-center justify-center text-white mb-6 shadow-xl shadow-navy/20">
+                                        <Plus size={32} />
+                                    </div>
+                                    <h2 className="text-3xl font-black text-navy italic tracking-tighter">Stock Entry</h2>
+                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-2 leading-relaxed">Register new hardware units into primary warehouse bins.</p>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Part Category</label>
                                         <select 
-                                            className="form-input"
+                                            className="w-full h-14 bg-white border-none rounded-2xl px-6 font-bold text-navy shadow-sm focus:ring-2 ring-navy/10 transition-all"
                                             value={purchaseData.spare_id}
                                             onChange={(e) => setPurchaseData({...purchaseData, spare_id: e.target.value})}
                                         >
-                                            <option value="">-- Select Spare Type --</option>
+                                            <option value="">-- Choose Category --</option>
                                             {stocks.map(s => <option key={s.spare_id} value={s.spare_id}>{s.spare_name}</option>)}
                                         </select>
                                     </div>
-                                    <div>
-                                        <label className="form-label">Purchase Date</label>
-                                        <input 
-                                            type="date" 
-                                            className="form-input" 
-                                            value={purchaseData.purchase_date}
-                                            onChange={(e) => setPurchaseData({...purchaseData, purchase_date: e.target.value})}
-                                        />
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Quantity</label>
+                                            <input 
+                                                type="number" 
+                                                className="w-full h-14 bg-white border-none rounded-2xl px-6 font-black text-2xl text-navy shadow-sm ring-2 ring-navy/5"
+                                                value={purchaseData.quantity}
+                                                onChange={(e) => handleQuantityChange(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Invoice Amount</label>
+                                            <input 
+                                                type="number" 
+                                                className="w-full h-14 bg-emerald-50/30 border-none rounded-2xl px-6 font-black text-navy placeholder:text-navy/20 shadow-sm"
+                                                placeholder="₹"
+                                                value={purchaseData.amount}
+                                                onChange={(e) => setPurchaseData({...purchaseData, amount: e.target.value})}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Vendor / Supplier</label>
+                                        <div className="relative">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                            <input 
+                                                type="text" 
+                                                className="w-full h-14 bg-white border-none rounded-2xl pl-12 pr-6 font-bold text-navy shadow-sm"
+                                                placeholder="e.g. Acme Auto Parts"
+                                                value={purchaseData.vendor}
+                                                onChange={(e) => setPurchaseData({...purchaseData, vendor: e.target.value})}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Purchase Identity Date</label>
+                                        <div className="relative">
+                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                            <input 
+                                                type="date" 
+                                                className="w-full h-14 bg-white border-none rounded-2xl pl-12 pr-6 font-bold text-navy shadow-sm"
+                                                value={purchaseData.purchase_date}
+                                                onChange={(e) => setPurchaseData({...purchaseData, purchase_date: e.target.value})}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="form-label">Quantity (Units)</label>
-                                        <input 
-                                            type="number" 
-                                            className="form-input font-bold" 
-                                            placeholder="0" 
-                                            value={purchaseData.quantity}
-                                            onChange={(e) => handleQuantityChange(e.target.value)}
-                                        />
+                            <button
+                                onClick={handlePurchaseSubmit}
+                                disabled={!purchaseData.spare_id || purchaseData.quantity <= 0 || !purchaseData.amount}
+                                className={`w-full py-5 rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] transition-all shadow-2xl flex items-center justify-center gap-3 mt-10
+                                    ${(!purchaseData.spare_id || purchaseData.quantity <= 0 || !purchaseData.amount) 
+                                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
+                                        : 'bg-navy text-white hover:scale-105 shadow-navy/20 active:scale-95'}
+                                `}
+                            >
+                                <ArrowRight size={18} /> Finalize Inventory Commit
+                            </button>
+                        </div>
+
+                        {/* Right Pane: Code Management */}
+                        <div className="flex-1 p-10 bg-white flex flex-col h-full overflow-hidden">
+                            <div className="flex justify-between items-center mb-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                                        <Zap size={24} />
                                     </div>
                                     <div>
-                                        <label className="form-label text-navy font-black">Total Invoice Amount (₹)</label>
-                                        <input 
-                                            type="number" 
-                                            className="form-input border-blue-200 bg-blue-50 font-bold"
-                                            placeholder="0.00" 
-                                            value={purchaseData.amount}
-                                            onChange={(e) => setPurchaseData({...purchaseData, amount: e.target.value})}
-                                        />
+                                        <h3 className="text-xl font-black text-navy uppercase tracking-tighter">Physical Identity Mapping</h3>
+                                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                                            {purchaseData.product_codes.filter(c => c.trim()).length} / {purchaseData.quantity} Codes Verified
+                                        </p>
                                     </div>
                                 </div>
-
-                                <div>
-                                    <label className="form-label">Supplier / Vendor</label>
-                                    <input 
-                                        type="text" 
-                                        className="form-input" 
-                                        placeholder="e.g. City Auto Distribution" 
-                                        value={purchaseData.vendor}
-                                        onChange={(e) => setPurchaseData({...purchaseData, vendor: e.target.value})}
-                                    />
+                                <div className="flex bg-slate-100 p-1 rounded-2xl">
+                                    <button 
+                                        onClick={() => setIsBulkMode(false)}
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${!isBulkMode ? 'bg-white text-navy shadow-sm' : 'text-slate-500'}`}
+                                    >Individual</button>
+                                    <button 
+                                        onClick={() => setIsBulkMode(true)}
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${isBulkMode ? 'bg-white text-navy shadow-sm' : 'text-slate-500'}`}
+                                    >Bulk Paste</button>
                                 </div>
+                            </div>
 
-                                {/* Dynamic Product Codes */}
-                                {purchaseData.product_codes.length > 0 && (
-                                    <div className="space-y-3 pt-6 border-t border-slate-100">
-                                        <label className="text-xs font-black text-navy uppercase tracking-widest block mb-4">Enter Product Codes / Serial Numbers</label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {purchaseData.product_codes.map((code, idx) => (
-                                                <div key={idx} className="relative">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">#{idx + 1}</span>
+                            <div className="flex-1 overflow-y-auto">
+                                {purchaseData.quantity === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4 opacity-50">
+                                        <div className="w-24 h-24 border-4 border-dashed border-slate-200 rounded-full flex items-center justify-center">
+                                            <Package size={40} />
+                                        </div>
+                                        <p className="font-black uppercase tracking-[0.2em] text-[10px]">Awaiting Quantity Input...</p>
+                                    </div>
+                                ) : isBulkMode ? (
+                                    <div className="h-full flex flex-col gap-4 animate-in slide-in-from-right-4 duration-300">
+                                        <div className="p-6 bg-blue-50 rounded-3xl border border-blue-100 flex items-start gap-4">
+                                            <Clipboard className="text-blue-500 mt-1" size={20} />
+                                            <div>
+                                                <p className="text-sm font-bold text-navy">Bulk Inject Mode</p>
+                                                <p className="text-xs text-slate-500 mt-1">Paste your list of serial numbers (one per line). The system will automatically map them to the corresponding unit slots.</p>
+                                            </div>
+                                        </div>
+                                        <textarea
+                                            className="flex-1 w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] p-8 font-mono text-sm font-bold focus:ring-4 ring-navy/5 focus:bg-white transition-all outline-none"
+                                            placeholder={"Serial001\nSerial002\nSerial003..."}
+                                            value={bulkInput}
+                                            onChange={handleBulkPaste}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in slide-in-from-left-4 duration-300 pb-10">
+                                        {purchaseData.product_codes.map((code, idx) => {
+                                            const isDuplicate = purchaseData.product_codes.filter(c => c === code && c !== '').length > 1;
+                                            return (
+                                                <div key={idx} className={`group flex items-center gap-4 p-4 rounded-3xl border transition-all duration-300
+                                                    ${isDuplicate ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-50 hover:border-navy hover:bg-white'}
+                                                `}>
+                                                    <span className="w-10 h-10 flex-shrink-0 bg-white rounded-2xl flex items-center justify-center text-[10px] font-black text-slate-400 group-hover:text-navy group-hover:scale-110 transition-all shadow-sm">
+                                                        {idx + 1}
+                                                    </span>
                                                     <input 
                                                         type="text"
                                                         value={code}
+                                                        placeholder="S-NO / CODE"
+                                                        className="bg-transparent border-none w-full p-0 font-black text-navy uppercase placeholder:text-slate-200 text-sm focus:ring-0"
                                                         onChange={(e) => handleCodeChange(idx, e.target.value)}
-                                                        className="form-input pl-10 text-xs font-bold uppercase"
-                                                        placeholder="CODE"
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' && idx < purchaseData.quantity - 1) {
+                                                                codeInputsRef.current[idx + 1].focus();
+                                                            }
+                                                        }}
+                                                        ref={el => codeInputsRef.current[idx] = el}
                                                     />
+                                                    {code.trim() && !isDuplicate && <CheckCircle2 size={16} className="text-emerald-500" />}
+                                                    {isDuplicate && <AlertCircle size={16} className="text-red-500 animate-bounce" />}
                                                 </div>
-                                            ))}
-                                        </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
 
-                            <div className="p-6 bg-slate-50 flex justify-end gap-3 border-t border-slate-100">
-                                <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-2 font-bold text-slate-400">Cancel</button>
-                                <button 
-                                    onClick={handlePurchaseSubmit} 
-                                    className="btn btn-primary px-8"
-                                    disabled={!purchaseData.spare_id || !purchaseData.quantity || !purchaseData.amount}
+                            {/* Status Bar */}
+                            <div className="mt-8 pt-8 border-t border-slate-100 flex justify-between items-center bg-white">
+                                <div className="flex gap-4">
+                                    <div className="flex flex-col">
+                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Entry Progress</span>
+                                        <span className="text-xl font-black text-navy italic">{Math.round((purchaseData.product_codes.filter(c => c.trim()).length / purchaseData.quantity) * 100 || 0)}%</span>
+                                    </div>
+                                    <div className="w-[120px] h-3 bg-slate-100 rounded-full mt-auto mb-1 overflow-hidden">
+                                        <div 
+                                            className="h-full bg-navy transition-all duration-700 ease-out" 
+                                            style={{ width: `${(purchaseData.product_codes.filter(c => c.trim()).length / purchaseData.quantity) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setPurchaseData({...purchaseData, product_codes: Array(purchaseData.quantity).fill('')})}
+                                    className="px-6 py-3 text-red-500 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 hover:bg-red-50 rounded-2xl transition-all"
                                 >
-                                    Confirm Purchase
+                                    <Trash2 size={14} /> Clear Codes
                                 </button>
                             </div>
                         </div>
@@ -313,36 +464,29 @@ export default function Stocks() {
                 </div>
             )}
 
-            {/* New Part Type Modal */}
+            {/* MODAL: New Category (Mini) */}
             {isNewTypeModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100">
-                        <div className="p-6">
-                            <h2 className="text-xl font-bold text-navy flex items-center gap-2">
-                                <Plus size={24} className="text-emerald-500" />
-                                Register New Spare Type
-                            </h2>
+                <div className="fixed inset-0 bg-navy/60 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden p-8 animate-in zoom-in-95 duration-300">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-black text-navy italic tracking-tighter">Add Category</h3>
+                            <button onClick={() => setIsNewTypeModalOpen(false)} className="text-slate-300 hover:text-navy transition-colors"><X size={20} /></button>
                         </div>
-                        <div className="p-6 pt-0 space-y-4">
-                            <p className="text-sm text-slate-500">Add a new category of parts to the master inventory database.</p>
-                            <input 
-                                type="text" 
-                                className="form-input focus:border-emerald-500" 
-                                placeholder="e.g. Engine Oil Filter"
-                                value={newSpareName}
-                                onChange={(e) => setNewSpareName(e.target.value)}
-                            />
-                        </div>
-                        <div className="p-6 bg-slate-50 flex justify-end gap-3">
-                            <button onClick={() => setIsNewTypeModalOpen(false)} className="px-4 py-2 font-bold text-slate-400">Cancel</button>
-                            <button 
-                                onClick={handleAddNewType} 
-                                className="btn btn-primary bg-emerald-600 hover:bg-emerald-700 border-emerald-600"
-                                disabled={!newSpareName}
-                            >
-                                Register Type
-                            </button>
-                        </div>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6">Initialize a new part classification in the master log.</p>
+                        <input 
+                            type="text" 
+                            className="w-full h-14 bg-slate-50 border-none rounded-2xl px-6 font-bold text-navy shadow-inner mb-6"
+                            placeholder="e.g. Rear Spring"
+                            value={newSpareName}
+                            onChange={(e) => setNewSpareName(e.target.value)}
+                        />
+                        <button 
+                            onClick={handleAddNewType}
+                            disabled={!newSpareName.trim()}
+                            className="w-full py-4 bg-navy text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-navy/20 hover:scale-[1.02] active:scale-95 transition-all disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                        >
+                            Register New Classification
+                        </button>
                     </div>
                 </div>
             )}
