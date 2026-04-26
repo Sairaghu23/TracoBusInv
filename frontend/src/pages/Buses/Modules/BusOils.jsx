@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Plus, Droplet, Calendar, IndianRupee, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import api from '../../../utils/api';
 
 export default function BusOils() {
     const { id: rc_plate_number } = useParams();
@@ -30,10 +31,9 @@ export default function BusOils() {
     const checkReadingStatus = async (selectedDate) => {
         setReadingErrorMsg('');
         try {
-            const res = await fetch(`/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
-            const result = await res.json();
+            const result = await api.get(`/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
 
-            if (result.status && result.data) {
+            if (result.data?.status && result.data.data) {
                 setReadingExists(true);
                 setReadingErrorMsg('');
             } else {
@@ -45,33 +45,26 @@ export default function BusOils() {
         }
     };
 
-    // useEffect dependency on date check removed
-
-
     const fetchData = async () => {
         setLoading(true);
         try {
             const [busRes, logsRes, typesRes] = await Promise.all([
-                fetch(`/api/buses/${rc_plate_number}`),
-                fetch(`/api/buses/${rc_plate_number}/oils`),
-                fetch('/api/oils/types')
+                api.get(`/api/buses/${rc_plate_number}`),
+                api.get(`/api/buses/${rc_plate_number}/oils`),
+                api.get('/api/oils/types')
             ]);
 
-            const busResult = await busRes.json();
-            const logsResult = await logsRes.json();
-            const typesResult = await typesRes.json();
-
-            if (busResult.status) setBus(busResult.data);
-            if (logsResult.status) {
-                setOilLogs(logsResult.data);
+            if (busRes.data?.status) setBus(busRes.data.data);
+            if (logsRes.data?.status) {
+                setOilLogs(logsRes.data.data);
                 // Pre-fill old_reading from last recorded new_reading
-                if (logsResult.data.length > 0) {
-                    const last = logsResult.data[0].new_reading || 0;
+                if (logsRes.data.data.length > 0) {
+                    const last = logsRes.data.data[0].new_reading || 0;
                     setLastOdometer(last);
                     setLogData(prev => ({ ...prev, old_reading: last }));
                 }
             }
-            if (typesResult.status) setOilTypes(typesResult.data);
+            if (typesRes.data?.status) setOilTypes(typesRes.data.data);
         } catch (err) {
             console.error('Error fetching oil data:', err);
         } finally {
@@ -91,20 +84,15 @@ export default function BusOils() {
         setSaving(true);
         setError(null);
         try {
-            const res = await fetch(`/api/buses/${rc_plate_number}/oils`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(logData)
-            });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.post(`/api/buses/${rc_plate_number}/oils`, logData);
+            if (result.data?.status) {
                 setSuccess('Oil service logged successfully!');
                 setIsAddModalOpen(false);
                 setLogData({ oil_id: '', log_date: new Date().toISOString().split('T')[0], quantity: '', amount: '' });
                 fetchData();
                 setTimeout(() => setSuccess(null), 3000);
             } else {
-                setError(result.message || 'Failed to save log.');
+                setError(result.data?.message || 'Failed to save log.');
             }
         } catch (err) {
             setError('Server error. Please try again.');

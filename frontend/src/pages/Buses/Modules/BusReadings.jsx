@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Plus, Gauge, Calendar, Navigation } from 'lucide-react';
+import api from '../../../utils/api';
 
 export default function BusReadings() {
     const { id: rc_plate_number } = useParams();
@@ -25,29 +26,26 @@ export default function BusReadings() {
             setLoading(true);
             try {
                 // Fetch Bus Details
-                const busRes = await fetch(`/api/buses/${rc_plate_number}`);
-                const busResult = await busRes.json();
-                if (busResult.status) {
-                    setBus(busResult.data);
+                const busRes = await api.get(`/api/buses/${rc_plate_number}`);
+                if (busRes.data?.status) {
+                    setBus(busRes.data.data);
                 }
 
                 // Fetch Readings
-                const readingsRes = await fetch(`/api/buses/${rc_plate_number}/readings`);
-                const readingsResult = await readingsRes.json();
-                if (readingsResult.status) {
-                    setReadings(readingsResult.data);
+                const readingsRes = await api.get(`/api/buses/${rc_plate_number}/readings`);
+                if (readingsRes.data?.status) {
+                    setReadings(readingsRes.data.data);
                 }
 
                 // Fetch Latest reading for pre-fill
-                const latestRes = await fetch(`/api/buses/${rc_plate_number}/readings/latest`);
-                const latestResult = await latestRes.json();
-                if (latestResult.status && latestResult.data) {
+                const latestRes = await api.get(`/api/buses/${rc_plate_number}/readings/latest`);
+                if (latestRes.data?.status && latestRes.data.data) {
                     setNewReadingData(prev => ({ 
                         ...prev, 
-                        old_reading: latestResult.data.new_reading,
-                        trip_start_date: latestResult.data.end_date || prev.trip_start_date
+                        old_reading: latestRes.data.data.new_reading,
+                        trip_start_date: latestRes.data.data.end_date || prev.trip_start_date
                     }));
-                } else if (busResult.data) {
+                } else if (busRes.data?.data) {
                     // Fallback to initial bus capacity or 0 if no readings yet
                     // Note: You might want to have an initial_odometer in buses table
                     setNewReadingData(prev => ({ ...prev, old_reading: 0 }));
@@ -71,29 +69,23 @@ export default function BusReadings() {
 
     const handleSaveReading = async () => {
         try {
-            const response = await fetch(`/api/buses/${rc_plate_number}/readings`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newReadingData)
-            });
-            const result = await response.json();
-            if (result.status) {
+            const result = await api.post(`/api/buses/${rc_plate_number}/readings`, newReadingData);
+            if (result.data?.status) {
                 alert("Trip log saved successfully!");
                 setIsAddModalOpen(false);
                 // Refresh data
-                const readingsRes = await fetch(`/api/buses/${rc_plate_number}/readings`);
-                const readingsResult = await readingsRes.json();
-                if (readingsResult.status) setReadings(readingsResult.data);
+                const readingsRes = await api.get(`/api/buses/${rc_plate_number}/readings`);
+                if (readingsRes.data?.status) setReadings(readingsRes.data.data);
 
                 // Update old_reading for next log
                 setNewReadingData({
                     trip_start_date: newReadingData.trip_end_date, // Setup next trip with today's end date
                     trip_end_date: new Date().toISOString().split('T')[0],
-                    old_reading: result.data.new_reading,
+                    old_reading: result.data.data.new_reading,
                     new_reading: ''
                 });
             } else {
-                alert(result.message || "Failed to save log");
+                alert(result.data?.message || "Failed to save log");
             }
         } catch (err) {
             console.error("Error saving reading:", err);

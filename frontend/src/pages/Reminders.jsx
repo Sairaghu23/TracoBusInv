@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileX, AlertTriangle, Calendar, AlertCircle, FileCheck2, Clock, Search, User, Car } from 'lucide-react';
-
-const API_BASE = 'https://tracobusinvcicd.duckdns.org';
+import api from '../utils/api';
 
 export default function Reminders() {
     const [duration, setDuration] = useState(30);
@@ -14,22 +13,17 @@ export default function Reminders() {
         setLoading(true);
         try {
             const [typesRes, matrixRes, driverRes] = await Promise.all([
-                fetch(`${API_BASE}/api/document-types`),
-                fetch(`${API_BASE}/api/documents/compliance-matrix`),
-                fetch(`${API_BASE}/api/drivers`)
-            ]);
-            const [typesResult, matrixResult, driverResult] = await Promise.all([
-                typesRes.json(), 
-                matrixRes.json(), 
-                driverRes.json()
+                api.get('/api/document-types'),
+                api.get('/api/documents/compliance-matrix'),
+                api.get('/api/drivers')
             ]);
 
-            if (typesResult.status) {
-                setDocTypes(typesResult.data.map(dt => dt.document_name));
+            if (typesRes.data?.status) {
+                setDocTypes(typesRes.data.data.map(dt => dt.document_name));
             }
 
-            if (matrixResult.status) {
-                const data = matrixResult.data;
+            if (matrixRes.data?.status) {
+                const data = matrixRes.data.data;
                 const grouped = {};
                 data.forEach(item => {
                     if (!grouped[item.rc_plate_number]) {
@@ -49,10 +43,10 @@ export default function Reminders() {
                 setReminders(grouped);
             }
 
-            if (driverResult.status) {
+            if (driverRes.data?.status) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                const expiring = driverResult.data.filter(d => {
+                const expiring = driverRes.data.data.filter(d => {
                     if (!d.license_expiry) return false;
                     const expiry = new Date(d.license_expiry);
                     const days = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));

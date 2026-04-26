@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bus, Users, UserSquare2, ChevronLeft, ChevronRight, FileX, BarChart3, AlertCircle, ShieldAlert, Car } from 'lucide-react';
-
-const API_BASE = 'https://tracobusinvcicd.duckdns.org';
+import api from '../utils/api';
 
 // ── Compliance Calendar ───────────────────────────────────────────────────────
 const CalendarWidget = () => {
@@ -14,9 +13,8 @@ const CalendarWidget = () => {
     const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
     useEffect(() => {
-        fetch(`${API_BASE}/api/analytics/calendar-expirations`)
-            .then(r => r.json())
-            .then(result => { if (result.status) setExpirations(result.data); })
+        api.get('/api/analytics/calendar-expirations')
+            .then(result => { if (result.data?.status) setExpirations(result.data.data); })
             .catch(console.error);
     }, []);
 
@@ -171,11 +169,11 @@ export default function Dashboard() {
 
     useEffect(() => {
         Promise.all([
-            fetch(`${API_BASE}/api/buses`).then(r => r.json()),
-            fetch(`${API_BASE}/api/students/summary/counts`).then(r => r.json()),
+            api.get('/api/buses'),
+            api.get('/api/students/summary/counts'),
         ]).then(([busRes, studentRes]) => {
-            if (busRes.status) setBuses(busRes.data);
-            if (studentRes.status) setStudentCounts(studentRes.data);
+            if (busRes.data?.status) setBuses(busRes.data.data);
+            if (studentRes.data?.status) setStudentCounts(studentRes.data.data);
         }).catch(console.error)
           .finally(() => setLoading(false));
     }, []);

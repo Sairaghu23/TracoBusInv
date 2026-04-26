@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Plus, Fuel, AlertCircle, X, CheckCircle2, Calendar, IndianRupee } from 'lucide-react';
+import api from '../../../utils/api';
 
 export default function BusDiesel() {
     const { id } = useParams();
@@ -27,14 +28,12 @@ export default function BusDiesel() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const busRes = await fetch(`/api/buses/${id}`);
-            const busResult = await busRes.json();
-            if (busResult.status) {
-                setBus(busResult.data);
-                const dieselRes = await fetch(`/api/buses/${id}/diesel`);
-                const dieselResult = await dieselRes.json();
-                if (dieselResult.status) {
-                    const logs = dieselResult.data || [];
+            const busRes = await api.get(`/api/buses/${id}`);
+            if (busRes.data?.status) {
+                setBus(busRes.data.data);
+                const dieselRes = await api.get(`/api/buses/${id}/diesel`);
+                if (dieselRes.data?.status) {
+                    const logs = dieselRes.data.data || [];
                     setBusDiesel(logs);
                     if (logs.length > 0) {
                         const last = logs[0].new_reading || 0;
@@ -63,13 +62,8 @@ export default function BusDiesel() {
         setSaving(true);
         setError(null);
         try {
-            const res = await fetch(`/api/buses/${id}/diesel`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(logData)
-            });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.post(`/api/buses/${id}/diesel`, logData);
+            if (result.data?.status) {
                 setSuccess('Diesel logged successfully!');
                 setIsAddModalOpen(false);
                 setLogData({
@@ -79,7 +73,7 @@ export default function BusDiesel() {
                 fetchData();
                 setTimeout(() => setSuccess(null), 3000);
             } else {
-                setError(result.message || 'Failed to save log.');
+                setError(result.data?.message || 'Failed to save log.');
             }
         } catch (err) {
             setError('Server error. Please try again.');

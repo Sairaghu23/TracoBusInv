@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Plus, FileText, AlertCircle, X, Download, FileCheck2, FileWarning, Trash2 } from 'lucide-react';
-
-const API_BASE = 'https://tracobusinvcicd.duckdns.org';
+import api from '../../../utils/api';
 
 export default function BusDocuments() {
     const { id } = useParams(); // bus_id
@@ -30,18 +29,14 @@ export default function BusDocuments() {
         setLoading(true);
         try {
             const [busRes, docsRes, typesRes] = await Promise.all([
-                fetch(`${API_BASE}/api/buses/${id}`),
-                fetch(`${API_BASE}/api/buses/${id}/documents`),
-                fetch(`${API_BASE}/api/documents/types`)
+                api.get(`/api/buses/${id}`),
+                api.get(`/api/buses/${id}/documents`),
+                api.get(`/api/documents/types`)
             ]);
             
-            const busResult = await busRes.json();
-            const docsResult = await docsRes.json();
-            const typesResult = await typesRes.json();
-            
-            if (busResult.status) setBus(busResult.data);
-            if (docsResult.status) setDocuments(docsResult.data);
-            if (typesResult.status) setDocumentTypes(typesResult.data);
+            if (busRes.data?.status) setBus(busRes.data.data);
+            if (docsRes.data?.status) setDocuments(docsRes.data.data);
+            if (typesRes.data?.status) setDocumentTypes(typesRes.data.data);
         } catch (err) {
             console.error("Error fetching document data:", err);
         } finally {
@@ -91,20 +86,15 @@ export default function BusDocuments() {
             payload.append('expiry_date', formData.expiry_date);
             payload.append('document', formData.file);
 
-            const res = await fetch(`${API_BASE}/api/documents/upload`, {
-                method: 'POST',
-                body: payload // Note: Do NOT set Content-Type header manually when sending FormData
-            });
-
-            const result = await res.json();
+            const result = await api.post('/api/documents/upload', payload);
             
-            if (result.status) {
+            if (result.data?.status) {
                 // Success
                 setIsUploadModalOpen(false);
                 setFormData({ document_type_id: '', provider: '', start_date: '', expiry_date: '', file: null });
                 fetchData(); // Refresh list
             } else {
-                setUploadError(result.message || "Failed to upload document");
+                setUploadError(result.data?.message || "Failed to upload document");
             }
         } catch (err) {
             console.error("Upload error:", err);
@@ -209,7 +199,7 @@ export default function BusDocuments() {
                                         </td>
                                         <td className="py-5 pr-8 text-right">
                                             <a
-                                                href={`${API_BASE}${doc.file_path}`}
+                                                href={`${api.defaults.baseURL}${doc.file_path}`}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white hover:bg-navy-light rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-navy/10"

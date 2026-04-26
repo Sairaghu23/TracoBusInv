@@ -5,8 +5,7 @@ import {
     Plus, X, ChevronLeft, FileText, Download, UserPlus, 
     Clock, Filter, MapPin, CreditCard, Pencil, Trash2 
 } from 'lucide-react';
-
-const API_BASE = 'https://tracobusinvcicd.duckdns.org';
+import api from '../../utils/api';
 
 export default function Students() {
     // 1. UI State
@@ -60,9 +59,8 @@ export default function Students() {
     useEffect(() => {
         const fetchCounts = async () => {
             try {
-                const response = await fetch(`${API_BASE}/api/students/summary/counts`);
-                const result = await response.json();
-                if (result.status) setCounts(result.data);
+                const result = await api.get('/api/students/summary/counts');
+                if (result.data?.status) setCounts(result.data.data);
             } catch (error) {
                 console.error("Error fetching counts:", error);
             }
@@ -71,9 +69,8 @@ export default function Students() {
         
         const fetchRoutes = async () => {
             try {
-                const response = await fetch(`${API_BASE}/api/routes`);
-                const result = await response.json();
-                if (result.status) setRoutes(result.data);
+                const result = await api.get('/api/routes');
+                if (result.data?.status) setRoutes(result.data.data);
             } catch (error) {
                 console.error("Error fetching routes:", error);
             }
@@ -81,9 +78,8 @@ export default function Students() {
 
         const fetchBranches = async () => {
             try {
-                const response = await fetch(`${API_BASE}/api/branches`);
-                const result = await response.json();
-                if (result.status) setBranches(result.data);
+                const result = await api.get('/api/branches');
+                if (result.data?.status) setBranches(result.data.data);
             } catch (error) {
                 console.error("Error fetching branches:", error);
             }
@@ -120,9 +116,8 @@ export default function Students() {
         setLoading(true);
         try {
             const yearNum = parseInt(year);
-            const response = await fetch(`${API_BASE}/api/students/${type}/${yearNum}/semester/${semester}`);
-            const result = await response.json();
-            if (result.status) setStudents(result.data);
+            const result = await api.get(`/api/students/${type}/${yearNum}/semester/${semester}`);
+            if (result.data?.status) setStudents(result.data.data);
         } catch (error) {
             console.error("Error fetching students:", error);
         } finally {
@@ -133,9 +128,8 @@ export default function Students() {
     const fetchArchiveBatches = async (type) => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE}/api/students/archive/${type}/batches`);
-            const result = await response.json();
-            if (result.status) setBatches(result.data);
+            const result = await api.get(`/api/students/archive/${type}/batches`);
+            if (result.data?.status) setBatches(result.data.data);
         } catch (error) {
             console.error("Error fetching archive batches:", error);
         } finally {
@@ -146,9 +140,8 @@ export default function Students() {
     const fetchArchiveStudents = async (type, start, end) => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE}/api/students/archive/${type}/${start}/${end}`);
-            const result = await response.json();
-            if (result.status) setStudents(result.data);
+            const result = await api.get(`/api/students/archive/${type}/${start}/${end}`);
+            if (result.data?.status) setStudents(result.data.data);
         } catch (error) {
             console.error("Error fetching archive students:", error);
         } finally {
@@ -158,10 +151,9 @@ export default function Students() {
 
     const fetchPaymentHistory = async (type, sId) => {
         try {
-            const response = await fetch(`${API_BASE}/api/students/${type}/history/${sId}`);
-            const result = await response.json();
-            if (result.status) {
-                setPaymentHistory(result.data);
+            const result = await api.get(`/api/students/${type}/history/${sId}`);
+            if (result.data?.status) {
+                setPaymentHistory(result.data.data);
                 setHistoryModal(true);
             }
         } catch (error) {
@@ -179,17 +171,12 @@ export default function Students() {
         e.preventDefault();
         const type = 'btech';
         try {
-            const response = await fetch(`${API_BASE}/api/students/${type}/payment`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    s_id: selectedStudent.s_id,
-                    semester: selectedSemester,
-                    ...paymentForm
-                })
+            const result = await api.post(`/api/students/${type}/payment`, {
+                s_id: selectedStudent.s_id,
+                semester: selectedSemester,
+                ...paymentForm
             });
-            const result = await response.json();
-            if (result.status) {
+            if (result.data?.status) {
                 setPaymentModal(false);
                 fetchStudents(type, selectedYear, selectedSemester);
                 alert("Payment recorded successfully!");
@@ -203,18 +190,13 @@ export default function Students() {
         e.preventDefault();
         const type = 'btech';
         const url = isEditMode 
-            ? `${API_BASE}/api/students/${type}/${editingStudentId}`
-            : `${API_BASE}/api/students/${type}`;
-        const method = isEditMode ? 'PUT' : 'POST';
+            ? `/api/students/${type}/${editingStudentId}`
+            : `/api/students/${type}`;
+        const method = isEditMode ? 'put' : 'post';
 
         try {
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(studentForm)
-            });
-            const result = await response.json();
-            if (result.status) {
+            const result = await api[method](url, studentForm);
+            if (result.data?.status) {
                 setActiveModal(false);
                 setIsEditMode(false);
                 setEditingStudentId(null);
@@ -231,9 +213,8 @@ export default function Students() {
                 });
                 // Fetch counts and students for current view
                 const fetchCounts = async () => {
-                    const res = await fetch(`${API_BASE}/api/students/summary/counts`);
-                    const r = await res.json();
-                    if (r.status) setCounts(r.data);
+                    const res = await api.get('/api/students/summary/counts');
+                    if (res.data?.status) setCounts(res.data.data);
                 };
                 fetchCounts();
                 if (view === 'detail') fetchStudents(type, selectedYear, selectedSemester);

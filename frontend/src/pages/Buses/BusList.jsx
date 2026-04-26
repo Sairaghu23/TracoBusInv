@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter, LayoutGrid, List, MoreVertical, Edit2, Trash2, Bus, AlertTriangle, X, CheckCircle2, MoreHorizontal } from 'lucide-react';
-
-const API_BASE = 'https://tracobusinvcicd.duckdns.org';
+import api from '../../utils/api';
 
 export default function BusList() {
     const navigate = useNavigate();
@@ -46,10 +45,9 @@ export default function BusList() {
     const fetchBuses = async () => {
         setLoadingBuses(true);
         try {
-            const response = await fetch(`${API_BASE}/api/buses`);
-            const result = await response.json();
-            if (result.status) {
-                setBuses(result.data);
+            const result = await api.get('/api/buses');
+            if (result.data?.status) {
+                setBuses(result.data.data);
             }
         } catch (error) {
             console.error("Error fetching buses:", error);
@@ -75,25 +73,12 @@ export default function BusList() {
     const handleDelete = async (rc_plate_number) => {
         if (window.confirm(`Are you sure you want to delete bus ${rc_plate_number}?`)) {
             try {
-                const response = await fetch(`${API_BASE}/api/buses/${rc_plate_number}`, {
-                    method: 'DELETE'
-                });
-
-                // First check if the response is actually JSON
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const result = await response.json();
-                    if (result.status) {
-                        alert("Bus deleted successfully!");
-                        fetchBuses();
-                    } else {
-                        alert(result.message || "Failed to delete bus");
-                    }
+                const result = await api.delete(`/api/buses/${rc_plate_number}`);
+                if (result.data?.status) {
+                    alert("Bus deleted successfully!");
+                    fetchBuses();
                 } else {
-                    // Not JSON (e.g. HTML 404 or 500)
-                    const text = await response.text();
-                    console.error("Non-JSON response:", text);
-                    alert(`Server error (${response.status}). Please try again later.`);
+                    alert(result.data?.message || "Failed to delete bus");
                 }
             } catch (error) {
                 console.error("Error deleting bus:", error);
@@ -107,10 +92,9 @@ export default function BusList() {
         const fetchRoutes = async () => {
             setLoadingRoutes(true);
             try {
-                const response = await fetch(`${API_BASE}/api/routes`);
-                const result = await response.json();
-                if (result.status) {
-                    setRoutes(result.data);
+                const result = await api.get('/api/routes');
+                if (result.data?.status) {
+                    setRoutes(result.data.data);
                 }
             } catch (error) {
                 console.error("Error fetching routes:", error);

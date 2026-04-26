@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Plus, X, Check, Route as RouteIcon, Pencil, Trash2, Users, BarChart3, GraduationCap, ChevronLeft } from 'lucide-react';
-
-const API_BASE = 'https://tracobusinvcicd.duckdns.org';
+import api from '../../utils/api';
 
 export default function Routes() {
     // State for live data
@@ -12,10 +11,9 @@ export default function Routes() {
     const fetchRoutes = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE}/api/routes`);
-            const result = await response.json();
-            if (result.status) {
-                setRoutes(result.data);
+            const result = await api.get('/api/routes');
+            if (result.data?.status) {
+                setRoutes(result.data.data);
             }
         } catch (error) {
             console.error("Error fetching routes:", error);
@@ -52,24 +50,23 @@ export default function Routes() {
         if (!newRouteName) return;
         setRouteError('');
         try {
-            const response = await fetch(`${API_BASE}/api/routes`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ route_name: newRouteName })
-            });
-            const result = await response.json();
-            if (result.status) {
+            const result = await api.post('/api/routes', { route_name: newRouteName });
+            if (result.data?.status) {
                 setNewRouteName('');
                 setActiveModal(null);
                 fetchRoutes(); // Refresh list
-            } else if (response.status === 409) {
-                setRouteError(result.message || "Route already exists");
+            } else if (result.status === 409) {
+                setRouteError(result.data?.message || "Route already exists");
             } else {
-                setRouteError(result.message || "An error occurred");
+                setRouteError(result.data?.message || "An error occurred");
             }
         } catch (error) {
             console.error("Error adding route:", error);
-            setRouteError("Connection error. Please try again.");
+            if (error.response?.status === 409) {
+                setRouteError(error.response.data?.message || "Route already exists");
+            } else {
+                setRouteError("Connection error. Please try again.");
+            }
         }
     };
 
@@ -77,17 +74,12 @@ export default function Routes() {
         e.preventDefault();
         if (!newStop.name || !newStop.routeId || !newStop.fee) return;
         try {
-            const response = await fetch(`${API_BASE}/api/routes/stops`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    route_id: parseInt(newStop.routeId),
-                    stop_name: newStop.name,
-                    fee: parseFloat(newStop.fee)
-                })
+            const result = await api.post('/api/routes/stops', {
+                route_id: parseInt(newStop.routeId),
+                stop_name: newStop.name,
+                fee: parseFloat(newStop.fee)
             });
-            const result = await response.json();
-            if (result.status) {
+            if (result.data?.status) {
                 setNewStop({ name: '', routeId: '', fee: '' });
                 setActiveModal(null);
                 fetchRoutes();
@@ -100,26 +92,21 @@ export default function Routes() {
     const handleSaveStop = async () => {
         if (!editingStop) return;
         try {
-            const res = await fetch(`${API_BASE}/api/routes/stops/${editingStop.stop_id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ stop_name: editingStop.name, fee: editingStop.fee })
+            const result = await api.put(`/api/routes/stops/${editingStop.stop_id}`, {
+                stop_name: editingStop.name,
+                fee: editingStop.fee
             });
-            const result = await res.json();
-            if (result.status) { setEditingStop(null); fetchRoutes(); }
+            if (result.data?.status) { setEditingStop(null); fetchRoutes(); }
         } catch (err) { console.error('Error updating stop:', err); }
     };
 
     const handleSaveRoute = async () => {
         if (!editingRoute) return;
         try {
-            const res = await fetch(`${API_BASE}/api/routes/${editingRoute.route_id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ route_name: editingRoute.route_name })
+            const result = await api.put(`/api/routes/${editingRoute.route_id}`, {
+                route_name: editingRoute.route_name
             });
-            const result = await res.json();
-            if (result.status) { setEditingRoute(null); fetchRoutes(); }
+            if (result.data?.status) { setEditingRoute(null); fetchRoutes(); }
         } catch (err) { console.error('Error updating route:', err); }
     };
 
@@ -129,12 +116,11 @@ export default function Routes() {
         );
         if (!confirmed) return;
         try {
-            const res = await fetch(`${API_BASE}/api/routes/${route.route_id}`, { method: 'DELETE' });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.delete(`/api/routes/${route.route_id}`);
+            if (result.data?.status) {
                 fetchRoutes();
             } else {
-                alert(`Error: ${result.message}`);
+                alert(`Error: ${result.data?.message}`);
             }
         } catch (err) {
             console.error('Error deleting route:', err);
@@ -148,12 +134,11 @@ export default function Routes() {
         );
         if (!confirmed) return;
         try {
-            const res = await fetch(`${API_BASE}/api/routes/stops/${stop.stop_id}`, { method: 'DELETE' });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.delete(`/api/routes/stops/${stop.stop_id}`);
+            if (result.data?.status) {
                 fetchRoutes();
             } else {
-                alert(`Error: ${result.message}`);
+                alert(`Error: ${result.data?.message}`);
             }
         } catch (err) {
             console.error('Error deleting stop:', err);
@@ -166,10 +151,9 @@ export default function Routes() {
         setCurrentView('breakdown');
         setBreakdownLoading(true);
         try {
-            const response = await fetch(`${API_BASE}/api/routes/${route.route_id}/student-breakdown`);
-            const result = await response.json();
-            if (result.status) {
-                setBreakdownData(result.data);
+            const result = await api.get(`/api/routes/${route.route_id}/student-breakdown`);
+            if (result.data?.status) {
+                setBreakdownData(result.data.data);
             }
         } catch (error) {
             console.error("Error fetching breakdown:", error);

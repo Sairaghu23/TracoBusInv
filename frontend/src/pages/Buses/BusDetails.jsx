@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Droplet, Settings, FileSearch, Navigation, Gauge, Bus as BusIconBase } from 'lucide-react';
-
-const API_BASE = 'https://tracobusinvcicd.duckdns.org';
+import api from '../../utils/api';
 
 export default function BusDetails() {
     const { id: rc_plate_number } = useParams();
@@ -14,12 +13,11 @@ export default function BusDetails() {
     useEffect(() => {
         const fetchBusDetails = async () => {
             try {
-                const response = await fetch(`${API_BASE}/api/buses/${encodeURIComponent(rc_plate_number)}`);
-                const result = await response.json();
-                if (result.status) {
-                    setBus(result.data);
+                const result = await api.get(`/api/buses/${encodeURIComponent(rc_plate_number)}`);
+                if (result.data?.status) {
+                    setBus(result.data.data);
                 } else {
-                    setError(result.message || "Vehicle record not found.");
+                    setError(result.data?.message || "Vehicle record not found.");
                 }
             } catch (err) {
                 console.error("Error fetching bus details:", err);

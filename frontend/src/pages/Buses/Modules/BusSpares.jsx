@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Plus, Settings, Calendar, User, ShoppingBag } from 'lucide-react';
+import api from '../../../utils/api';
 
 export default function BusSpares() {
     const { id: rc_plate_number } = useParams();
@@ -30,10 +31,9 @@ export default function BusSpares() {
     const checkReadingStatus = async (selectedDate) => {
         setReadingErrorMsg('');
         try {
-            const res = await fetch(`/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
-            const result = await res.json();
+            const result = await api.get(`/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
 
-            if (result.status && result.data) {
+            if (result.data?.status && result.data.data) {
                 setReadingExists(true);
                 setReadingErrorMsg('');
             } else {
@@ -45,34 +45,27 @@ export default function BusSpares() {
         }
     };
 
-    // useEffect dependency on date check removed
-
-
-
     const fetchData = async () => {
         setLoading(true);
         try {
             // Fetch Bus Details
-            const busRes = await fetch(`/api/buses/${rc_plate_number}`);
-            const busResult = await busRes.json();
-            if (busResult.status) setBus(busResult.data);
+            const busRes = await api.get(`/api/buses/${rc_plate_number}`);
+            if (busRes.data?.status) setBus(busRes.data.data);
 
             // Fetch Usage History
-            const usageRes = await fetch(`/api/buses/${rc_plate_number}/spares`);
-            const usageResult = await usageRes.json();
-            if (usageResult.status) {
-                setSpares(usageResult.data);
-                if (usageResult.data.length > 0) {
-                    const last = usageResult.data[0].new_reading || 0;
+            const usageRes = await api.get(`/api/buses/${rc_plate_number}/spares`);
+            if (usageRes.data?.status) {
+                setSpares(usageRes.data.data);
+                if (usageRes.data.data.length > 0) {
+                    const last = usageRes.data.data[0].new_reading || 0;
                     setLastOdometer(last);
                     setUsageData(prev => ({ ...prev, old_reading: last }));
                 }
             }
 
             // Fetch Available Stocks (for selection)
-            const stocksRes = await fetch('/api/spares/stocks');
-            const stocksResult = await stocksRes.json();
-            if (stocksResult.status) setStocks(stocksResult.data);
+            const stocksRes = await api.get('/api/spares/stocks');
+            if (stocksRes.data?.status) setStocks(stocksRes.data.data);
 
         } catch (err) {
             console.error("Error fetching bus spares:", err);
@@ -87,16 +80,11 @@ export default function BusSpares() {
 
     const handleReplacementSubmit = async () => {
         try {
-            const res = await fetch(`/api/buses/${rc_plate_number}/spares`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(usageData)
-            });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.post(`/api/buses/${rc_plate_number}/spares`, usageData);
+            if (result.data?.status) {
                 alert("Replacement logged and stock deducted!");
                 setIsAddModalOpen(false);
-                const nextOdo = result.data?.new_reading || lastOdometer;
+                const nextOdo = result.data.data?.new_reading || lastOdometer;
                 setUsageData({
                     spare_id: '',
                     product_code: '',
@@ -107,7 +95,7 @@ export default function BusSpares() {
                 });
                 fetchData();
             } else {
-                alert(result.message || "Failed to log replacement.");
+                alert(result.data?.message || "Failed to log replacement.");
             }
         } catch (err) {
             console.error("Error logging replacement:", err);
