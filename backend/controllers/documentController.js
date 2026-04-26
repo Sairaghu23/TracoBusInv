@@ -14,9 +14,17 @@ const storage = multer.diskStorage({
         cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
-        // File name: bus_id-timestamp-original_name
+        // Fallback to 'BUS' if bus_id is not yet available in req.body
+        const busId = req.body.bus_id || 'BUS';
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, req.body.bus_id + '-' + uniqueSuffix + path.extname(file.originalname));
+        
+        // Sanitize original filename (remove special chars/spaces)
+        const namePart = path.parse(file.originalname).name
+            .replace(/[^a-z0-9]/gi, '_')
+            .substring(0, 20); // Limit length
+            
+        const finalName = `${busId}-${namePart}-${uniqueSuffix}${path.extname(file.originalname)}`;
+        cb(null, finalName);
     }
 });
 
