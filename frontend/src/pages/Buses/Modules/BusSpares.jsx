@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
     ChevronLeft, Plus, Settings, Calendar, User, 
-    ShoppingBag, Search, X, Check, ArrowRight,
+    ShoppingBag, ShoppingCart, Search, X, Check, ArrowRight,
     Wrench, Gauge, CreditCard, Trash2, CheckCircle2, Package
 } from 'lucide-react';
 import api from '../../../utils/api';

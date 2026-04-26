@@ -38,9 +38,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve static files for uploaded documents
-// The 'uploads' folder is currently in the project root.
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve static files for uploaded documents under /api to ensure proxy routing consistency
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Use centralized API router
 app.use('/api', apiRouter);

@@ -79,7 +79,7 @@ export const uploadBusDocumentController = (req, res, next) => {
                 return res.status(400).json({ status: false, message: 'All fields except provider are required' });
             }
 
-            const filePath = `/uploads/${req.file.filename}`;
+            const filePath = `/api/uploads/${req.file.filename}`;
             const newDoc = await createBusDocument(rc_plate_number, document_type_id, filePath, start_date, expiry_date, provider);
             
             handleResponse(res, 201, "Document uploaded successfully", newDoc);
