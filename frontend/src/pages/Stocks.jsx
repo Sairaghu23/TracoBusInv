@@ -346,7 +346,6 @@ export default function Stocks() {
                             </button>
                         </div>
                     </div>
-                    </div>
                 </div>
             )}
 
