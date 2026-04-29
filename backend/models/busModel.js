@@ -21,7 +21,12 @@ export const getAllBuses = async () => {
 
 // Check if bus exists by RC Plate Number
 export const getBusByRcPlate = async (rcPlate) => {
-    const result = await pool.query('SELECT * FROM buses WHERE rc_plate_number = $1', [rcPlate.trim().toUpperCase()]);
+    const result = await pool.query(`
+        SELECT b.*, r.route_name 
+        FROM buses b 
+        LEFT JOIN routes r ON b.route_id = r.route_id
+        WHERE b.rc_plate_number = $1
+    `, [rcPlate.trim().toUpperCase()]);
     return result.rows[0];
 };
 
