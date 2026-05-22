@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://tracobusinvcicd.duckdns.org'
+    baseURL: 'https://tracobusinv.onrender.com'
 });
 
 // Add a request interceptor to attach the JWT token
