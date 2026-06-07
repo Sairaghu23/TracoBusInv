@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { ChevronLeft, Plus, FileText, AlertCircle, X, Download, FileCheck2, FileWarning, Trash2 } from 'lucide-react';
 import api from '../../../utils/api';
+=======
+import { ChevronLeft, Plus, FileText, AlertCircle, X, Download, FileCheck2, FileWarning } from 'lucide-react';
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function BusDocuments() {
     const { id } = useParams(); // bus_id
@@ -29,6 +33,7 @@ export default function BusDocuments() {
         setLoading(true);
         try {
             const [busRes, docsRes, typesRes] = await Promise.all([
+<<<<<<< HEAD
                 api.get(`/api/buses/${id}`),
                 api.get(`/api/buses/${id}/documents`),
                 api.get(`/api/documents/types`)
@@ -37,6 +42,20 @@ export default function BusDocuments() {
             if (busRes.data?.status) setBus(busRes.data.data);
             if (docsRes.data?.status) setDocuments(docsRes.data.data);
             if (typesRes.data?.status) setDocumentTypes(typesRes.data.data);
+=======
+                fetch(`http://localhost:5001/api/buses/${id}`),
+                fetch(`http://localhost:5001/api/buses/${id}/documents`),
+                fetch('http://localhost:5001/api/document-types')
+            ]);
+            
+            const busResult = await busRes.json();
+            const docsResult = await docsRes.json();
+            const typesResult = await typesRes.json();
+            
+            if (busResult.status) setBus(busResult.data);
+            if (docsResult.status) setDocuments(docsResult.data);
+            if (typesResult.status) setDocumentTypes(typesResult.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         } catch (err) {
             console.error("Error fetching document data:", err);
         } finally {
@@ -86,15 +105,30 @@ export default function BusDocuments() {
             payload.append('expiry_date', formData.expiry_date);
             payload.append('document', formData.file);
 
+<<<<<<< HEAD
             const result = await api.post('/api/documents/upload', payload);
             
             if (result.data?.status) {
+=======
+            const res = await fetch('http://localhost:5001/api/buses/documents', {
+                method: 'POST',
+                body: payload // Note: Do NOT set Content-Type header manually when sending FormData
+            });
+
+            const result = await res.json();
+            
+            if (result.status) {
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 // Success
                 setIsUploadModalOpen(false);
                 setFormData({ document_type_id: '', provider: '', start_date: '', expiry_date: '', file: null });
                 fetchData(); // Refresh list
             } else {
+<<<<<<< HEAD
                 setUploadError(result.data?.message || "Failed to upload document");
+=======
+                setUploadError(result.message || "Failed to upload document");
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             }
         } catch (err) {
             console.error("Upload error:", err);
@@ -104,6 +138,7 @@ export default function BusDocuments() {
         }
     };
 
+<<<<<<< HEAD
     const handleDeleteDocument = async (documentId, documentName) => {
         if (!window.confirm(`Are you sure you want to permanently delete "${documentName}"? This cannot be undone.`)) return;
 
@@ -120,6 +155,8 @@ export default function BusDocuments() {
         }
     };
 
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     // Calculate document status
     const getStatus = (expiryDate) => {
         const today = new Date();
@@ -214,6 +251,7 @@ export default function BusDocuments() {
                                             </span>
                                         </td>
                                         <td className="py-5 pr-8 text-right">
+<<<<<<< HEAD
                                             <div className="flex items-center justify-end gap-2">
                                                 <a
                                                     href={`${api.defaults.baseURL}${doc.file_path}`}
@@ -231,6 +269,16 @@ export default function BusDocuments() {
                                                     <Trash2 size={13} />
                                                 </button>
                                             </div>
+=======
+                                            <a
+                                                href={`http://localhost:5001${doc.file_path}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-navy text-white hover:bg-navy-light rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-navy/10"
+                                            >
+                                                <Download size={14} /> View PDF
+                                            </a>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                         </td>
                                     </tr>
                                 );
@@ -243,9 +291,15 @@ export default function BusDocuments() {
             {/* Upload Modal Overlay */}
             {isUploadModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/40 backdrop-blur-sm animate-in fade-in duration-300">
+<<<<<<< HEAD
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden scale-in-center border-2 border-white/20">
                         {/* Modal Header */}
                         <div className="bg-navy p-6 flex items-center justify-between text-white shrink-0 relative overflow-hidden">
+=======
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden scale-in-center border-2 border-white/20">
+                        {/* Modal Header */}
+                        <div className="bg-navy p-6 flex items-center justify-between text-white relative overflow-hidden">
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 pointer-events-none" />
                             <div className="flex items-center gap-3 relative z-10">
                                 <div className="p-2 bg-white/10 rounded-xl">
@@ -269,7 +323,11 @@ export default function BusDocuments() {
                         </div>
                         
                         {/* Form */}
+<<<<<<< HEAD
                         <div className="p-8 overflow-y-auto flex-1 custom-scrollbar">
+=======
+                        <div className="p-8">
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                             {uploadError && (
                                 <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-2xl text-sm font-bold flex items-center gap-3 animate-in slide-in-from-top-2">
                                     <AlertCircle size={18} className="shrink-0" />

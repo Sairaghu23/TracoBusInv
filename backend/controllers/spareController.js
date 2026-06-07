@@ -73,6 +73,7 @@ export const getSparePurchasesController = async (req, res, next) => {
         next(err);
     }
 };
+<<<<<<< HEAD
 
 // --- INVENTORY / CODES ---
 
@@ -116,3 +117,5 @@ export const getCostPerUnitController = async (req, res, next) => {
         next(err);
     }
 };
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)

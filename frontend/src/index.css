@@ -69,6 +69,7 @@
     @apply hover:bg-slate-50 transition-colors duration-150;
   }
 }
+<<<<<<< HEAD
 
 /* Slim Premium Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
@@ -84,3 +85,5 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8; /* slate-400 */
 }
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Plus, Droplet, Calendar, IndianRupee, X, CheckCircle2, AlertCircle } from 'lucide-react';
+<<<<<<< HEAD
 import api from '../../../utils/api';
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function BusOils() {
     const { id: rc_plate_number } = useParams();
@@ -22,18 +25,30 @@ export default function BusOils() {
         oil_id: '',
         log_date: new Date().toISOString().split('T')[0],
         quantity: '',
+<<<<<<< HEAD
         amount: '',
         old_reading: '',
         new_reading: ''
     });
     const [lastOdometer, setLastOdometer] = useState(0);
+=======
+        amount: ''
+    });
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
     const checkReadingStatus = async (selectedDate) => {
         setReadingErrorMsg('');
         try {
+<<<<<<< HEAD
             const result = await api.get(`/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
 
             if (result.data?.status && result.data.data) {
+=======
+            const res = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/readings/date/${selectedDate}`);
+            const result = await res.json();
+
+            if (result.status && result.data) {
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 setReadingExists(true);
                 setReadingErrorMsg('');
             } else {
@@ -45,10 +60,20 @@ export default function BusOils() {
         }
     };
 
+<<<<<<< HEAD
+=======
+    useEffect(() => {
+        if (logData.log_date) {
+            checkReadingStatus(logData.log_date);
+        }
+    }, [logData.log_date, rc_plate_number]);
+
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     const fetchData = async () => {
         setLoading(true);
         try {
             const [busRes, logsRes, typesRes] = await Promise.all([
+<<<<<<< HEAD
                 api.get(`/api/buses/${rc_plate_number}`),
                 api.get(`/api/buses/${rc_plate_number}/oils`),
                 api.get('/api/oils/types')
@@ -65,6 +90,20 @@ export default function BusOils() {
                 }
             }
             if (typesRes.data?.status) setOilTypes(typesRes.data.data);
+=======
+                fetch(`http://localhost:5001/api/buses/${rc_plate_number}`),
+                fetch(`http://localhost:5001/api/buses/${rc_plate_number}/oils`),
+                fetch('http://localhost:5001/api/oils/types')
+            ]);
+
+            const busResult = await busRes.json();
+            const logsResult = await logsRes.json();
+            const typesResult = await typesRes.json();
+
+            if (busResult.status) setBus(busResult.data);
+            if (logsResult.status) setOilLogs(logsResult.data);
+            if (typesResult.status) setOilTypes(typesResult.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         } catch (err) {
             console.error('Error fetching oil data:', err);
         } finally {
@@ -84,15 +123,29 @@ export default function BusOils() {
         setSaving(true);
         setError(null);
         try {
+<<<<<<< HEAD
             const result = await api.post(`/api/buses/${rc_plate_number}/oils`, logData);
             if (result.data?.status) {
+=======
+            const res = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/oils`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logData)
+            });
+            const result = await res.json();
+            if (result.status) {
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 setSuccess('Oil service logged successfully!');
                 setIsAddModalOpen(false);
                 setLogData({ oil_id: '', log_date: new Date().toISOString().split('T')[0], quantity: '', amount: '' });
                 fetchData();
                 setTimeout(() => setSuccess(null), 3000);
             } else {
+<<<<<<< HEAD
                 setError(result.data?.message || 'Failed to save log.');
+=======
+                setError(result.message || 'Failed to save log.');
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             }
         } catch (err) {
             setError('Server error. Please try again.');
@@ -175,8 +228,12 @@ export default function BusOils() {
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Distance</th>
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Oil / Fluid Type</th>
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Quantity</th>
+<<<<<<< HEAD
                             <th className="py-4 text-left uppercase tracking-widest text-[10px] font-black">Amount (₹)</th>
                             <th className="py-4 pr-8 text-right uppercase tracking-widest text-[10px] font-black">Logged At</th>
+=======
+                            <th className="py-4 pr-8 text-right uppercase tracking-widest text-[10px] font-black">Amount (₹)</th>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -209,16 +266,23 @@ export default function BusOils() {
                                 <td className="py-4 pr-8 text-right font-black text-navy text-sm whitespace-nowrap">
                                     ₹{parseFloat(record.amount || 0).toLocaleString()}
                                 </td>
+<<<<<<< HEAD
                                 <td className="py-4 pr-8 text-right text-xs text-slate-400 font-mono whitespace-nowrap">
                                     {record.created_at
                                         ? new Date(record.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                                         : '—'}
                                 </td>
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                             </tr>
                         ))}
                         {oilLogs.length === 0 && (
                             <tr>
+<<<<<<< HEAD
                                 <td colSpan="8" className="py-20 text-center">
+=======
+                                <td colSpan="7" className="py-20 text-center">
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                     <div className="flex flex-col items-center gap-3">
                                         <Droplet size={48} className="text-slate-100" />
                                         <p className="text-slate-400 font-medium italic">No oil service records found for this vehicle.</p>
@@ -252,6 +316,7 @@ export default function BusOils() {
                                     <AlertCircle size={16} /> {error}
                                 </div>
                             )}
+<<<<<<< HEAD
                             {/* Odometer Readings Grid */}
 
                             {/* Odometer Readings Grid */}
@@ -282,6 +347,13 @@ export default function BusOils() {
                                     </div>
                                 </div>
                             </div>
+=======
+                            {readingErrorMsg && (
+                                <div className="p-3 bg-red-50 text-red-600 text-sm font-bold border border-red-200 rounded-xl animate-pulse">
+                                    ⚠️ {readingErrorMsg}
+                                </div>
+                            )}
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
                             {/* Oil Type Dropdown */}
                             <div>
@@ -344,8 +416,13 @@ export default function BusOils() {
                             <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 font-bold text-slate-400 hover:text-slate-600">Discard</button>
                             <button
                                 onClick={handleSubmit}
+<<<<<<< HEAD
                                 disabled={saving || !logData.oil_id || !logData.quantity || !logData.amount || !logData.new_reading}
                                 className={`btn px-10 rounded-2xl transition-all ${saving || !logData.oil_id || !logData.quantity || !logData.amount || !logData.new_reading
+=======
+                                disabled={saving || !logData.oil_id || !logData.quantity || !logData.amount || !readingExists}
+                                className={`btn px-10 rounded-2xl transition-all ${saving || !logData.oil_id || !logData.quantity || !logData.amount || !readingExists
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
                                         : 'btn-primary shadow-xl shadow-blue-100 hover:scale-[1.02]'
                                     }`}

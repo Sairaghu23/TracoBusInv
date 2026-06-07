@@ -44,6 +44,7 @@ export const createBusDocument = async (rcPlateNumber, documentTypeId, filePath,
     }
 };
 
+<<<<<<< HEAD
 export const deleteBusDocument = async (documentId) => {
     try {
         const result = await pool.query(
@@ -57,6 +58,8 @@ export const deleteBusDocument = async (documentId) => {
     }
 };
 
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 export const getExpiringDocumentsInfo = async (days) => {
     try {
         const query = `

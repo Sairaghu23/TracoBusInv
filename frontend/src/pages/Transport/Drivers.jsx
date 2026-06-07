@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 import { 
     User, Search, Plus, FileText, ChevronLeft, 
     Download, Phone, ShieldCheck, Filter, UserPlus, X, Trash2, Edit2
 } from 'lucide-react';
+<<<<<<< HEAD
 import api from '../../utils/api';
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function Drivers() {
     const navigate = useNavigate();
@@ -23,8 +29,14 @@ export default function Drivers() {
 
     const fetchDrivers = async () => {
         try {
+<<<<<<< HEAD
             const result = await api.get('/api/drivers');
             if (result.data?.status) setDrivers(result.data.data);
+=======
+            const response = await fetch('http://localhost:5001/api/drivers');
+            const result = await response.json();
+            if (result.status) setDrivers(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         } catch (error) {
             console.error("Error fetching drivers:", error);
         } finally {
@@ -35,8 +47,18 @@ export default function Drivers() {
     const handleAddDriver = async (e) => {
         e.preventDefault();
         try {
+<<<<<<< HEAD
             const result = await api.post('/api/drivers', newDriver);
             if (result.data?.status) {
+=======
+            const response = await fetch('http://localhost:5001/api/drivers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newDriver)
+            });
+            const result = await response.json();
+            if (result.status) {
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 fetchDrivers();
                 setActiveModal(false);
                 setNewDriver({ name: '', phone: '', license_number: '', status: 'ACTIVE', address: '', joining_date: new Date().toISOString().split('T')[0], license_expiry: '' });

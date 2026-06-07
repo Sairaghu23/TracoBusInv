@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { getAllBuses, getBusByRcPlate, getDuplicateBus, createBus, updateBus, deleteBus } from "../models/busModel.js";
+=======
+import { getAllBuses, getBusByRcPlate, createBus, updateBus, deleteBus } from "../models/busModel.js";
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 const handleResponse = (res, statusCode, status, message, data = null) => {
     res.status(statusCode).json({
@@ -35,6 +39,7 @@ export const getBusByRcPlateController = async (req, res, next) => {
 // Controller to add a new bus
 export const addBusController = async (req, res, next) => {
     try {
+<<<<<<< HEAD
         const { rc_plate_number, capacity, seating_capacity, engine_no, engine_number, bus_no, purchase_date } = req.body;
 
         if (purchase_date && new Date(purchase_date) > new Date()) {
@@ -42,11 +47,17 @@ export const addBusController = async (req, res, next) => {
         }
 
         // 1. Check if bus already exists by RC Plate
+=======
+        const { rc_plate_number, capacity, seating_capacity, engine_no, engine_number, bus_no } = req.body;
+
+        // 1. Check if bus already exists
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         const existingBus = await getBusByRcPlate(rc_plate_number);
         if (existingBus) {
             return handleResponse(res, 400, false, "Bus with this RC Plate Number already exists");
         }
 
+<<<<<<< HEAD
         // 2. Check for duplicate bus_no or engine_number
         if (bus_no || engine_number || engine_no) {
             const duplicate = await getDuplicateBus(bus_no, engine_number || engine_no);
@@ -61,6 +72,9 @@ export const addBusController = async (req, res, next) => {
         }
 
         // 3. Map fields and store
+=======
+        // 2. Map fields and store
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         const busToCreate = {
             ...req.body,
             seating_capacity: seating_capacity || capacity, // Support both during transition
@@ -80,6 +94,7 @@ export const addBusController = async (req, res, next) => {
 export const updateBusController = async (req, res, next) => {
     try {
         const { rc_plate_number } = req.params;
+<<<<<<< HEAD
         const { capacity, seating_capacity, engine_no, engine_number, bus_no, purchase_date } = req.body;
 
         if (purchase_date && new Date(purchase_date) > new Date()) {
@@ -101,10 +116,27 @@ export const updateBusController = async (req, res, next) => {
         const busData = {
             ...req.body,
             seating_capacity: seating_capacity || capacity,
+=======
+        const { capacity, seating_capacity, engine_no, engine_number, bus_no } = req.body;
+
+        // Basic validation
+        if (seating_capacity === undefined && capacity === undefined) {
+            return handleResponse(res, 400, false, "Seating capacity is required");
+        }
+        
+        const busData = {
+            ...req.body,
+            seating_capacity: seating_capacity !== undefined ? seating_capacity : capacity,
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             engine_number: engine_number || engine_no,
             status: req.body.status?.toUpperCase() || 'ACTIVE'
         };
 
+<<<<<<< HEAD
+=======
+        console.log("Attempting to update bus:", rc_plate_number, busData);
+
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         const updatedBus = await updateBus(rc_plate_number, busData);
         if (!updatedBus) {
             return handleResponse(res, 404, false, "Bus not found");

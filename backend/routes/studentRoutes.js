@@ -10,12 +10,18 @@ import {
     getBranchesController, 
     updateStudentController 
 } from '../controllers/studentController.js';
+<<<<<<< HEAD
 import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
+=======
+
+const router = express.Router();
+
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 router.get('/summary/counts', getStudentCountsController);
 router.get('/archive/batches', getArchiveBatchesController);
 router.get('/archive/:type/:batch_start/:batch_end', getArchiveStudentsByBatchController);

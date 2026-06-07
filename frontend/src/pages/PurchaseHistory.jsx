@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ShoppingBag, Calendar, User, ArrowRight } from 'lucide-react';
+<<<<<<< HEAD
 import api from '../utils/api';
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function PurchaseHistory() {
     const { spare_id } = useParams();
@@ -10,13 +13,17 @@ export default function PurchaseHistory() {
     const [spare, setSpare] = useState(null);
     const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
     const [viewCodesPurchase, setViewCodesPurchase] = useState(null);
     const [codesInModal, setCodesInModal] = useState([]);
     const [loadingCodes, setLoadingCodes] = useState(false);
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
     const fetchData = async () => {
         setLoading(true);
         try {
+<<<<<<< HEAD
             const stocksResult = await api.get('/api/spares/stocks');
             if (stocksResult.data?.status) {
                 const foundSpare = stocksResult.data.data.find(s => s.spare_id === parseInt(spare_id));
@@ -26,6 +33,22 @@ export default function PurchaseHistory() {
             const result = await api.get(`/api/spares/${spare_id}/purchases`);
             if (result.data?.status) {
                 setPurchases(result.data.data);
+=======
+            // Fetch All Stocks to find the specific spare name (or we could add a specific API for one spare)
+            // For efficiency, we'll fetch the purchases first and get names from the first record if available
+            // Actually, let's fetch stocks to get the spare name correctly
+            const stocksRes = await fetch('http://localhost:5001/api/spares/stocks');
+            const stocksResult = await stocksRes.json();
+            if (stocksResult.status) {
+                const foundSpare = stocksResult.data.find(s => s.spare_id === parseInt(spare_id));
+                setSpare(foundSpare);
+            }
+
+            const res = await fetch(`http://localhost:5001/api/spares/${spare_id}/purchases`);
+            const result = await res.json();
+            if (result.status) {
+                setPurchases(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             }
         } catch (err) {
             console.error("Error fetching purchase history:", err);
@@ -34,6 +57,7 @@ export default function PurchaseHistory() {
         }
     };
 
+<<<<<<< HEAD
     const fetchCodes = async (purchase) => {
         setViewCodesPurchase(purchase);
         setLoadingCodes(true);
@@ -49,6 +73,8 @@ export default function PurchaseHistory() {
         }
     };
 
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     useEffect(() => {
         fetchData();
     }, [spare_id]);
@@ -102,8 +128,12 @@ export default function PurchaseHistory() {
                             <th className="py-5 pl-8">Purchase Date</th>
                             <th>Supplier / Vendor</th>
                             <th>Inbound Quantity</th>
+<<<<<<< HEAD
                             <th className="text-right">Total Invoice (₹)</th>
                             <th className="text-right pr-8">Actions</th>
+=======
+                            <th className="text-right pr-8">Total Invoice (₹)</th>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -127,6 +157,7 @@ export default function PurchaseHistory() {
                                         </span>
                                     </div>
                                 </td>
+<<<<<<< HEAD
                                 <td className="text-right">
                                     <span className="text-lg font-black text-navy italic">₹{parseFloat(log.amount).toLocaleString()}</span>
                                 </td>
@@ -137,12 +168,20 @@ export default function PurchaseHistory() {
                                     >
                                         View Unique Codes
                                     </button>
+=======
+                                <td className="text-right pr-8">
+                                    <span className="text-xl font-black text-navy italic">₹{parseFloat(log.amount).toLocaleString()}</span>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                 </td>
                             </tr>
                         ))}
                         {purchases.length === 0 && (
                             <tr>
+<<<<<<< HEAD
                                 <td colSpan="5" className="py-24 text-center">
+=======
+                                <td colSpan="4" className="py-24 text-center">
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                     <div className="flex flex-col items-center gap-4">
                                         <ShoppingBag size={48} className="text-slate-100" />
                                         <p className="text-slate-400 font-medium italic">No purchase logs found for this part classification.</p>
@@ -153,6 +192,7 @@ export default function PurchaseHistory() {
                     </tbody>
                 </table>
             </div>
+<<<<<<< HEAD
 
             {/* Codes Modal */}
             {viewCodesPurchase && (
@@ -191,6 +231,8 @@ export default function PurchaseHistory() {
                     </div>
                 </div>
             )}
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         </div>
     );
 }

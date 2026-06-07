@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+<<<<<<< HEAD
 import { fileURLToPath } from 'url';
 import { getDocumentTypes, getBusDocuments, createBusDocument, deleteBusDocument, getExpiringDocumentsInfo, getComplianceMatrix } from '../models/documentModel.js';
 
@@ -10,10 +11,14 @@ import { getDocumentTypes, getBusDocuments, createBusDocument, deleteBusDocument
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const UPLOADS_DIR = path.resolve(__dirname, '..', '..', 'uploads');
+=======
+import { getDocumentTypes, getBusDocuments, createBusDocument, getExpiringDocumentsInfo, getComplianceMatrix } from '../models/documentModel.js';
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 // Configure multer storage
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
+<<<<<<< HEAD
         // Use absolute path so files always go to project_root/uploads/
         // regardless of the Node process's working directory
         if (!fs.existsSync(UPLOADS_DIR)) {
@@ -33,6 +38,19 @@ const storage = multer.diskStorage({
             
         const finalName = `${busId}-${namePart}-${uniqueSuffix}${path.extname(file.originalname)}`;
         cb(null, finalName);
+=======
+        const uploadPath = 'uploads';
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
+    },
+    filename: function (req, file, cb) {
+        // File name: bus_id-timestamp-original_name
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, req.body.bus_id + '-' + uniqueSuffix + path.extname(file.originalname));
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     }
 });
 
@@ -95,7 +113,11 @@ export const uploadBusDocumentController = (req, res, next) => {
                 return res.status(400).json({ status: false, message: 'All fields except provider are required' });
             }
 
+<<<<<<< HEAD
             const filePath = `/api/uploads/${req.file.filename}`;
+=======
+            const filePath = `/uploads/${req.file.filename}`;
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             const newDoc = await createBusDocument(rc_plate_number, document_type_id, filePath, start_date, expiry_date, provider);
             
             handleResponse(res, 201, "Document uploaded successfully", newDoc);
@@ -108,6 +130,7 @@ export const uploadBusDocumentController = (req, res, next) => {
     });
 };
 
+<<<<<<< HEAD
 export const deleteBusDocumentController = async (req, res, next) => {
     try {
         const { documentId } = req.params;
@@ -132,6 +155,8 @@ export const deleteBusDocumentController = async (req, res, next) => {
     }
 };
 
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 export const getExpiringDocumentsController = async (req, res, next) => {
     try {
         const days = parseInt(req.query.days) || 30;

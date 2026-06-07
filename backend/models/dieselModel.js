@@ -21,6 +21,7 @@ export const dieselModel = {
         return result.rows[0];
     },
 
+<<<<<<< HEAD
     // 3. Check if all buses have odometer readings for a specific date
     checkOdometerStatus: async (date) => {
         // Find buses that DON'T have a reading for this date
@@ -32,6 +33,23 @@ export const dieselModel = {
         `;
         const result = await pool.query(query, [date]);
         return result.rows; // Returns array of plate numbers missing readings
+=======
+    checkOdometerStatus: async (date) => {
+        // Returns buses that don't have ANY reading history on or before this date
+        const query = `
+            SELECT b.rc_plate_number, b.bus_no 
+            FROM buses b
+            LEFT JOIN (
+                SELECT DISTINCT ON (bus_id) bus_id, reading_id 
+                FROM bus_readings 
+                WHERE end_date <= $1
+                ORDER BY bus_id, end_date DESC
+            ) r ON b.bus_id = r.bus_id
+            WHERE r.reading_id IS NULL;
+        `;
+        const result = await pool.query(query, [date]);
+        return result.rows; // Returns array of plate numbers missing ANY readings
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     },
 
     // 4. Get base data for Diesel Entry (Buses + Odometer Reading IDs for the date)
@@ -41,6 +59,7 @@ export const dieselModel = {
                 b.bus_id,
                 b.rc_plate_number,
                 b.bus_no,
+<<<<<<< HEAD
                 r.reading_id,
                 r.old_reading,
                 r.new_reading,
@@ -50,6 +69,24 @@ export const dieselModel = {
             FROM buses b
             JOIN bus_readings r ON b.bus_id = r.bus_id AND r.end_date = $1
             LEFT JOIN diesel_logs d ON r.reading_id = d.reading_id
+=======
+                COALESCE(r.reading_id, lr.reading_id) as reading_id,
+                COALESCE(r.old_reading, lr.old_reading) as old_reading,
+                COALESCE(r.new_reading, lr.new_reading) as new_reading,
+                COALESCE(r.distance, lr.distance, 0) as distance,
+                d.liters,
+                d.diesel_id,
+                (r.reading_id IS NOT NULL) as exact_match
+            FROM buses b
+            LEFT JOIN bus_readings r ON b.bus_id = r.bus_id AND r.end_date = $1
+            LEFT JOIN (
+                SELECT DISTINCT ON (bus_id) bus_id, reading_id, old_reading, new_reading, distance
+                FROM bus_readings
+                WHERE end_date < $1
+                ORDER BY bus_id, end_date DESC, reading_id DESC
+            ) lr ON b.bus_id = lr.bus_id
+            LEFT JOIN diesel_logs d ON COALESCE(r.reading_id, lr.reading_id) = d.reading_id
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             ORDER BY b.bus_no ASC;
         `;
         const result = await pool.query(query, [date]);
@@ -64,18 +101,36 @@ export const dieselModel = {
             const insertedLogs = [];
             
             for (const log of logs) {
+<<<<<<< HEAD
                 const { bus_id, reading_id, rate_id, liters, date } = log;
                 
                 // Using ON CONFLICT to update if a log already exists for this reading
                 const query = `
                     INSERT INTO diesel_logs (bus_id, reading_id, rate_id, liters, created_at)
+=======
+                const { rc_plate_number, reading_id, rate_id, liters, date } = log;
+                
+                // Using ON CONFLICT to update if a log already exists for this reading
+                const query = `
+                    INSERT INTO diesel_logs (rc_plate_number, reading_id, rate_id, liters, created_at)
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                     VALUES ($1, $2, $3, $4, $5)
                     ON CONFLICT (reading_id) DO UPDATE SET 
                         liters = EXCLUDED.liters,
                         rate_id = EXCLUDED.rate_id
                     RETURNING *;
                 `;
+<<<<<<< HEAD
                 const res = await client.query(query, [bus_id, reading_id, rate_id, liters, date]);
+=======
+                const res = await client.query(query, [
+                    rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '',
+                    reading_id,
+                    rate_id,
+                    liters,
+                    date
+                ]);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 insertedLogs.push(res.rows[0]);
             }
             
@@ -106,7 +161,11 @@ export const dieselModel = {
             FROM diesel_logs d
             JOIN bus_readings r ON d.reading_id = r.reading_id
             JOIN fuel_rates f ON d.rate_id = f.rate_id
+<<<<<<< HEAD
             JOIN buses b ON d.bus_id = b.bus_id
+=======
+            JOIN buses b ON d.rc_plate_number = b.rc_plate_number
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             WHERE d.created_at = $1
             ORDER BY b.bus_no ASC;
         `;
@@ -130,6 +189,7 @@ export const dieselModel = {
             FROM diesel_logs d
             JOIN fuel_rates f ON d.rate_id = f.rate_id
             JOIN bus_readings r ON d.reading_id = r.reading_id
+<<<<<<< HEAD
             JOIN buses b ON d.bus_id = b.bus_id
             WHERE b.rc_plate_number = $1
             ORDER BY d.created_at DESC;
@@ -186,5 +246,13 @@ export const dieselModel = {
         } finally {
             client.release();
         }
+=======
+            JOIN buses b ON d.rc_plate_number = b.rc_plate_number
+            WHERE b.rc_plate_number = $1
+            ORDER BY d.created_at DESC;
+        `;
+        const result = await pool.query(query, [rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '']);
+        return result.rows;
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     }
 };

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Bus, Users, UserSquare2, ChevronLeft, ChevronRight, FileX, BarChart3, AlertCircle, ShieldAlert, Car } from 'lucide-react';
+<<<<<<< HEAD
 import api from '../utils/api';
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 // ── Compliance Calendar ───────────────────────────────────────────────────────
 const CalendarWidget = () => {
@@ -13,8 +16,14 @@ const CalendarWidget = () => {
     const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
     useEffect(() => {
+<<<<<<< HEAD
         api.get('/api/analytics/calendar-expirations')
             .then(result => { if (result.data?.status) setExpirations(result.data.data); })
+=======
+        fetch('http://localhost:5001/api/analytics/calendar-expirations')
+            .then(r => r.json())
+            .then(result => { if (result.status) setExpirations(result.data); })
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             .catch(console.error);
     }, []);
 
@@ -169,11 +178,19 @@ export default function Dashboard() {
 
     useEffect(() => {
         Promise.all([
+<<<<<<< HEAD
             api.get('/api/buses'),
             api.get('/api/students/summary/counts'),
         ]).then(([busRes, studentRes]) => {
             if (busRes.data?.status) setBuses(busRes.data.data);
             if (studentRes.data?.status) setStudentCounts(studentRes.data.data);
+=======
+            fetch('http://localhost:5001/api/buses').then(r => r.json()),
+            fetch('http://localhost:5001/api/students/summary/counts').then(r => r.json()),
+        ]).then(([busRes, studentRes]) => {
+            if (busRes.status) setBuses(busRes.data);
+            if (studentRes.status) setStudentCounts(studentRes.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         }).catch(console.error)
           .finally(() => setLoading(false));
     }, []);

@@ -4,7 +4,10 @@ import {
     User, Phone, ShieldCheck, MapPin, Calendar, 
     Edit2, Trash2, ChevronLeft, Check, X, Camera, FileText
 } from 'lucide-react';
+<<<<<<< HEAD
 import api from '../../utils/api';
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function DriverDetails() {
     const { id } = useParams();
@@ -22,12 +25,22 @@ export default function DriverDetails() {
 
     const fetchDriverDetails = async () => {
         try {
+<<<<<<< HEAD
             const result = await api.get(`/api/drivers/${id}`);
             if (result.data?.status) {
                 setDriver(result.data.data);
                 const formattedData = {
                     ...result.data.data,
                     joining_date: result.data.data.joining_date ? new Date(result.data.data.joining_date).toISOString().split('T')[0] : ''
+=======
+            const response = await fetch(`http://localhost:5001/api/drivers/${id}`);
+            const result = await response.json();
+            if (result.status) {
+                setDriver(result.data);
+                const formattedData = {
+                    ...result.data,
+                    joining_date: result.data.joining_date ? new Date(result.data.joining_date).toISOString().split('T')[0] : ''
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 };
                 setEditData(formattedData);
             }
@@ -41,9 +54,20 @@ export default function DriverDetails() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
+<<<<<<< HEAD
             const result = await api.put(`/api/drivers/${id}`, editData);
             if (result.data?.status) {
                 setDriver(result.data.data);
+=======
+            const response = await fetch(`http://localhost:5001/api/drivers/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editData)
+            });
+            const result = await response.json();
+            if (result.status) {
+                setDriver(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 setIsEditing(false);
             }
         } catch (error) {
@@ -54,8 +78,14 @@ export default function DriverDetails() {
     const handleDelete = async () => {
         if (window.confirm("Are you sure you want to retire this driver from the fleet? This action is permanent.")) {
             try {
+<<<<<<< HEAD
                 const result = await api.delete(`/api/drivers/${id}`);
                 if (result.data?.status) navigate('/drivers');
+=======
+                const response = await fetch(`http://localhost:5001/api/drivers/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (result.status) navigate('/drivers');
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             } catch (error) {
                 console.error("Error deleting driver:", error);
             }
@@ -77,7 +107,11 @@ export default function DriverDetails() {
         </div>
     );
 
+<<<<<<< HEAD
     const photoUrl = driver.photo_url || "/uploads/drivers/default_avatar.png";
+=======
+    const photoUrl = driver.photo_url || "http://localhost:5001/uploads/drivers/default_avatar.png";
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 animate-in zoom-in-95 duration-500">

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FileX, AlertTriangle, Calendar, AlertCircle, FileCheck2, Clock, Search, User, Car } from 'lucide-react';
+<<<<<<< HEAD
 import api from '../utils/api';
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function Reminders() {
     const [duration, setDuration] = useState(30);
@@ -13,6 +16,7 @@ export default function Reminders() {
         setLoading(true);
         try {
             const [typesRes, matrixRes, driverRes] = await Promise.all([
+<<<<<<< HEAD
                 api.get('/api/document-types'),
                 api.get('/api/documents/compliance-matrix'),
                 api.get('/api/drivers')
@@ -24,6 +28,24 @@ export default function Reminders() {
 
             if (matrixRes.data?.status) {
                 const data = matrixRes.data.data;
+=======
+                fetch('http://localhost:5001/api/document-types'),
+                fetch('http://localhost:5001/api/documents/compliance-matrix'),
+                fetch('http://localhost:5001/api/drivers')
+            ]);
+            const [typesResult, matrixResult, driverResult] = await Promise.all([
+                typesRes.json(), 
+                matrixRes.json(), 
+                driverRes.json()
+            ]);
+
+            if (typesResult.status) {
+                setDocTypes(typesResult.data.map(dt => dt.document_name));
+            }
+
+            if (matrixResult.status) {
+                const data = matrixResult.data;
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 const grouped = {};
                 data.forEach(item => {
                     if (!grouped[item.rc_plate_number]) {
@@ -43,10 +65,17 @@ export default function Reminders() {
                 setReminders(grouped);
             }
 
+<<<<<<< HEAD
             if (driverRes.data?.status) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const expiring = driverRes.data.data.filter(d => {
+=======
+            if (driverResult.status) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const expiring = driverResult.data.filter(d => {
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                     if (!d.license_expiry) return false;
                     const expiry = new Date(d.license_expiry);
                     const days = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));

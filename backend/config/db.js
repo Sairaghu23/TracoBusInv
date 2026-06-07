@@ -32,7 +32,53 @@ pool.query('SELECT NOW()', (err, res) => {
         console.error("Database connection test failed:", err.message);
     } else {
         console.log("Database connection test successful:", res.rows[0].now);
+<<<<<<< HEAD
     }
 });
 
+=======
+        runMigrations();
+    }
+});
+
+const runMigrations = async () => {
+    try {
+        console.log("Running self-healing database migrations...");
+        
+        // 1. Ensure buses table has bus_no column
+        await pool.query(`
+            ALTER TABLE buses ADD COLUMN IF NOT EXISTS bus_no VARCHAR(50);
+        `).catch(err => console.log("buses.bus_no column check:", err.message));
+
+        // 2. Clean up duplicate fuel_rates dates (if any)
+        await pool.query(`
+            DELETE FROM fuel_rates a USING fuel_rates b 
+            WHERE a.rate_id < b.rate_id AND a.rate_date = b.rate_date;
+        `).catch(err => console.log("fuel_rates duplicate cleanup check:", err.message));
+
+        // 3. Ensure UNIQUE constraint on fuel_rates(rate_date)
+        await pool.query(`
+            ALTER TABLE fuel_rates ADD CONSTRAINT fuel_rates_rate_date_key UNIQUE (rate_date);
+        `).catch(err => {
+            if (!err.message.includes("already exists")) {
+                console.log("Adding fuel_rates_rate_date_key constraint error:", err.message);
+            }
+        });
+
+        // 4. Ensure UNIQUE constraint on diesel_logs(reading_id)
+        await pool.query(`
+            ALTER TABLE diesel_logs ADD CONSTRAINT diesel_logs_reading_id_key UNIQUE (reading_id);
+        `).catch(err => {
+            if (!err.message.includes("already exists")) {
+                console.log("Adding diesel_logs_reading_id_key constraint error:", err.message);
+            }
+        });
+
+        console.log("Database self-healing migrations finished.");
+    } catch (err) {
+        console.error("Database self-healing migrations failed:", err.message);
+    }
+};
+
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 export default pool;

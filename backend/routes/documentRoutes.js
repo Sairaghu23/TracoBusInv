@@ -3,7 +3,10 @@ import {
     getDocumentTypesController, 
     getBusDocumentsController, 
     uploadBusDocumentController, 
+<<<<<<< HEAD
     deleteBusDocumentController,
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     getExpiringDocumentsController, 
     getComplianceMatrixController 
 } from '../controllers/documentController.js';
@@ -15,7 +18,10 @@ router.get('/', getDocumentTypesController); // Alias for flat /api/document-typ
 router.get('/reminders', getExpiringDocumentsController);
 router.get('/compliance-matrix', getComplianceMatrixController);
 router.post('/upload', uploadBusDocumentController);
+<<<<<<< HEAD
 router.delete('/:documentId', deleteBusDocumentController);
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 // Note: /api/buses/:id/documents is handled in busRoutes.js as a nested resource
 
 export default router;

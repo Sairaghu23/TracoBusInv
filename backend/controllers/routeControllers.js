@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { getAllRoutesWithStops, createRoute, updateRouteName, deleteRouteById } from "../models/routeModel.js";
 import { createStoppingWithFee, updateStop, deleteStoppingById } from "../models/stoppingModel.js";
+=======
+import { getAllRoutesWithStops, createRoute, updateRouteName } from "../models/routeModel.js";
+import { createStoppingWithFee, updateStop } from "../models/stoppingModel.js";
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 const handleResponse = (res, statusCode, message, data = null) => {
     res.status(statusCode).json({
@@ -22,29 +27,52 @@ export const addRouteController = async (req, res, next) => {
     try {
         const { route_name } = req.body;
         console.log("POST /api/routes - Received:", route_name);
+<<<<<<< HEAD
 
         if (!route_name) {
             return res.status(400).json({ status: false, message: "Route name is required" });
         }
 
+=======
+        
+        if (!route_name) {
+            return res.status(400).json({ status: false, message: "Route name is required" });
+        }
+        
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         const newRoute = await createRoute(route_name);
         handleResponse(res, 201, "Route created successfully", newRoute);
     } catch (err) {
         console.error("FATAL ERROR in addRouteController:", err);
+<<<<<<< HEAD
 
         // Check for duplicate
         const isDuplicate = err.code === '23505' ||
             err.message?.toLowerCase().includes('unique') ||
             err.message?.toLowerCase().includes('already exists');
 
+=======
+        
+        // Check for duplicate
+        const isDuplicate = err.code === '23505' || 
+                           err.message?.toLowerCase().includes('unique') || 
+                           err.message?.toLowerCase().includes('already exists');
+        
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         if (isDuplicate) {
             return res.status(409).json({ status: false, message: "ROUTE ALREADY EXISTS" });
         }
 
         // Send actual error message to client for debugging
+<<<<<<< HEAD
         res.status(500).json({
             status: false,
             message: `SERVER ERROR: ${err.message}`,
+=======
+        res.status(500).json({ 
+            status: false, 
+            message: `SERVER ERROR: ${err.message}`, 
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             code: err.code,
             detail: err.detail
         });
@@ -63,6 +91,7 @@ export const updateRouteController = async (req, res, next) => {
     }
 };
 
+<<<<<<< HEAD
 export const deleteRouteController = async (req, res, next) => {
     try {
         const { route_id } = req.params;
@@ -74,6 +103,8 @@ export const deleteRouteController = async (req, res, next) => {
     }
 };
 
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 export const updateStopController = async (req, res, next) => {
     try {
         const { stop_id } = req.params;
@@ -85,6 +116,7 @@ export const updateStopController = async (req, res, next) => {
         next(err);
     }
 };
+<<<<<<< HEAD
 
 export const deleteStopController = async (req, res, next) => {
     try {
@@ -96,3 +128,5 @@ export const deleteStopController = async (req, res, next) => {
         next(err);
     }
 };
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)

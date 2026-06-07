@@ -28,6 +28,13 @@ export const addDriverController = async (req, res) => {
         const newDriver = await driverModel.createDriver(req.body);
         res.status(201).json({ status: true, data: newDriver });
     } catch (error) {
+<<<<<<< HEAD
+=======
+        console.error("Error in addDriverController:", error);
+        if (error.code === '23505') {
+            return res.status(400).json({ status: false, message: "A driver with this license number already exists." });
+        }
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         res.status(500).json({ status: false, message: error.message });
     }
 };
@@ -40,6 +47,13 @@ export const updateDriverController = async (req, res) => {
         if (!updatedDriver) return res.status(404).json({ status: false, message: 'Driver not found' });
         res.status(200).json({ status: true, data: updatedDriver });
     } catch (error) {
+<<<<<<< HEAD
+=======
+        console.error("Error in updateDriverController:", error);
+        if (error.code === '23505') {
+            return res.status(400).json({ status: false, message: "A driver with this license number already exists." });
+        }
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         res.status(500).json({ status: false, message: error.message });
     }
 };

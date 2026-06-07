@@ -1,8 +1,11 @@
 import pool from '../config/db.js';
 
+<<<<<<< HEAD
 // Helper to convert empty strings to null for int/date columns
 const sanitizeEmpty = (val) => (val === '' ? null : val);
 
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 // Get all buses from database
 export const getAllBuses = async () => {
     try {
@@ -21,6 +24,7 @@ export const getAllBuses = async () => {
 
 // Check if bus exists by RC Plate Number
 export const getBusByRcPlate = async (rcPlate) => {
+<<<<<<< HEAD
     const result = await pool.query(`
         SELECT b.*, r.route_name 
         FROM buses b 
@@ -41,12 +45,16 @@ export const getDuplicateBus = async (bus_no, engine_number, current_rc_plate_nu
     }
 
     const result = await pool.query(query, params);
+=======
+    const result = await pool.query('SELECT * FROM buses WHERE rc_plate_number = $1', [rcPlate ? String(rcPlate).trim().toUpperCase() : '']);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     return result.rows[0];
 };
 
 // Update an existing bus
 export const updateBus = async (rc_plate_number, busData) => {
     const { seating_capacity, engine_number, route_id, purchase_date, status, bus_no } = busData;
+<<<<<<< HEAD
     const result = await pool.query(`
         UPDATE buses 
         SET seating_capacity = $1, engine_number = $2, route_id = $3, purchase_date = $4, status = $5, bus_no = $6
@@ -62,11 +70,54 @@ export const updateBus = async (rc_plate_number, busData) => {
         rc_plate_number.trim().toUpperCase()
     ]);
     return result.rows[0];
+=======
+    
+    // Ensure we don't pass empty strings to date/int fields
+    const clean_purchase_date = (purchase_date && typeof purchase_date === 'string' && purchase_date.trim() !== "") 
+        ? purchase_date 
+        : (purchase_date ? purchase_date : null);
+    const clean_route_id = (route_id && String(route_id).trim() !== "") ? route_id : null;
+
+    try {
+        const result = await pool.query(`
+            UPDATE buses 
+            SET seating_capacity = $1, 
+                engine_number = $2, 
+                route_id = $3, 
+                purchase_date = $4, 
+                status = $5, 
+                bus_no = $6
+            WHERE UPPER(TRIM(rc_plate_number)) = $7
+            RETURNING *
+        `, [
+            seating_capacity,
+            engine_number ? String(engine_number).trim().toUpperCase() : null,
+            clean_route_id,
+            clean_purchase_date,
+            status?.toUpperCase() || 'ACTIVE',
+            bus_no ? String(bus_no).trim().toUpperCase() : null,
+            rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : ''
+        ]);
+        
+        if (result.rows.length === 0) {
+            console.log("No bus found with RC Plate:", rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '');
+        }
+        
+        return result.rows[0];
+    } catch (error) {
+        console.error("DATABASE ERROR in updateBus:", error.message);
+        throw error;
+    }
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 };
 
 // Delete a bus
 export const deleteBus = async (rc_plate_number) => {
+<<<<<<< HEAD
     const result = await pool.query('DELETE FROM buses WHERE rc_plate_number = $1 RETURNING *', [rc_plate_number.trim().toUpperCase()]);
+=======
+    const result = await pool.query('DELETE FROM buses WHERE rc_plate_number = $1 RETURNING *', [rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '']);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     return result.rows[0];
 };
 
@@ -78,6 +129,7 @@ export const createBus = async (busData) => {
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
     `, [
+<<<<<<< HEAD
         rc_plate_number.trim().toUpperCase(), 
         sanitizeEmpty(seating_capacity), 
         engine_number?.trim().toUpperCase(), 
@@ -85,6 +137,15 @@ export const createBus = async (busData) => {
         sanitizeEmpty(purchase_date), 
         status?.toUpperCase() || 'ACTIVE',
         sanitizeEmpty(bus_no)
+=======
+        rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '',
+        seating_capacity,
+        engine_number ? String(engine_number).trim().toUpperCase() : null,
+        route_id || null,
+        purchase_date,
+        status?.toUpperCase() || 'ACTIVE',
+        bus_no ? String(bus_no).trim().toUpperCase() : null
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     ]);
     return result.rows[0];
 };

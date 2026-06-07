@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import * as XLSX from 'xlsx';
 import { 
     School, BookOpen, Award, GraduationCap, Users, Search, 
@@ -6,6 +7,17 @@ import {
     Clock, Filter, MapPin, CreditCard, Pencil, Trash2 
 } from 'lucide-react';
 import api from '../../utils/api';
+=======
+import { 
+    Users, Search, Plus, FileText, ChevronLeft, 
+    Download, GraduationCap, School, BookOpen, 
+    Award, ShieldCheck, Filter, UserPlus, X, Check,
+    Clock, CreditCard, MapPin, Pencil
+} from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function Students() {
     // 1. UI State
@@ -34,7 +46,10 @@ export default function Students() {
 
     // Payment Form State
     const [paymentForm, setPaymentForm] = useState({
+<<<<<<< HEAD
         route_id: '',
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         stop_id: '',
         amount_paid: '',
         payment_mode: 'Online',
@@ -49,11 +64,15 @@ export default function Students() {
         admission_year: new Date().getFullYear(),
         batch_start_year: new Date().getFullYear(),
         batch_end_year: new Date().getFullYear() + 4,
+<<<<<<< HEAD
         route_id: '',
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         stop_id: '',
         concession: 0
     });
 
+<<<<<<< HEAD
     const [branchFilter, setBranchFilter] = useState('all');
 
     useEffect(() => {
@@ -61,6 +80,14 @@ export default function Students() {
             try {
                 const result = await api.get('/api/students/summary/counts');
                 if (result.data?.status) setCounts(result.data.data);
+=======
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                const response = await fetch('http://localhost:5001/api/students/summary/counts');
+                const result = await response.json();
+                if (result.status) setCounts(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             } catch (error) {
                 console.error("Error fetching counts:", error);
             }
@@ -69,8 +96,14 @@ export default function Students() {
         
         const fetchRoutes = async () => {
             try {
+<<<<<<< HEAD
                 const result = await api.get('/api/routes');
                 if (result.data?.status) setRoutes(result.data.data);
+=======
+                const response = await fetch('http://localhost:5001/api/routes');
+                const result = await response.json();
+                if (result.status) setRoutes(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             } catch (error) {
                 console.error("Error fetching routes:", error);
             }
@@ -78,8 +111,14 @@ export default function Students() {
 
         const fetchBranches = async () => {
             try {
+<<<<<<< HEAD
                 const result = await api.get('/api/branches');
                 if (result.data?.status) setBranches(result.data.data);
+=======
+                const response = await fetch('http://localhost:5001/api/branches');
+                const result = await response.json();
+                if (result.status) setBranches(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             } catch (error) {
                 console.error("Error fetching branches:", error);
             }
@@ -116,8 +155,14 @@ export default function Students() {
         setLoading(true);
         try {
             const yearNum = parseInt(year);
+<<<<<<< HEAD
             const result = await api.get(`/api/students/${type}/${yearNum}/semester/${semester}`);
             if (result.data?.status) setStudents(result.data.data);
+=======
+            const response = await fetch(`http://localhost:5001/api/students/${type}/${yearNum}/semester/${semester}`);
+            const result = await response.json();
+            if (result.status) setStudents(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         } catch (error) {
             console.error("Error fetching students:", error);
         } finally {
@@ -128,8 +173,14 @@ export default function Students() {
     const fetchArchiveBatches = async (type) => {
         setLoading(true);
         try {
+<<<<<<< HEAD
             const result = await api.get(`/api/students/archive/${type}/batches`);
             if (result.data?.status) setBatches(result.data.data);
+=======
+            const response = await fetch(`http://localhost:5001/api/students/archive/${type}/batches`);
+            const result = await response.json();
+            if (result.status) setBatches(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         } catch (error) {
             console.error("Error fetching archive batches:", error);
         } finally {
@@ -140,8 +191,14 @@ export default function Students() {
     const fetchArchiveStudents = async (type, start, end) => {
         setLoading(true);
         try {
+<<<<<<< HEAD
             const result = await api.get(`/api/students/archive/${type}/${start}/${end}`);
             if (result.data?.status) setStudents(result.data.data);
+=======
+            const response = await fetch(`http://localhost:5001/api/students/archive/${type}/${start}/${end}`);
+            const result = await response.json();
+            if (result.status) setStudents(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         } catch (error) {
             console.error("Error fetching archive students:", error);
         } finally {
@@ -151,9 +208,16 @@ export default function Students() {
 
     const fetchPaymentHistory = async (type, sId) => {
         try {
+<<<<<<< HEAD
             const result = await api.get(`/api/students/${type}/history/${sId}`);
             if (result.data?.status) {
                 setPaymentHistory(result.data.data);
+=======
+            const response = await fetch(`http://localhost:5001/api/students/${type}/history/${sId}`);
+            const result = await response.json();
+            if (result.status) {
+                setPaymentHistory(result.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 setHistoryModal(true);
             }
         } catch (error) {
@@ -171,12 +235,26 @@ export default function Students() {
         e.preventDefault();
         const type = 'btech';
         try {
+<<<<<<< HEAD
             const result = await api.post(`/api/students/${type}/payment`, {
                 s_id: selectedStudent.s_id,
                 semester: selectedSemester,
                 ...paymentForm
             });
             if (result.data?.status) {
+=======
+            const response = await fetch(`http://localhost:5001/api/students/${type}/payment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    s_id: selectedStudent.s_id,
+                    semester: selectedSemester,
+                    ...paymentForm
+                })
+            });
+            const result = await response.json();
+            if (result.status) {
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 setPaymentModal(false);
                 fetchStudents(type, selectedYear, selectedSemester);
                 alert("Payment recorded successfully!");
@@ -190,6 +268,7 @@ export default function Students() {
         e.preventDefault();
         const type = 'btech';
         const url = isEditMode 
+<<<<<<< HEAD
             ? `/api/students/${type}/${editingStudentId}`
             : `/api/students/${type}`;
         const method = isEditMode ? 'put' : 'post';
@@ -197,6 +276,20 @@ export default function Students() {
         try {
             const result = await api[method](url, studentForm);
             if (result.data?.status) {
+=======
+            ? `http://localhost:5001/api/students/${type}/${editingStudentId}`
+            : `http://localhost:5001/api/students/${type}`;
+        const method = isEditMode ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(studentForm)
+            });
+            const result = await response.json();
+            if (result.status) {
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 setActiveModal(false);
                 setIsEditMode(false);
                 setEditingStudentId(null);
@@ -207,14 +300,23 @@ export default function Students() {
                     admission_year: new Date().getFullYear(),
                     batch_start_year: new Date().getFullYear(),
                     batch_end_year: new Date().getFullYear() + 4,
+<<<<<<< HEAD
                     route_id: '',
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                     stop_id: '',
                     concession: 0
                 });
                 // Fetch counts and students for current view
                 const fetchCounts = async () => {
+<<<<<<< HEAD
                     const res = await api.get('/api/students/summary/counts');
                     if (res.data?.status) setCounts(res.data.data);
+=======
+                    const res = await fetch('http://localhost:5001/api/students/summary/counts');
+                    const r = await res.json();
+                    if (r.status) setCounts(r.data);
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 };
                 fetchCounts();
                 if (view === 'detail') fetchStudents(type, selectedYear, selectedSemester);
@@ -238,7 +340,10 @@ export default function Students() {
             admission_year: student.admission_year || new Date().getFullYear(),
             batch_start_year: student.batch_start_year || new Date().getFullYear(),
             batch_end_year: student.batch_end_year || new Date().getFullYear() + 4,
+<<<<<<< HEAD
             route_id: student.route_id || '',
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             stop_id: student.stop_id || '',
             concession: student.concession || 0
         });
@@ -509,8 +614,12 @@ export default function Students() {
             : s.s_name?.toLowerCase().includes(searchQuery.toLowerCase());
         const isPaid = parseFloat(s.amount_paid || 0) > 0;
         const matchPayment = paymentFilter === 'all' ? true : paymentFilter === 'paid' ? isPaid : !isPaid;
+<<<<<<< HEAD
         const matchBranch = branchFilter === 'all' ? true : s.branch_id?.toString() === branchFilter.toString();
         return matchSearch && matchPayment && matchBranch;
+=======
+        return matchSearch && matchPayment;
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     });
 
     return (
@@ -529,7 +638,11 @@ export default function Students() {
                             <span className={`w-3 h-3 rounded-full ${yearData?.color || 'bg-slate-400'}`} />
                             <h2 className="text-2xl font-black text-navy italic">{yearData?.name} Registry</h2>
                         </div>
+<<<<<<< HEAD
                         <p className="text-slate-500 text-sm font-medium">Session 2024-25 • {branches.find(b => b.branch_id.toString() === branchFilter.toString())?.branch_name || 'All Disciplines'}</p>
+=======
+                        <p className="text-slate-500 text-sm font-medium">Session 2024-25 • Financial Oversight</p>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                     </div>
                 </div>
 
@@ -551,7 +664,10 @@ export default function Students() {
                                 admission_year: new Date().getFullYear(),
                                 batch_start_year: new Date().getFullYear(),
                                 batch_end_year: new Date().getFullYear() + 4,
+<<<<<<< HEAD
                                 route_id: '',
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                 stop_id: '',
                                 concession: 0
                             });
@@ -599,12 +715,17 @@ export default function Students() {
                         onChange={(e) => setPaymentFilter(e.target.value)}
                         className="bg-transparent border-none text-sm font-black text-navy focus:outline-none cursor-pointer"
                     >
+<<<<<<< HEAD
                         <option value="all">All Status</option>
+=======
+                        <option value="all">All Students</option>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                         <option value="paid">Paid Only</option>
                         <option value="unpaid">Unpaid Only</option>
                     </select>
                 </div>
 
+<<<<<<< HEAD
                 {/* Branch Filter */}
                 <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 focus-within:border-orange-500 transition-all">
                     <Filter size={18} className="text-slate-400" />
@@ -620,6 +741,8 @@ export default function Students() {
                     </select>
                 </div>
 
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 <div className="flex-1 flex items-center px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 focus-within:border-orange-500 transition-all">
                     <Search size={18} className="text-slate-400" />
                     <input 
@@ -679,12 +802,19 @@ export default function Students() {
                                             onClick={() => {
                                                 setSelectedStudent(student);
                                                 setPaymentForm({
+<<<<<<< HEAD
                                                     route_id: '',
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                                     stop_id: student.stop_id || '',
                                                     amount_paid: '',
                                                     payment_mode: 'Online',
                                                     payment_date: new Date().toISOString().split('T')[0],
+<<<<<<< HEAD
                                                     concession: 0
+=======
+                                                    concession: student.concession || 0
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                                 });
                                                 setPaymentModal(true);
                                             }}
@@ -694,6 +824,16 @@ export default function Students() {
                                             <Plus size={18} />
                                         </button>
                                         <button 
+<<<<<<< HEAD
+=======
+                                            onClick={() => handleHistoryClick(student)}
+                                            className="w-10 h-10 rounded-xl bg-slate-50 text-navy hover:bg-navy-light transition-all flex items-center justify-center"
+                                            title="Payment History"
+                                        >
+                                            <Clock size={18} />
+                                        </button>
+                                        <button 
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                             onClick={() => handleEditClick(student)}
                                             className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center"
                                             title="Edit Profile"
@@ -772,7 +912,13 @@ export default function Students() {
                                     <CreditCard size={32} className="text-orange-200" />
                                 </div>
                                 <div>
+<<<<<<< HEAD
                                     <h2 className="text-2xl font-black italic tracking-tight">Record Fee</h2>
+=======
+                                    <h2 className="text-2xl font-black italic tracking-tight">
+                                        {selectedStudent.amount_paid > 0 ? 'Add Installment' : 'Record Fee'}
+                                    </h2>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                     <p className="text-orange-100 text-xs font-bold uppercase tracking-widest">{selectedStudent.s_name} • Sem {selectedSemester}</p>
                                 </div>
                             </div>
@@ -781,6 +927,7 @@ export default function Students() {
                             </button>
                         </div>
                         
+<<<<<<< HEAD
                         <form onSubmit={handleRecordPayment} className="p-8 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
@@ -798,23 +945,58 @@ export default function Students() {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
+=======
+                        <div className="px-8 pt-6">
+                            <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-[9px] font-black text-orange-300 uppercase tracking-widest">Already Paid</p>
+                                    <p className="font-black text-orange-700 italic">₹{selectedStudent.amount_paid?.toLocaleString() || 0}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[9px] font-black text-orange-300 uppercase tracking-widest">Pending Balance</p>
+                                    <p className="font-black text-orange-700 italic">₹{((selectedStudent.total_fee || 0) - (selectedStudent.concession || 0) - (selectedStudent.amount_paid || 0)).toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleRecordPayment} className="p-8 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Bus Stop</label>
                                     <select 
                                         required
                                         value={paymentForm.stop_id}
                                         onChange={(e) => setPaymentForm({...paymentForm, stop_id: e.target.value})}
                                         className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-navy focus:outline-none focus:border-orange-500 transition-all appearance-none"
+<<<<<<< HEAD
                                         disabled={!paymentForm.route_id}
                                     >
                                         <option value="">Choose Stop...</option>
                                         {paymentForm.route_id && routes.find(r => r.route_id.toString() === paymentForm.route_id.toString())?.stops.map(stop => (
                                             <option key={stop.id} value={stop.id}>{stop.name} (₹{stop.fee})</option>
+=======
+                                    >
+                                        <option value="">Choose Stop...</option>
+                                        {routes.map(route => (
+                                            <optgroup key={route.route_id} label={route.route_name}>
+                                                {route.stops.map(stop => (
+                                                    <option key={stop.id} value={stop.id}>{stop.name} (₹{stop.fee})</option>
+                                                ))}
+                                            </optgroup>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                         ))}
                                     </select>
                                 </div>
 
                                 <div className="space-y-2">
+<<<<<<< HEAD
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Amount Paid (₹)</label>
+=======
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                                        {selectedStudent.amount_paid > 0 ? 'Amount to Add (₹)' : 'Amount Paid (₹)'}
+                                    </label>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                     <input 
                                         required
                                         type="number"
@@ -919,6 +1101,7 @@ export default function Students() {
                                     </select>
                                 </div>
                                 <div className="space-y-1">
+<<<<<<< HEAD
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Route</label>
                                     <select 
                                         required
@@ -933,17 +1116,30 @@ export default function Students() {
                                     </select>
                                 </div>
                                 <div className="space-y-1">
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Boarding Stop</label>
                                     <select 
                                         required
                                         value={studentForm.stop_id}
                                         onChange={(e) => setStudentForm({...studentForm, stop_id: e.target.value})}
                                         className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-bold text-navy focus:outline-none focus:border-blue-500 transition-all"
+<<<<<<< HEAD
                                         disabled={!studentForm.route_id}
                                     >
                                         <option value="">Select Stop...</option>
                                         {studentForm.route_id && routes.find(r => r.route_id.toString() === studentForm.route_id.toString())?.stops.map(s => (
                                             <option key={s.id} value={s.id}>{s.name} (₹{s.fee})</option>
+=======
+                                    >
+                                        <option value="">Select Stop...</option>
+                                        {routes.map(r => (
+                                            <optgroup key={r.route_id} label={r.route_name}>
+                                                {r.stops.map(s => (
+                                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                                ))}
+                                            </optgroup>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                         ))}
                                     </select>
                                 </div>

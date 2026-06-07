@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { ChevronLeft, Plus, Fuel, AlertCircle, X, CheckCircle2, Calendar, IndianRupee } from 'lucide-react';
 import api from '../../../utils/api';
+=======
+import { ChevronLeft, Plus, Fuel, AlertCircle } from 'lucide-react';
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function BusDiesel() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [bus, setBus] = useState(null);
+<<<<<<< HEAD
     const [busDiesel, setBusDiesel] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -85,12 +90,50 @@ export default function BusDiesel() {
     const totalExpenditure = (busDiesel || []).reduce((sum, record) => sum + (parseFloat(record.total_amount) || 0), 0);
     const avgKMPL = (busDiesel || []).length > 0
         ? ((busDiesel || []).reduce((sum, r) => sum + (parseFloat(r.kmpl) || 0), 0) / (busDiesel || []).length)
+=======
+    const [busDiesel, setBusDiesel] = useState([]); // Empty until diesel table is implemented
+    const [loading, setLoading] = useState(true);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // Fetch Bus Details
+                const busRes = await fetch(`http://localhost:5001/api/buses/${id}`);
+
+                const busResult = await busRes.json();
+
+                if (busResult.status) {
+                    setBus(busResult.data);
+                    const dieselRes = await fetch(`http://localhost:5001/api/buses/${id}/diesel`);
+                    const dieselResult = await dieselRes.json();
+                    if (dieselResult.status) {
+                        setBusDiesel(dieselResult.data);
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching diesel data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [id]);
+
+    const totalExpenditure = busDiesel.reduce((sum, record) => sum + (parseFloat(record.total_amount) || 0), 0);
+    const avgKMPL = busDiesel.length > 0
+        ? (busDiesel.reduce((sum, r) => sum + parseFloat(r.kmpl), 0) / busDiesel.length)
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         : 0;
 
     if (loading) return <div className="p-20 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto"></div></div>;
 
     return (
+<<<<<<< HEAD
         <>
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
             <button
                 onClick={() => navigate(`/buses/${id}`)}
@@ -105,10 +148,17 @@ export default function BusDiesel() {
                     Fuel Consumption & Economy
                 </h1>
                 <button
+<<<<<<< HEAD
                     onClick={() => setIsAddModalOpen(true)}
                     className="btn btn-primary bg-orange-600 hover:bg-orange-700 border-none shadow-lg shadow-orange-100"
                 >
                     <Plus size={18} /> Add Diesel Log
+=======
+                    onClick={() => navigate('/entry/diesel')}
+                    className="btn btn-primary bg-orange-600 hover:bg-orange-700 border-none shadow-lg shadow-orange-100"
+                >
+                    <Plus size={18} /> Batch Refueling
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 </button>
             </div>
 
@@ -143,8 +193,12 @@ export default function BusDiesel() {
                             <th className="uppercase tracking-widest text-[10px] font-black">Quantity (L)</th>
                             <th className="uppercase tracking-widest text-[10px] font-black">Rate (₹/L)</th>
                             <th className="uppercase tracking-widest text-[10px] font-black">Amount (₹)</th>
+<<<<<<< HEAD
                             <th className="uppercase tracking-widest text-[10px] font-black">Efficiency</th>
                             <th className="text-right pr-8 uppercase tracking-widest text-[10px] font-black">Logged At</th>
+=======
+                            <th className="text-right pr-8 uppercase tracking-widest text-[10px] font-black">Efficiency</th>
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -168,16 +222,23 @@ export default function BusDiesel() {
                                         {parseFloat(record.kmpl).toFixed(2)} KMPL
                                     </div>
                                 </td>
+<<<<<<< HEAD
                                 <td className="text-right pr-8 text-xs text-slate-400 font-mono whitespace-nowrap">
                                     {record.created_at
                                         ? new Date(record.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                                         : '—'}
                                 </td>
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                             </tr>
                         ))}
                         {busDiesel.length === 0 && (
                             <tr>
+<<<<<<< HEAD
                                 <td colSpan="7" className="text-center py-24">
+=======
+                                <td colSpan="6" className="text-center py-24">
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                     <div className="flex flex-col items-center gap-3 text-slate-400">
                                         <Fuel size={48} className="opacity-10" />
                                         <p className="font-medium italic">No refueling records found for this vehicle.</p>
@@ -189,6 +250,7 @@ export default function BusDiesel() {
                 </table>
             </div>
         </div>
+<<<<<<< HEAD
 
         {/* Add Modal */}
         {isAddModalOpen && (
@@ -284,5 +346,7 @@ export default function BusDiesel() {
             </div>
         )}
         </>
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     );
 }

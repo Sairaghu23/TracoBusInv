@@ -18,11 +18,16 @@ export const addSpareType = async (spare_name) => {
 // --- PURCHASES (Restock) ---
 
 export const recordPurchase = async (purchaseData) => {
+<<<<<<< HEAD
     const { spare_id, purchase_date, amount, vendor, quantity, product_codes } = purchaseData;
+=======
+    const { spare_id, purchase_date, amount, vendor, quantity } = purchaseData;
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
 
+<<<<<<< HEAD
         // Cast to appropriate types for safety
         const s_id = parseInt(spare_id);
         const qty = parseFloat(quantity);
@@ -49,14 +54,32 @@ export const recordPurchase = async (purchaseData) => {
         await client.query(
             'UPDATE spare_stocks SET quantity = (SELECT COUNT(*) FROM spare_items WHERE spare_id = $1 AND status = $2) WHERE spare_id = $1',
             [s_id, 'AVAILABLE']
+=======
+        // 1. Record the purchase
+        const purchaseResult = await client.query(
+            'INSERT INTO spare_purchases (spare_id, purchase_date, amount, vendor, quantity) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [spare_id, purchase_date, amount, vendor?.trim().toUpperCase(), quantity]
+        );
+
+        // 2. Update the stock quantity
+        await client.query(
+            'UPDATE spare_stocks SET quantity = quantity + $1 WHERE spare_id = $2',
+            [quantity, spare_id]
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         );
 
         await client.query('COMMIT');
         return purchaseResult.rows[0];
+<<<<<<< HEAD
     } catch (err) {
         await client.query('ROLLBACK');
         console.error("CRITICAL PURCHASE ERROR:", err);
         throw err;
+=======
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     } finally {
         client.release();
     }
@@ -66,6 +89,7 @@ export const recordPurchase = async (purchaseData) => {
 
 export const getUsageByBus = async (rc_plate_number) => {
     const result = await pool.query(`
+<<<<<<< HEAD
         SELECT u.*, s.spare_name,
                (u.new_reading - u.old_reading) as distance,
                string_agg(i.product_code, ', ') as product_codes,
@@ -77,22 +101,39 @@ export const getUsageByBus = async (rc_plate_number) => {
         LEFT JOIN spare_items i ON ud.item_id = i.item_id
         WHERE b.rc_plate_number = $1
         GROUP BY u.usage_id, s.spare_name
+=======
+        SELECT u.*, s.spare_name, r.old_reading, r.new_reading 
+        FROM spare_usage u
+        JOIN spare_stocks s ON u.spare_id = s.spare_id
+        JOIN buses b ON u.bus_id = b.bus_id
+        LEFT JOIN bus_readings r ON u.bus_id = r.bus_id AND u.usage_date::DATE = r.end_date::DATE
+        WHERE b.rc_plate_number = $1
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         ORDER BY u.usage_date DESC
     `, [rc_plate_number.trim().toUpperCase()]);
     return result.rows;
 };
 
 export const recordUsage = async (usageData) => {
+<<<<<<< HEAD
     const { rc_plate_number, spare_id, item_ids, usage_date, mechanic, service_charge, spare_cost, quantity, old_reading, new_reading } = usageData;
+=======
+    const { rc_plate_number, spare_id, product_code, usage_date, mechanic, amount, quantity } = usageData;
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
 
+<<<<<<< HEAD
         // 0. Extract corresponding bus_id
+=======
+        // 0. Extract corresponding bus_id securely avoiding hard dependencies
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         const busQuery = await client.query('SELECT bus_id FROM buses WHERE rc_plate_number = $1', [rc_plate_number.trim().toUpperCase()]);
         if (busQuery.rows.length === 0) throw new Error('Vehicle Identity Authentication Failure.');
         const active_bus = busQuery.rows[0].bus_id;
 
+<<<<<<< HEAD
         // 1. Record the usage
         const usageResult = await client.query(
             'INSERT INTO spare_usage (bus_id, spare_id, usage_date, mechanic, quantity, service_charge, spare_cost, old_reading, new_reading) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
@@ -130,6 +171,24 @@ export const recordUsage = async (usageData) => {
         await client.query(
             'UPDATE spare_stocks SET quantity = (SELECT COUNT(*) FROM spare_items WHERE spare_id = $1 AND status = $2) WHERE spare_id = $1',
             [spare_id, 'AVAILABLE']
+=======
+        // 1. Check if stock exists matching validated constraints limits
+        const stockCheck = await client.query('SELECT quantity FROM spare_stocks WHERE spare_id = $1', [spare_id]);
+        if (stockCheck.rows.length === 0 || stockCheck.rows[0].quantity < quantity || quantity < 1) {
+            throw new Error('Insufficient stock for this spare part.');
+        }
+
+        // 2. Record the usage mapping variable components securely over Native DB schemas
+        const usageResult = await client.query(
+            'INSERT INTO spare_usage (bus_id, spare_id, usage_date, mechanic, amount, quantity, product_code) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+            [active_bus, spare_id, usage_date, mechanic?.trim().toUpperCase(), amount, quantity, product_code]
+        );
+
+        // 3. Decrement the specific requested metric mapping inventory calculations globally
+        await client.query(
+            'UPDATE spare_stocks SET quantity = quantity - $1 WHERE spare_id = $2',
+            [quantity, spare_id]
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         );
 
         await client.query('COMMIT');
@@ -151,6 +210,7 @@ export const getPurchasesBySpare = async (spare_id) => {
     );
     return result.rows;
 };
+<<<<<<< HEAD
 
 // --- INVENTORY HELPERS ---
 
@@ -198,3 +258,5 @@ export const getCostPerUnit = async (spare_id) => {
     );
     return result.rows[0];
 };
+=======
+>>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
