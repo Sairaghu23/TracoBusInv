@@ -20,6 +20,7 @@ export default function Students() {
     const [historyModal, setHistoryModal] = useState(false);
     const [paymentModal, setPaymentModal] = useState(false);
     const [paymentFilter, setPaymentFilter] = useState('all'); // Moved here for Rules of Hooks
+    const [branchFilter, setBranchFilter] = useState('all');
     
     // Data State
     const [students, setStudents] = useState([]);
