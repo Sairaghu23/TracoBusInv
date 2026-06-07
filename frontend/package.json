@@ -8,10 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-<<<<<<< HEAD
     "axios": "^1.15.2",
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.577.0",
