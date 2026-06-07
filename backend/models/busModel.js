@@ -1,11 +1,12 @@
 import pool from '../config/db.js';
 
-<<<<<<< HEAD
-// Helper to convert empty strings to null for int/date columns
-const sanitizeEmpty = (val) => (val === '' ? null : val);
+// Helper to convert empty strings to null for int/date/string columns
+const sanitizeEmpty = (val) => {
+    if (val === undefined || val === null) return null;
+    const str = String(val).trim();
+    return str === '' ? null : str;
+};
 
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 // Get all buses from database
 export const getAllBuses = async () => {
     try {
@@ -24,59 +25,44 @@ export const getAllBuses = async () => {
 
 // Check if bus exists by RC Plate Number
 export const getBusByRcPlate = async (rcPlate) => {
-<<<<<<< HEAD
+    const rcPlateStr = rcPlate ? String(rcPlate).trim().toUpperCase() : '';
     const result = await pool.query(`
         SELECT b.*, r.route_name 
         FROM buses b 
         LEFT JOIN routes r ON b.route_id = r.route_id
         WHERE b.rc_plate_number = $1
-    `, [rcPlate.trim().toUpperCase()]);
+    `, [rcPlateStr]);
     return result.rows[0];
 };
 
 // Check for duplicates by bus_no or engine_number (excluding current rc_plate_number)
 export const getDuplicateBus = async (bus_no, engine_number, current_rc_plate_number = null) => {
+    const cleanBusNo = sanitizeEmpty(bus_no);
+    const cleanEngineNo = engine_number ? String(engine_number).trim().toUpperCase() : null;
+    
     let query = 'SELECT * FROM buses WHERE (bus_no = $1 OR engine_number = $2)';
-    let params = [sanitizeEmpty(bus_no), engine_number?.trim().toUpperCase()];
+    let params = [cleanBusNo, cleanEngineNo];
 
     if (current_rc_plate_number) {
         query += ' AND rc_plate_number != $3';
-        params.push(current_rc_plate_number.trim().toUpperCase());
+        params.push(String(current_rc_plate_number).trim().toUpperCase());
     }
 
     const result = await pool.query(query, params);
-=======
-    const result = await pool.query('SELECT * FROM buses WHERE rc_plate_number = $1', [rcPlate ? String(rcPlate).trim().toUpperCase() : '']);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     return result.rows[0];
 };
 
 // Update an existing bus
 export const updateBus = async (rc_plate_number, busData) => {
     const { seating_capacity, engine_number, route_id, purchase_date, status, bus_no } = busData;
-<<<<<<< HEAD
-    const result = await pool.query(`
-        UPDATE buses 
-        SET seating_capacity = $1, engine_number = $2, route_id = $3, purchase_date = $4, status = $5, bus_no = $6
-        WHERE rc_plate_number = $7
-        RETURNING *
-    `, [
-        sanitizeEmpty(seating_capacity), 
-        engine_number?.trim().toUpperCase(), 
-        sanitizeEmpty(route_id), 
-        sanitizeEmpty(purchase_date), 
-        status?.toUpperCase() || 'ACTIVE', 
-        sanitizeEmpty(bus_no),
-        rc_plate_number.trim().toUpperCase()
-    ]);
-    return result.rows[0];
-=======
     
-    // Ensure we don't pass empty strings to date/int fields
-    const clean_purchase_date = (purchase_date && typeof purchase_date === 'string' && purchase_date.trim() !== "") 
-        ? purchase_date 
-        : (purchase_date ? purchase_date : null);
-    const clean_route_id = (route_id && String(route_id).trim() !== "") ? route_id : null;
+    const clean_seating_capacity = sanitizeEmpty(seating_capacity);
+    const clean_engine_number = engine_number ? String(engine_number).trim().toUpperCase() : null;
+    const clean_route_id = sanitizeEmpty(route_id);
+    const clean_purchase_date = sanitizeEmpty(purchase_date);
+    const clean_status = status ? String(status).toUpperCase() : 'ACTIVE';
+    const clean_bus_no = sanitizeEmpty(bus_no);
+    const clean_rc_plate_number = rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '';
 
     try {
         const result = await pool.query(`
@@ -90,62 +76,53 @@ export const updateBus = async (rc_plate_number, busData) => {
             WHERE UPPER(TRIM(rc_plate_number)) = $7
             RETURNING *
         `, [
-            seating_capacity,
-            engine_number ? String(engine_number).trim().toUpperCase() : null,
+            clean_seating_capacity,
+            clean_engine_number,
             clean_route_id,
             clean_purchase_date,
-            status?.toUpperCase() || 'ACTIVE',
-            bus_no ? String(bus_no).trim().toUpperCase() : null,
-            rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : ''
+            clean_status,
+            clean_bus_no,
+            clean_rc_plate_number
         ]);
-        
-        if (result.rows.length === 0) {
-            console.log("No bus found with RC Plate:", rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '');
-        }
         
         return result.rows[0];
     } catch (error) {
         console.error("DATABASE ERROR in updateBus:", error.message);
         throw error;
     }
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 };
 
 // Delete a bus
 export const deleteBus = async (rc_plate_number) => {
-<<<<<<< HEAD
-    const result = await pool.query('DELETE FROM buses WHERE rc_plate_number = $1 RETURNING *', [rc_plate_number.trim().toUpperCase()]);
-=======
-    const result = await pool.query('DELETE FROM buses WHERE rc_plate_number = $1 RETURNING *', [rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '']);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
+    const rcPlateStr = rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '';
+    const result = await pool.query('DELETE FROM buses WHERE rc_plate_number = $1 RETURNING *', [rcPlateStr]);
     return result.rows[0];
 };
 
 // Create a new bus record
 export const createBus = async (busData) => {
     const { rc_plate_number, seating_capacity, engine_number, route_id, purchase_date, status, bus_no } = busData;
+    
+    const clean_rc_plate_number = rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '';
+    const clean_seating_capacity = sanitizeEmpty(seating_capacity);
+    const clean_engine_number = engine_number ? String(engine_number).trim().toUpperCase() : null;
+    const clean_route_id = sanitizeEmpty(route_id);
+    const clean_purchase_date = sanitizeEmpty(purchase_date);
+    const clean_status = status ? String(status).toUpperCase() : 'ACTIVE';
+    const clean_bus_no = sanitizeEmpty(bus_no);
+
     const result = await pool.query(`
         INSERT INTO buses (rc_plate_number, seating_capacity, engine_number, route_id, purchase_date, status, bus_no)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
     `, [
-<<<<<<< HEAD
-        rc_plate_number.trim().toUpperCase(), 
-        sanitizeEmpty(seating_capacity), 
-        engine_number?.trim().toUpperCase(), 
-        sanitizeEmpty(route_id), 
-        sanitizeEmpty(purchase_date), 
-        status?.toUpperCase() || 'ACTIVE',
-        sanitizeEmpty(bus_no)
-=======
-        rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '',
-        seating_capacity,
-        engine_number ? String(engine_number).trim().toUpperCase() : null,
-        route_id || null,
-        purchase_date,
-        status?.toUpperCase() || 'ACTIVE',
-        bus_no ? String(bus_no).trim().toUpperCase() : null
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
+        clean_rc_plate_number,
+        clean_seating_capacity,
+        clean_engine_number,
+        clean_route_id,
+        clean_purchase_date,
+        clean_status,
+        clean_bus_no
     ]);
     return result.rows[0];
 };

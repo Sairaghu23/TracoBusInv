@@ -11,7 +11,6 @@ import spareRoutes from './spareRoutes.js';
 import fuelRoutes from './fuelRoutes.js';
 import oilRoutes from './oilRoutes.js';
 import documentRoutes from './documentRoutes.js';
-<<<<<<< HEAD
 import authRoutes from './authRoutes.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
@@ -23,11 +22,6 @@ router.use('/auth', authRoutes);
 // Protected routes (All endpoints below require a valid JWT)
 router.use(authMiddleware);
 
-=======
-
-const router = express.Router();
-
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 // Register all routes with correct API prefixes
 router.use('/routes', routeRoutes);
 router.use('/buses', busRoutes);

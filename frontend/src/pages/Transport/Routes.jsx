@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
 import { Search, MapPin, Plus, X, Check, Route as RouteIcon, Pencil, Trash2, Users, BarChart3, GraduationCap, ChevronLeft } from 'lucide-react';
 import api from '../../utils/api';
-=======
-import { Search, MapPin, Plus, X, Check, Route as RouteIcon, Pencil, Users, BarChart3, GraduationCap, ChevronLeft } from 'lucide-react';
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function Routes() {
     // State for live data
@@ -15,16 +11,9 @@ export default function Routes() {
     const fetchRoutes = async () => {
         setLoading(true);
         try {
-<<<<<<< HEAD
             const result = await api.get('/api/routes');
             if (result.data?.status) {
                 setRoutes(result.data.data);
-=======
-            const response = await fetch('http://localhost:5001/api/routes');
-            const result = await response.json();
-            if (result.status) {
-                setRoutes(result.data);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             }
         } catch (error) {
             console.error("Error fetching routes:", error);
@@ -61,25 +50,6 @@ export default function Routes() {
         if (!newRouteName) return;
         setRouteError('');
         try {
-<<<<<<< HEAD
-            const result = await api.post('/api/routes', { route_name: newRouteName });
-            if (result.data?.status) {
-                setNewRouteName('');
-                setActiveModal(null);
-                fetchRoutes(); // Refresh list
-            } else if (result.status === 409) {
-                setRouteError(result.data?.message || "Route already exists");
-            } else {
-                setRouteError(result.data?.message || "An error occurred");
-            }
-        } catch (error) {
-            console.error("Error adding route:", error);
-            if (error.response?.status === 409) {
-                setRouteError(error.response.data?.message || "Route already exists");
-            } else {
-                setRouteError("Connection error. Please try again.");
-            }
-=======
             const response = await fetch('http://localhost:5001/api/routes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -98,7 +68,6 @@ export default function Routes() {
         } catch (error) {
             console.error("Error adding route:", error);
             setRouteError("Connection error. Please try again.");
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         }
     };
 
@@ -106,26 +75,12 @@ export default function Routes() {
         e.preventDefault();
         if (!newStop.name || !newStop.routeId || !newStop.fee) return;
         try {
-<<<<<<< HEAD
             const result = await api.post('/api/routes/stops', {
                 route_id: parseInt(newStop.routeId),
                 stop_name: newStop.name,
                 fee: parseFloat(newStop.fee)
             });
             if (result.data?.status) {
-=======
-            const response = await fetch('http://localhost:5001/api/routes/stops', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    route_id: parseInt(newStop.routeId),
-                    stop_name: newStop.name,
-                    fee: parseFloat(newStop.fee)
-                })
-            });
-            const result = await response.json();
-            if (result.status) {
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 setNewStop({ name: '', routeId: '', fee: '' });
                 setActiveModal(null);
                 fetchRoutes();
@@ -138,13 +93,6 @@ export default function Routes() {
     const handleSaveStop = async () => {
         if (!editingStop) return;
         try {
-<<<<<<< HEAD
-            const result = await api.put(`/api/routes/stops/${editingStop.stop_id}`, {
-                stop_name: editingStop.name,
-                fee: editingStop.fee
-            });
-            if (result.data?.status) { setEditingStop(null); fetchRoutes(); }
-=======
             const res = await fetch(`http://localhost:5001/api/stops/${editingStop.stop_id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -152,58 +100,12 @@ export default function Routes() {
             });
             const result = await res.json();
             if (result.status) { setEditingStop(null); fetchRoutes(); }
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         } catch (err) { console.error('Error updating stop:', err); }
     };
 
     const handleSaveRoute = async () => {
         if (!editingRoute) return;
         try {
-<<<<<<< HEAD
-            const result = await api.put(`/api/routes/${editingRoute.route_id}`, {
-                route_name: editingRoute.route_name
-            });
-            if (result.data?.status) { setEditingRoute(null); fetchRoutes(); }
-        } catch (err) { console.error('Error updating route:', err); }
-    };
-
-    const handleDeleteRoute = async (route) => {
-        const confirmed = window.confirm(
-            `⚠️ DELETE ROUTE: "${route.route_name}"?\n\nThis will:\n• Permanently delete this route and all its stops from the network\n• Remove all stop mappings (route_stop_map)\n• Students currently on this route will remain in the system but their boarding assignment will be CLEARED (set to unassigned)\n\nThis action CANNOT be undone. Continue?`
-        );
-        if (!confirmed) return;
-        try {
-            const result = await api.delete(`/api/routes/${route.route_id}`);
-            if (result.data?.status) {
-                fetchRoutes();
-            } else {
-                alert(`Error: ${result.data?.message}`);
-            }
-        } catch (err) {
-            console.error('Error deleting route:', err);
-            alert('Connection error. Could not delete route.');
-        }
-    };
-
-    const handleDeleteStop = async (stop, routeName) => {
-        const confirmed = window.confirm(
-            `⚠️ DELETE STOP: "${stop.name}" from "${routeName}"?\n\nThis will:\n• Permanently remove this stop from the route\n• Remove its entry from the stop mapping table\n• Students boarding at this stop will remain in the system but their boarding assignment will be CLEARED (set to unassigned)\n\nThis action CANNOT be undone. Continue?`
-        );
-        if (!confirmed) return;
-        try {
-            const result = await api.delete(`/api/routes/stops/${stop.stop_id}`);
-            if (result.data?.status) {
-                fetchRoutes();
-            } else {
-                alert(`Error: ${result.data?.message}`);
-            }
-        } catch (err) {
-            console.error('Error deleting stop:', err);
-            alert('Connection error. Could not delete stop.');
-        }
-    };
-
-=======
             const res = await fetch(`http://localhost:5001/api/routes/${editingRoute.route_id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -214,22 +116,14 @@ export default function Routes() {
         } catch (err) { console.error('Error updating route:', err); }
     };
 
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     const fetchBreakdown = async (route) => {
         setBreakdownRoute(route);
         setCurrentView('breakdown');
         setBreakdownLoading(true);
         try {
-<<<<<<< HEAD
             const result = await api.get(`/api/routes/${route.route_id}/student-breakdown`);
             if (result.data?.status) {
                 setBreakdownData(result.data.data);
-=======
-            const response = await fetch(`http://localhost:5001/api/routes/${route.route_id}/student-breakdown`);
-            const result = await response.json();
-            if (result.status) {
-                setBreakdownData(result.data);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             }
         } catch (error) {
             console.error("Error fetching breakdown:", error);
@@ -372,7 +266,6 @@ export default function Routes() {
                                             <button
                                                 onClick={() => setEditingRoute({ route_id: route.route_id, route_name: route.route_name })}
                                                 className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-orange-500 transition-all rounded-lg hover:bg-orange-50"
-<<<<<<< HEAD
                                                 title="Edit Route"
                                             >
                                                 <Pencil size={13} />
@@ -384,11 +277,6 @@ export default function Routes() {
                                             >
                                                 <Trash2 size={13} />
                                             </button>
-=======
-                                            >
-                                                <Pencil size={13} />
-                                            </button>
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                         </div>
                                     )}
                                 </div>
@@ -456,7 +344,6 @@ export default function Routes() {
                                                             {stop.fee === 0 ? 'Free' : `₹${stop.fee?.toLocaleString()}`}
                                                         </td>
                                                         <td className="px-2 py-3">
-<<<<<<< HEAD
                                                             <div className="flex items-center gap-1">
                                                                 <button
                                                                     onClick={() => setEditingStop({ stop_id: stop.id, name: stop.name, fee: stop.fee })}
@@ -473,14 +360,6 @@ export default function Routes() {
                                                                     <Trash2 size={12} />
                                                                 </button>
                                                             </div>
-=======
-                                                            <button
-                                                                onClick={() => setEditingStop({ stop_id: stop.id, name: stop.name, fee: stop.fee })}
-                                                                className="opacity-0 group-hover/row:opacity-100 p-1.5 text-slate-400 hover:text-orange-500 rounded-lg hover:bg-orange-50 transition-all"
-                                                            >
-                                                                <Pencil size={12} />
-                                                            </button>
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                                         </td>
                                                     </>
                                                 )}

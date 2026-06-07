@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
     User, Phone, ShieldCheck, MapPin, Calendar, 
     Edit2, Trash2, ChevronLeft, Check, X, Camera, FileText
 } from 'lucide-react';
-<<<<<<< HEAD
 import api from '../../utils/api';
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function DriverDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
+    
     const [driver, setDriver] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [editData, setEditData] = useState({
         name: '', phone: '', license_number: '', status: 'ACTIVE', address: '', joining_date: ''
     });
@@ -25,22 +25,12 @@ export default function DriverDetails() {
 
     const fetchDriverDetails = async () => {
         try {
-<<<<<<< HEAD
             const result = await api.get(`/api/drivers/${id}`);
             if (result.data?.status) {
                 setDriver(result.data.data);
                 const formattedData = {
                     ...result.data.data,
                     joining_date: result.data.data.joining_date ? new Date(result.data.data.joining_date).toISOString().split('T')[0] : ''
-=======
-            const response = await fetch(`http://localhost:5001/api/drivers/${id}`);
-            const result = await response.json();
-            if (result.status) {
-                setDriver(result.data);
-                const formattedData = {
-                    ...result.data,
-                    joining_date: result.data.joining_date ? new Date(result.data.joining_date).toISOString().split('T')[0] : ''
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 };
                 setEditData(formattedData);
             }
@@ -54,20 +44,9 @@ export default function DriverDetails() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-<<<<<<< HEAD
             const result = await api.put(`/api/drivers/${id}`, editData);
             if (result.data?.status) {
                 setDriver(result.data.data);
-=======
-            const response = await fetch(`http://localhost:5001/api/drivers/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editData)
-            });
-            const result = await response.json();
-            if (result.status) {
-                setDriver(result.data);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 setIsEditing(false);
             }
         } catch (error) {
@@ -78,17 +57,41 @@ export default function DriverDetails() {
     const handleDelete = async () => {
         if (window.confirm("Are you sure you want to retire this driver from the fleet? This action is permanent.")) {
             try {
-<<<<<<< HEAD
                 const result = await api.delete(`/api/drivers/${id}`);
                 if (result.data?.status) navigate('/drivers');
-=======
-                const response = await fetch(`http://localhost:5001/api/drivers/${id}`, { method: 'DELETE' });
-                const result = await response.json();
-                if (result.status) navigate('/drivers');
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             } catch (error) {
                 console.error("Error deleting driver:", error);
             }
+        }
+    };
+
+    const handlePhotoClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handlePhotoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        setUploading(true);
+        try {
+            const result = await api.post(`/api/drivers/${id}/photo`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            if (result.data?.status) {
+                setDriver(result.data.data);
+                alert("Driver photo uploaded successfully!");
+            }
+        } catch (error) {
+            console.error("Error uploading photo:", error);
+            alert("Error uploading photo: " + (error.response?.data?.message || error.message));
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -107,14 +110,27 @@ export default function DriverDetails() {
         </div>
     );
 
-<<<<<<< HEAD
-    const photoUrl = driver.photo_url || "/uploads/drivers/default_avatar.png";
-=======
-    const photoUrl = driver.photo_url || "http://localhost:5001/uploads/drivers/default_avatar.png";
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
+    // Dynamic resolution of photos to support both dev & staging environments
+    const getPhotoUrl = (url) => {
+        if (!url) return "/uploads/drivers/default_avatar.png";
+        if (url.startsWith('http')) return url;
+        const base = api.defaults.baseURL || 'http://localhost:5001';
+        return `${base}${url}`;
+    };
+
+    const photoUrl = getPhotoUrl(driver.photo_url);
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 animate-in zoom-in-95 duration-500">
+            {/* Hidden File Input for Photo Upload */}
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handlePhotoUpload} 
+                className="hidden" 
+                accept="image/*"
+            />
+
             {/* Nav Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
@@ -174,14 +190,21 @@ export default function DriverDetails() {
                         <div className="relative z-10">
                             <div className="relative w-48 h-48 mx-auto mb-8">
                                 <div className="absolute inset-0 bg-blue-400/20 rounded-[3rem] blur-2xl" />
-                                <div className="relative w-full h-full bg-navy-light border-4 border-white/20 rounded-[3rem] overflow-hidden shadow-inner flex items-center justify-center group">
+                                <div 
+                                    onClick={handlePhotoClick}
+                                    className="relative w-full h-full bg-navy-light border-4 border-white/20 rounded-[3rem] overflow-hidden shadow-inner flex items-center justify-center group cursor-pointer"
+                                    title="Click to Upload New Photo"
+                                >
                                     <img 
                                         src={photoUrl} 
                                         alt={driver.name} 
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
-                                    <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                                         <Camera size={24} className="text-white opacity-80" />
+                                        <span className="text-[10px] text-white/90 font-black uppercase tracking-widest">
+                                            {uploading ? "Uploading..." : "Upload Photo"}
+                                        </span>
                                     </div>
                                 </div>
                             </div>

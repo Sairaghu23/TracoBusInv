@@ -39,14 +39,11 @@ app.use((req, res, next) => {
 });
 
 // Serve static files for uploaded documents
-<<<<<<< HEAD
 // We serve at both mount points to be compatible with proxies that may or may not strip the /api prefix
 app.use('/api/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
-=======
-// The 'uploads' folder is currently in the project root.
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
+app.use('/api/driversphoto', express.static(path.resolve(__dirname, '..', 'driversphoto')));
+app.use('/driversphoto', express.static(path.resolve(__dirname, '..', 'driversphoto')));
 
 // Use centralized API router
 app.use('/api', apiRouter);

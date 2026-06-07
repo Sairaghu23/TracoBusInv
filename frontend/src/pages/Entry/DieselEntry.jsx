@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Fuel, Calendar, Save, AlertCircle, CheckCircle2, FileText, Plus, ChevronRight, Gauge, TrendingUp, IndianRupee } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
 import api from '../../utils/api';
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function DieselEntry() {
     const navigate = useNavigate();
@@ -33,7 +30,6 @@ export default function DieselEntry() {
 
         try {
             // Check Odometer status
-<<<<<<< HEAD
             const valResult = await api.get(`/api/diesel/validate/${selectedDate}`);
 
             if (valResult.data?.status) {
@@ -55,31 +51,6 @@ export default function DieselEntry() {
             if (rateResult.data?.status && rateResult.data.data) {
                 setFuelRate(rateResult.data.data.fuel_rate);
                 setRateId(rateResult.data.data.rate_id);
-=======
-            const valRes = await fetch(`http://localhost:5001/api/diesel/validate/${selectedDate}`);
-            const valResult = await valRes.json();
-
-            if (valResult.status) {
-                setValidationStatus({ missing: false, checked: true, list: [] });
-                setFleetData(valResult.data);
-
-                // Initialize liters input
-                const initial = {};
-                valResult.data.forEach(bus => {
-                    initial[bus.rc_plate_number] = bus.liters || '';
-                });
-                setLitersData(initial);
-            } else if (valResult.missing) {
-                setValidationStatus({ missing: true, checked: true, list: valResult.data });
-            }
-
-            // Check Fuel Rate
-            const rateRes = await fetch(`http://localhost:5001/api/fuel-rates/${selectedDate}`);
-            const rateResult = await rateRes.json();
-            if (rateResult.status && rateResult.data) {
-                setFuelRate(rateResult.data.fuel_rate);
-                setRateId(rateResult.data.rate_id);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             } else {
                 setFuelRate('');
                 setRateId(null);
@@ -101,29 +72,12 @@ export default function DieselEntry() {
             setError("Please enter a valid fuel rate.");
             return;
         }
-<<<<<<< HEAD
         try {
             const result = await api.post('/api/fuel-rates', { date, rate: fuelRate });
             if (result.data?.status) {
                 setRateId(result.data.data.rate_id);
                 setSuccess("Fuel rate updated for " + date);
                 setTimeout(() => setSuccess(null), 3000);
-=======
-        setError(null);
-        try {
-            const res = await fetch('http://localhost:5001/api/fuel-rates', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date, rate: fuelRate })
-            });
-            const result = await res.json();
-            if (result.status) {
-                setRateId(result.data.rate_id);
-                setSuccess("Fuel rate updated for " + date);
-                setTimeout(() => setSuccess(null), 3000);
-            } else {
-                setError(result.message || "Failed to update fuel rate.");
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             }
         } catch (err) {
             setError("Failed to update fuel rate.");
@@ -172,7 +126,6 @@ export default function DieselEntry() {
         }
 
         try {
-<<<<<<< HEAD
             const result = await api.post('/api/diesel/bulk', { logs: logsToSave });
             if (result.data?.status) {
                 // Fetch report for summary view
@@ -186,26 +139,6 @@ export default function DieselEntry() {
                 }
             } else {
                 setError(result.data?.message || "Operation failed");
-=======
-            const res = await fetch('http://localhost:5001/api/diesel/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ logs: logsToSave })
-            });
-            const result = await res.json();
-            if (result.status) {
-                // Fetch report for summary view
-                const repRes = await fetch(`http://localhost:5001/api/diesel/report/${date}`);
-                const repResult = await repRes.json();
-
-                // Keep only the buses that had a valid diesel entry logged
-                const activeEntries = repResult.data.filter(r => r.liters !== null && r.liters !== undefined && parseFloat(r.liters) > 0);
-
-                setReportData(activeEntries);
-                setViewMode('summary');
-            } else {
-                setError(result.message);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             }
         } catch (err) {
             setError("An error occurred while saving.");
@@ -372,10 +305,7 @@ export default function DieselEntry() {
                         <Calendar size={18} className="text-slate-400" />
                         <input
                             type="date"
-<<<<<<< HEAD
-=======
-                            max={new Date().toISOString().split('T')[0]}
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
+
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
                             className="bg-transparent font-black text-navy focus:outline-none w-full"
@@ -497,14 +427,7 @@ export default function DieselEntry() {
                                                 </div>
                                                 <div className="h-4 w-px bg-slate-200" />
                                                 <div className="flex flex-col">
-<<<<<<< HEAD
                                                     <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Odometer</span>
-=======
-                                                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1">
-                                                        Odometer
-                                                        {!bus.exact_match && <span className="text-orange-500 font-black tracking-tighter bg-orange-50 px-1 rounded animate-pulse">(Suggested)</span>}
-                                                    </span>
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                                     <span className="text-xs font-mono text-slate-400">{bus.old_reading} → {bus.new_reading}</span>
                                                 </div>
                                             </div>
@@ -549,7 +472,6 @@ export default function DieselEntry() {
                     </table>
                 </div>
             )}
-<<<<<<< HEAD
 
             {/* Legend / Pro-Tip */}
             {!validationStatus.missing && (
@@ -574,8 +496,6 @@ export default function DieselEntry() {
                     </div>
                 </div>
             )}
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         </div>
     );
 }

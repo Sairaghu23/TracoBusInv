@@ -31,15 +31,6 @@ export const createDriver = async (driverData) => {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
         `, [
-<<<<<<< HEAD
-            name.trim(), 
-            phone.trim(), 
-            license_number.trim().toUpperCase(), 
-            status?.toUpperCase() || 'ACTIVE', 
-            joining_date || new Date(), 
-            address?.trim() || null, 
-            photo_url?.trim() || null,
-=======
             name ? String(name).trim() : '', 
             phone ? String(phone).trim() : '', 
             license_number ? String(license_number).trim().toUpperCase() : '', 
@@ -47,7 +38,6 @@ export const createDriver = async (driverData) => {
             joining_date || new Date(), 
             address ? String(address).trim() : null, 
             photo_url ? String(photo_url).trim() : null,
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             license_expiry || null
         ]);
         return result.rows[0];
@@ -67,15 +57,6 @@ export const updateDriver = async (id, driverData) => {
             WHERE driver_id = $9
             RETURNING *
         `, [
-<<<<<<< HEAD
-            name.trim(), 
-            phone.trim(), 
-            license_number.trim().toUpperCase(), 
-            status?.toUpperCase() || 'ACTIVE', 
-            joining_date, 
-            address?.trim() || null, 
-            photo_url?.trim() || null,
-=======
             name ? String(name).trim() : '', 
             phone ? String(phone).trim() : '', 
             license_number ? String(license_number).trim().toUpperCase() : '', 
@@ -83,7 +64,6 @@ export const updateDriver = async (id, driverData) => {
             joining_date, 
             address ? String(address).trim() : null, 
             photo_url ? String(photo_url).trim() : null,
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             license_expiry || null,
             id
         ]);

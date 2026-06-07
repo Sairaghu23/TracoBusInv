@@ -9,19 +9,11 @@ export const getAllOilTypes = async () => {
 // Get all oil logs for a specific bus (by rc_plate_number)
 export const getOilLogsByBus = async (rc_plate_number) => {
     const result = await pool.query(`
-<<<<<<< HEAD
         SELECT ol.*, os.oil_type,
                (ol.new_reading - ol.old_reading) as distance
         FROM oil_logs ol
         JOIN oil_stocks os ON ol.oil_id = os.oil_id
         JOIN buses b ON ol.bus_id = b.bus_id
-=======
-        SELECT ol.*, os.oil_type, r.old_reading, r.new_reading
-        FROM oil_logs ol
-        JOIN oil_stocks os ON ol.oil_id = os.oil_id
-        JOIN buses b ON ol.bus_id = b.bus_id
-        LEFT JOIN bus_readings r ON ol.bus_id = r.bus_id AND ol.log_date::DATE = r.end_date::DATE
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         WHERE b.rc_plate_number = $1
         ORDER BY ol.log_date DESC
     `, [rc_plate_number.trim().toUpperCase()]);
@@ -30,11 +22,7 @@ export const getOilLogsByBus = async (rc_plate_number) => {
 
 // Record a new oil log
 export const recordOilLog = async (logData) => {
-<<<<<<< HEAD
     const { rc_plate_number, oil_id, quantity, log_date, amount, old_reading, new_reading } = logData;
-=======
-    const { rc_plate_number, oil_id, quantity, log_date, amount } = logData;
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -47,25 +35,10 @@ export const recordOilLog = async (logData) => {
         if (busQuery.rows.length === 0) throw new Error('Vehicle not found.');
         const bus_id = busQuery.rows[0].bus_id;
 
-<<<<<<< HEAD
         // Insert oil log
         const result = await client.query(
             'INSERT INTO oil_logs (bus_id, oil_id, quantity, log_date, amount, old_reading, new_reading) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
             [bus_id, oil_id, quantity, log_date, amount, old_reading, new_reading]
-=======
-        // Lookup reading_id
-        const readingQuery = await client.query(
-            'SELECT reading_id FROM bus_readings WHERE bus_id = $1 AND end_date::DATE = $2::DATE LIMIT 1',
-            [bus_id, log_date]
-        );
-        if (readingQuery.rows.length === 0) throw new Error('Odometer reading missing for this date.');
-        const reading_id = readingQuery.rows[0].reading_id;
-
-        // Insert oil log
-        const result = await client.query(
-            'INSERT INTO oil_logs (bus_id, oil_id, quantity, log_date, amount, reading_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [bus_id, oil_id, quantity, log_date, amount, reading_id]
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         );
 
         await client.query('COMMIT');

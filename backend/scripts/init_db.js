@@ -50,10 +50,7 @@ const init = async () => {
                 purchase_date DATE NOT NULL,
                 status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE', 'REPAIR')),
                 route_id INT REFERENCES routes(route_id) ON DELETE SET NULL,
-<<<<<<< HEAD
-=======
-                bus_no VARCHAR(50) UNIQUE,
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
+
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
@@ -129,11 +126,7 @@ const init = async () => {
             CREATE TABLE IF NOT EXISTS diesel_logs (
                 diesel_id SERIAL PRIMARY KEY,
                 rc_plate_number VARCHAR(20) REFERENCES buses(rc_plate_number) ON DELETE CASCADE,
-<<<<<<< HEAD
                 reading_id INT REFERENCES bus_readings(reading_id),
-=======
-                reading_id INT UNIQUE REFERENCES bus_readings(reading_id),
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 rate_id INT REFERENCES fuel_rates(rate_id),
                 liters NUMERIC(10, 2) NOT NULL,
                 created_at DATE NOT NULL,

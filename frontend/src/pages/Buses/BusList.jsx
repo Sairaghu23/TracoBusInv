@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter, LayoutGrid, List, MoreVertical, Edit2, Trash2, Bus, AlertTriangle, X, CheckCircle2, MoreHorizontal } from 'lucide-react';
-<<<<<<< HEAD
 import api from '../../utils/api';
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function BusList() {
     const navigate = useNavigate();
@@ -48,16 +45,9 @@ export default function BusList() {
     const fetchBuses = async () => {
         setLoadingBuses(true);
         try {
-<<<<<<< HEAD
             const result = await api.get('/api/buses');
             if (result.data?.status) {
                 setBuses(result.data.data);
-=======
-            const response = await fetch('http://localhost:5001/api/buses');
-            const result = await response.json();
-            if (result.status) {
-                setBuses(result.data);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             }
         } catch (error) {
             console.error("Error fetching buses:", error);
@@ -83,14 +73,6 @@ export default function BusList() {
     const handleDelete = async (rc_plate_number) => {
         if (window.confirm(`Are you sure you want to delete bus ${rc_plate_number}?`)) {
             try {
-<<<<<<< HEAD
-                const result = await api.delete(`/api/buses/${rc_plate_number}`);
-                if (result.data?.status) {
-                    alert("Bus deleted successfully!");
-                    fetchBuses();
-                } else {
-                    alert(result.data?.message || "Failed to delete bus");
-=======
                 const response = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}`, {
                     method: 'DELETE'
                 });
@@ -110,7 +92,6 @@ export default function BusList() {
                     const text = await response.text();
                     console.error("Non-JSON response:", text);
                     alert(`Server error (${response.status}). Please try again later.`);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 }
             } catch (error) {
                 console.error("Error deleting bus:", error);
@@ -124,16 +105,9 @@ export default function BusList() {
         const fetchRoutes = async () => {
             setLoadingRoutes(true);
             try {
-<<<<<<< HEAD
                 const result = await api.get('/api/routes');
                 if (result.data?.status) {
                     setRoutes(result.data.data);
-=======
-                const response = await fetch('http://localhost:5001/api/routes');
-                const result = await response.json();
-                if (result.status) {
-                    setRoutes(result.data);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 }
             } catch (error) {
                 console.error("Error fetching routes:", error);
@@ -204,15 +178,11 @@ export default function BusList() {
             {/* Controls */}
             <div className="card flex flex-col sm:flex-row gap-4">
                 <div className="flex-1 flex gap-2 w-full">
-<<<<<<< HEAD
                     <label htmlFor="searchField" className="sr-only">Search Field</label>
                     <select
                         id="searchField"
                         name="searchField"
                         aria-label="Search Field"
-=======
-                    <select
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                         className="form-input w-40 bg-slate-50"
                         value={searchField}
                         onChange={(e) => setSearchField(e.target.value)}
@@ -222,7 +192,6 @@ export default function BusList() {
                         <option value="engine_number">Engine Number</option>
                     </select>
                     <div className="relative flex-1">
-<<<<<<< HEAD
                         <label htmlFor="searchQuery" className="sr-only">Search Term</label>
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
@@ -230,11 +199,6 @@ export default function BusList() {
                             name="searchQuery"
                             type="text"
                             aria-label="Search Query"
-=======
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                             className="form-input pl-10"
                             placeholder="Enter search term..."
                             value={searchTerm}
@@ -309,13 +273,8 @@ export default function BusList() {
             {/* Add Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-<<<<<<< HEAD
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden">
                         <div className="flex justify-between items-center p-6 border-b border-slate-200 shrink-0">
-=======
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-                        <div className="flex justify-between items-center p-6 border-b border-slate-200">
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                             <h2 className="text-lg font-bold text-navy">
                                 {isEditMode ? 'Update Vehicle Details' : 'Register New Vehicle'}
                             </h2>
@@ -323,7 +282,6 @@ export default function BusList() {
                                 <X size={20} />
                             </button>
                         </div>
-<<<<<<< HEAD
                         <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
                             <div>
                                 <label className="form-label text-[10px] font-black uppercase tracking-widest text-slate-400">Bus Number</label>
@@ -335,18 +293,6 @@ export default function BusList() {
                                     value={newBusData.bus_no}
                                     onChange={handleInputChange}
                                     required
-=======
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <label className="form-label text-[10px] font-black uppercase tracking-widest text-slate-400">Bus Number</label>
-                                <input
-                                    type="text"
-                                    name="bus_no"
-                                    className="form-input bg-slate-50 border-slate-100 rounded-xl font-bold text-navy focus:border-navy text-xl"
-                                    placeholder="e.g. BUS-01"
-                                    value={newBusData.bus_no}
-                                    onChange={handleInputChange}
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                 />
                             </div>
                             <div>
@@ -411,10 +357,7 @@ export default function BusList() {
                                     type="date"
                                     name="purchase_date"
                                     className="form-input"
-<<<<<<< HEAD
                                     max={new Date().toISOString().split("T")[0]}
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                     value={newBusData.purchase_date}
                                     onChange={handleInputChange}
                                 />
@@ -438,16 +381,11 @@ export default function BusList() {
                                 </div>
                             </div>
                         </div>
-<<<<<<< HEAD
                         <div className="p-6 border-t border-slate-200 flex justify-end gap-3 bg-slate-50 shrink-0">
-=======
-                        <div className="p-6 border-t border-slate-200 flex justify-end gap-3 bg-slate-50">
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                             <button onClick={resetForm} className="btn btn-outline">Cancel</button>
                             <button
                                 onClick={async () => {
                                     try {
-<<<<<<< HEAD
                                         const endpoint = isEditMode
                                             ? `/api/buses/${newBusData.rc_plate_number}`
                                             : `/api/buses`;
@@ -464,36 +402,11 @@ export default function BusList() {
                                         });
 
                                         if (result.data?.status) {
-=======
-                                        const url = isEditMode
-                                            ? `http://localhost:5001/api/buses/${newBusData.rc_plate_number}`
-                                            : 'http://localhost:5001/api/buses';
-
-                                        const response = await fetch(url, {
-                                            method: isEditMode ? 'PUT' : 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                bus_no: newBusData.bus_no,
-                                                rc_plate_number: newBusData.rc_plate_number,
-                                                seating_capacity: newBusData.seating_capacity,
-                                                engine_number: newBusData.engine_number,
-                                                route_id: newBusData.route_id,
-                                                purchase_date: newBusData.purchase_date,
-                                                status: newBusData.status
-                                            })
-                                        });
-                                        const result = await response.json();
-                                        if (result.status) {
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                             alert(isEditMode ? "Bus updated successfully!" : "Bus registered successfully!");
                                             resetForm();
                                             fetchBuses(); // Refresh list
                                         } else {
-<<<<<<< HEAD
                                             alert(result.data?.message || "Operation failed");
-=======
-                                            alert(result.message || "Operation failed");
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                                         }
                                     } catch (error) {
                                         console.error("Error saving bus:", error);
@@ -501,11 +414,7 @@ export default function BusList() {
                                     }
                                 }}
                                 className="btn btn-primary"
-<<<<<<< HEAD
                                 disabled={!newBusData.rc_plate_number || !newBusData.engine_number || !newBusData.bus_no}
-=======
-                                disabled={!newBusData.rc_plate_number || !newBusData.engine_number}
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                             >
                                 {isEditMode ? 'Update Record' : 'Save Bus Record'}
                             </button>

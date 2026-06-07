@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Fuel, Droplet, Settings, BarChart3, IndianRupee, ChevronLeft, Users, CheckCircle2, XCircle, GraduationCap, Bus } from 'lucide-react';
-<<<<<<< HEAD
 import api from '../utils/api';
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 const MONTHS = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -39,7 +36,6 @@ export default function Analytics() {
         setLoading(true);
         try {
             const [dieselRes, oilsRes, sparesRes, feesRes] = await Promise.all([
-<<<<<<< HEAD
                 api.get(`/api/analytics/diesel?month=${month}&year=${year}`),
                 api.get(`/api/analytics/oils?month=${month}&year=${year}`),
                 api.get(`/api/analytics/spares?month=${month}&year=${year}`),
@@ -50,19 +46,6 @@ export default function Analytics() {
                 oils:   oilsRes.data?.status ? oilsRes.data.data : [],
                 spares: sparesRes.data?.status ? sparesRes.data.data : [],
                 fees:   feesRes.data?.status ? feesRes.data.data : [],
-=======
-                fetch(`http://localhost:5001/api/analytics/diesel?month=${month}&year=${year}`),
-                fetch(`http://localhost:5001/api/analytics/oils?month=${month}&year=${year}`),
-                fetch(`http://localhost:5001/api/analytics/spares?month=${month}&year=${year}`),
-                fetch(`http://localhost:5001/api/analytics/fees?semester=${semester}`),
-            ]);
-            const [d, o, s, f] = await Promise.all([dieselRes.json(), oilsRes.json(), sparesRes.json(), feesRes.json()]);
-            setSectionData({
-                diesel: d.status ? d.data : [],
-                oils:   o.status ? o.data : [],
-                spares: s.status ? s.data : [],
-                fees:   f.status ? f.data : [],
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             });
         } catch (err) {
             console.error('Analytics fetch error:', err);

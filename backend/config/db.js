@@ -32,11 +32,6 @@ pool.query('SELECT NOW()', (err, res) => {
         console.error("Database connection test failed:", err.message);
     } else {
         console.log("Database connection test successful:", res.rows[0].now);
-<<<<<<< HEAD
-    }
-});
-
-=======
         runMigrations();
     }
 });
@@ -80,5 +75,4 @@ const runMigrations = async () => {
     }
 };
 
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 export default pool;

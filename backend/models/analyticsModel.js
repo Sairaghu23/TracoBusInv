@@ -55,11 +55,7 @@ export const getDieselAnalytics = async (month, year) => {
             COALESCE(SUM(dl.liters * fr.fuel_rate), 0) AS amount
         FROM diesel_logs dl
         LEFT JOIN fuel_rates fr ON dl.rate_id = fr.rate_id
-<<<<<<< HEAD
         JOIN buses b ON dl.bus_id = b.bus_id
-=======
-        JOIN buses b ON dl.rc_plate_number = b.rc_plate_number
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         WHERE EXTRACT(MONTH FROM dl.created_at) = $1
           AND EXTRACT(YEAR FROM dl.created_at) = $2
         GROUP BY b.bus_id, b.bus_no, b.rc_plate_number
@@ -93,11 +89,7 @@ export const getSpareAnalytics = async (month, year) => {
             b.bus_no,
             b.rc_plate_number,
             SUM(su.quantity) AS quantity,
-<<<<<<< HEAD
             SUM(su.spare_cost + su.service_charge) AS amount
-=======
-            SUM(su.amount) AS amount
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         FROM spare_usage su
         JOIN buses b ON su.bus_id = b.bus_id
         WHERE EXTRACT(MONTH FROM su.usage_date) = $1

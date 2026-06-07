@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Gauge, Calendar, Save, AlertCircle, CheckCircle2, FileText, Plus } from 'lucide-react';
-<<<<<<< HEAD
 import api from '../../utils/api';
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
 export default function OdometerEntry() {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -22,22 +19,12 @@ export default function OdometerEntry() {
     const fetchFleet = async () => {
         setLoading(true);
         try {
-<<<<<<< HEAD
             const result = await api.get('/api/readings/all-latest');
             if (result.data?.status) {
                 setFleetData(result.data.data);
                 // Initialize newReadings with empty strings
                 const initial = {};
                 result.data.data.forEach(bus => {
-=======
-            const res = await fetch(`http://localhost:5001/api/readings/all-latest?beforeDate=${date}`);
-            const result = await res.json();
-            if (result.status) {
-                setFleetData(result.data);
-                // Initialize newReadings with empty strings
-                const initial = {};
-                result.data.forEach(bus => {
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                     initial[bus.rc_plate_number] = '';
                 });
                 setNewReadings(initial);
@@ -52,11 +39,7 @@ export default function OdometerEntry() {
 
     useEffect(() => {
         fetchFleet();
-<<<<<<< HEAD
     }, []);
-=======
-    }, [date]);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
     const handleInputChange = (rc_plate_number, value) => {
         setNewReadings(prev => ({ ...prev, [rc_plate_number]: value }));
@@ -98,28 +81,14 @@ export default function OdometerEntry() {
         }
 
         try {
-<<<<<<< HEAD
             const result = await api.post('/api/readings/bulk', { readings: readingsToSave });
             if (result.data?.status) {
-=======
-            const res = await fetch('http://localhost:5001/api/readings/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ readings: readingsToSave })
-            });
-            const result = await res.json();
-            if (result.status) {
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 setSuccess(`Successfully saved ${readingsToSave.length} readings.`);
                 setSavedData(readingsToSave);
                 setViewMode('summary');
                 fetchFleet(); // Refresh latest readings
             } else {
-<<<<<<< HEAD
                 setError(result.data?.message || "Operation failed");
-=======
-                setError(result.message);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             }
         } catch (err) {
             console.error("Error saving bulk readings:", err);
@@ -286,10 +255,7 @@ export default function OdometerEntry() {
                         <Calendar size={18} className="text-slate-400" />
                         <input 
                             type="date" 
-<<<<<<< HEAD
-=======
-                            max={new Date().toISOString().split('T')[0]}
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
+
                             value={date} 
                             onChange={(e) => setDate(e.target.value)}
                             className="bg-transparent font-bold text-navy focus:outline-none"

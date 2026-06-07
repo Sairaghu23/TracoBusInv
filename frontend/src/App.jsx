@@ -21,7 +21,6 @@ import Students from './pages/Transport/Students';
 import Drivers from './pages/Transport/Drivers';
 import DriverDetails from './pages/Transport/DriverDetails';
 
-<<<<<<< HEAD
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -31,18 +30,6 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
-// Placeholders for subsequent routes
-const Placeholder = ({ title }) => (
-  <div className="p-8">
-    <h2 className="text-2xl font-semibold text-navy mb-4">{title} Module</h2>
-    <div className="card">
-      <p className="text-slate-500">Under construction.</p>
-    </div>
-  </div>
-);
-
 function App() {
   return (
     <BrowserRouter>
@@ -50,15 +37,11 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         {/* Protected Dashboard Layout Routes */}
-<<<<<<< HEAD
         <Route path="/" element={
           <ProtectedRoute>
             <MainLayout />
           </ProtectedRoute>
         }>
-=======
-        <Route path="/" element={<MainLayout />}>
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
           <Route index element={<Dashboard />} />
           
           <Route path="buses">

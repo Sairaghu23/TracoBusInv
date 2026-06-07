@@ -9,7 +9,6 @@ import {
 export default function MainLayout() {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
-<<<<<<< HEAD
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const handleLogout = () => {
@@ -17,8 +16,6 @@ export default function MainLayout() {
     localStorage.removeItem('user');
     navigate('/login');
   };
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
 
   const navLinks = [
     { name: 'Overview', path: '/', icon: LayoutDashboard, exact: true },
@@ -74,11 +71,7 @@ export default function MainLayout() {
 
         <div className="p-4 border-t border-navy-light">
           <button 
-<<<<<<< HEAD
             onClick={handleLogout}
-=======
-            onClick={() => navigate('/login')}
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             className={`w-full flex items-center text-slate-300 hover:text-white transition-colors ${isCollapsed ? 'justify-center' : 'gap-3 px-2'}`}
             title={isCollapsed ? "Logout" : ""}
           >
@@ -110,19 +103,11 @@ export default function MainLayout() {
             <div className="h-8 w-px bg-slate-200 mx-2"></div>
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-<<<<<<< HEAD
                 <div className="text-sm font-semibold text-slate-800">{user.username || 'Admin User'}</div>
                 <div className="text-xs text-slate-500">{user.role === 'admin' ? 'Super Administrator' : 'Staff'}</div>
               </div>
               <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center font-bold shadow-sm uppercase">
                 {user.username?.substring(0, 2) || 'AD'}
-=======
-                <div className="text-sm font-semibold text-slate-800">System Admin</div>
-                <div className="text-xs text-slate-500">Transport Node A</div>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-navy-light text-white flex items-center justify-center font-bold shadow-sm">
-                SA
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
               </div>
             </div>
           </div>

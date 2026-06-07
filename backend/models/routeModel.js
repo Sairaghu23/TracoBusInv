@@ -3,25 +3,12 @@ import pool from '../config/db.js';
 export const getAllRoutesWithStops = async () => {
     const query = `
         SELECT r.route_id, r.route_name, 
-<<<<<<< HEAD
                s.stop_id, s.stop_name, s.stop_fee as fee,
                rm.map_id
         FROM routes r
         LEFT JOIN route_stop_map rm ON r.route_id = rm.route_id
         LEFT JOIN stoppings s ON rm.stop_id = s.stop_id
         ORDER BY r.route_id, s.stop_name;
-=======
-               s.stop_id, s.stop_name, 
-               f.fee
-        FROM routes r
-        LEFT JOIN stoppings s ON r.route_id = s.route_id
-        LEFT JOIN (
-            SELECT DISTINCT ON (stop_id) stop_id, fee, created_at
-            FROM stopping_fees
-            ORDER BY stop_id, created_at DESC
-        ) f ON s.stop_id = f.stop_id
-        ORDER BY r.route_id, s.created_at;
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
     `;
     try {
         const result = await pool.query(query);
@@ -37,12 +24,8 @@ export const getAllRoutesWithStops = async () => {
             }
             if (row.stop_id) {
                 routesMap[row.route_id].stops.push({
-<<<<<<< HEAD
                     id: row.map_id, // We use map_id as the primary identifier for boardings
                     stop_id: row.stop_id,
-=======
-                    id: row.stop_id,
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                     name: row.stop_name,
                     fee: parseFloat(row.fee)
                 });
@@ -73,7 +56,6 @@ export const updateRouteName = async (routeId, routeName) => {
     );
     return result.rows[0];
 };
-<<<<<<< HEAD
 
 export const deleteRouteById = async (routeId) => {
     try {
@@ -87,5 +69,3 @@ export const deleteRouteById = async (routeId) => {
         throw error;
     }
 };
-=======
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)

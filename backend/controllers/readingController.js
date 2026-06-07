@@ -31,14 +31,7 @@ export const addBusReadingController = async (req, res, next) => {
             return handleResponse(res, 404, false, "Bus not found");
         }
 
-<<<<<<< HEAD
-=======
-        // Validate date is not in the future
-        if (new Date(trip_end_date) > new Date()) {
-            return handleResponse(res, 400, false, "Cannot log readings for future dates");
-        }
 
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         const readingData = {
             bus_id: bus.bus_id,
             start_date: trip_start_date,
@@ -83,12 +76,7 @@ export const getBusReadingByDateController = async (req, res, next) => {
 
 export const getAllFleetReadingsController = async (req, res, next) => {
     try {
-<<<<<<< HEAD
         const readings = await getAllFleetReadings();
-=======
-        const { beforeDate } = req.query;
-        const readings = await getAllFleetReadings(beforeDate);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         handleResponse(res, 200, true, "Fleet readings retrieved", readings);
     } catch (err) {
         next(err);
@@ -98,16 +86,7 @@ export const getAllFleetReadingsController = async (req, res, next) => {
 export const addBulkReadingsController = async (req, res, next) => {
     try {
         const { readings } = req.body; // Expects array of reading objects
-<<<<<<< HEAD
-=======
 
-        // Validate no future dates in batch
-        const futureDate = readings.find(r => new Date(r.end_date) > new Date());
-        if (futureDate) {
-            return handleResponse(res, 400, false, "Cannot log readings for future dates");
-        }
-
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         const results = await addBulkReadings(readings);
         handleResponse(res, 201, true, `${results.length} readings logged successfully`, results);
     } catch (err) {

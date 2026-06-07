@@ -21,17 +21,8 @@ export const addReading = async (readingData) => {
     const { bus_id, start_date, end_date, old_reading, new_reading } = readingData;
     try {
         const result = await pool.query(`
-<<<<<<< HEAD
             INSERT INTO bus_readings (bus_id, start_date, end_date, old_reading, new_reading)
             VALUES ($1, $2, $3, $4, $5)
-=======
-            INSERT INTO bus_readings (bus_id, start_date, end_date, old_reading, new_reading, distance)
-            VALUES ($1, $2, $3, $4, $5, $5 - $4)
-            ON CONFLICT (bus_id, end_date) DO UPDATE SET
-                new_reading = EXCLUDED.new_reading,
-                old_reading = EXCLUDED.old_reading,
-                distance = EXCLUDED.new_reading - EXCLUDED.old_reading
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             RETURNING *
         `, [bus_id, start_date, end_date, old_reading, new_reading]);
         return result.rows[0];
@@ -74,42 +65,18 @@ export const getReadingByDate = async (rc_plate_number, date) => {
 // --- BULK ENTRY SYSTEM ---
 
 // Get the latest reading for EVERY bus in the fleet
-<<<<<<< HEAD
 export const getAllFleetReadings = async () => {
     try {
         const result = await pool.query(`
-=======
-export const getAllFleetReadings = async (beforeDate = null) => {
-    try {
-        let query = `
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
             SELECT b.bus_id, b.rc_plate_number, b.bus_no, r.new_reading as last_reading, TO_CHAR(r.end_date, 'YYYY-MM-DD') as last_end_date
             FROM buses b
             LEFT JOIN (
                 SELECT DISTINCT ON (bus_id) bus_id, new_reading, end_date
                 FROM bus_readings
-<<<<<<< HEAD
                 ORDER BY bus_id, end_date DESC, reading_id DESC
             ) r ON b.bus_id = r.bus_id
             ORDER BY b.bus_no ASC;
         `);
-=======
-        `;
-        
-        const params = [];
-        if (beforeDate) {
-            query += ` WHERE end_date < $1 `;
-            params.push(beforeDate);
-        }
-
-        query += `
-                ORDER BY bus_id, end_date DESC, reading_id DESC
-            ) r ON b.bus_id = r.bus_id
-            ORDER BY b.bus_no ASC;
-        `;
-        
-        const result = await pool.query(query, params);
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
         return result.rows;
     } catch (error) {
         console.error("Error in getAllFleetReadings query:", error.message);
@@ -128,17 +95,8 @@ export const addBulkReadings = async (readings) => {
         for (const record of readings) {
             const { bus_id, start_date, end_date, old_reading, new_reading } = record;
             const res = await client.query(`
-<<<<<<< HEAD
                 INSERT INTO bus_readings (bus_id, start_date, end_date, old_reading, new_reading)
                 VALUES ($1, $2, $3, $4, $5)
-=======
-                INSERT INTO bus_readings (bus_id, start_date, end_date, old_reading, new_reading, distance)
-                VALUES ($1, $2, $3, $4, $5, $5 - $4)
-                ON CONFLICT (bus_id, end_date) DO UPDATE SET
-                    new_reading = EXCLUDED.new_reading,
-                    old_reading = EXCLUDED.old_reading,
-                    distance = EXCLUDED.new_reading - EXCLUDED.old_reading
->>>>>>> ebd537dc (fixed fuel entry issue in the deisel section)
                 RETURNING *
             `, [bus_id, start_date, end_date, old_reading, new_reading]);
             insertedRows.push(res.rows[0]);
