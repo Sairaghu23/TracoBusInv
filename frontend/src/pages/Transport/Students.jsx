@@ -57,9 +57,8 @@ export default function Students() {
     useEffect(() => {
         const fetchCounts = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/students/summary/counts');
-                const result = await response.json();
-                if (result.status) setCounts(result.data);
+                const result = await api.get('/api/students/summary/counts');
+                if (result.data?.status) setCounts(result.data.data);
             } catch (error) {
                 console.error("Error fetching counts:", error);
             }

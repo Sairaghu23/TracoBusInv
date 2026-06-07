@@ -73,32 +73,20 @@ export default function BusList() {
     const handleDelete = async (rc_plate_number) => {
         if (window.confirm(`Are you sure you want to delete bus ${rc_plate_number}?`)) {
             try {
-                const response = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}`, {
-                    method: 'DELETE'
-                });
-
-                // First check if the response is actually JSON
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const result = await response.json();
-                    if (result.status) {
-                        alert("Bus deleted successfully!");
-                        fetchBuses();
-                    } else {
-                        alert(result.message || "Failed to delete bus");
-                    }
+                const result = await api.delete(`/api/buses/${rc_plate_number}`);
+                if (result.data?.status) {
+                    alert("Bus deleted successfully!");
+                    fetchBuses();
                 } else {
-                    // Not JSON (e.g. HTML 404 or 500)
-                    const text = await response.text();
-                    console.error("Non-JSON response:", text);
-                    alert(`Server error (${response.status}). Please try again later.`);
+                    alert(result.data?.message || "Failed to delete bus");
                 }
             } catch (error) {
                 console.error("Error deleting bus:", error);
-                alert("An error occurred while deleting the bus.");
+                alert(error.response?.data?.message || "An error occurred while deleting the bus.");
             }
         }
     };
+
 
     // Fetch Routes and Buses from Backend
     useEffect(() => {

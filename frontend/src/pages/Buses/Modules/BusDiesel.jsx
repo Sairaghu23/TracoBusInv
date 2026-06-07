@@ -7,25 +7,28 @@ export default function BusDiesel() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [bus, setBus] = useState(null);
-    const [busDiesel, setBusDiesel] = useState([]); // Empty until diesel table is implemented
+    const [busDiesel, setBusDiesel] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [logData, setLogData] = useState({
+        refueling_date: new Date().toISOString().split('T')[0],
+        liters: '',
+        rate: '',
+    });
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // Fetch Bus Details
-                const busRes = await fetch(`http://localhost:5001/api/buses/${id}`);
-
-                const busResult = await busRes.json();
-
-                if (busResult.status) {
-                    setBus(busResult.data);
-                    const dieselRes = await fetch(`http://localhost:5001/api/buses/${id}/diesel`);
-                    const dieselResult = await dieselRes.json();
-                    if (dieselResult.status) {
-                        setBusDiesel(dieselResult.data);
+                const busResult = await api.get(`/api/buses/${id}`);
+                if (busResult.data?.status) {
+                    setBus(busResult.data.data);
+                    const dieselResult = await api.get(`/api/buses/${id}/diesel`);
+                    if (dieselResult.data?.status) {
+                        setBusDiesel(dieselResult.data.data);
                     }
                 }
             } catch (err) {
@@ -36,6 +39,35 @@ export default function BusDiesel() {
         };
         fetchData();
     }, [id]);
+
+    const handleSubmit = async () => {
+        if (!logData.liters || !logData.rate || !logData.refueling_date) {
+            setError('Please fill in all fields.');
+            return;
+        }
+        setSaving(true);
+        setError('');
+        try {
+            const result = await api.post(`/api/buses/${id}/diesel`, logData);
+            if (result.data?.status) {
+                setSuccess('Fuel log added successfully!');
+                setIsAddModalOpen(false);
+                setLogData({ refueling_date: new Date().toISOString().split('T')[0], liters: '', rate: '' });
+                // Refresh diesel logs
+                const dieselResult = await api.get(`/api/buses/${id}/diesel`);
+                if (dieselResult.data?.status) setBusDiesel(dieselResult.data.data);
+                setTimeout(() => setSuccess(''), 3000);
+            } else {
+                setError(result.data?.message || 'Failed to add record.');
+            }
+        } catch (err) {
+            console.error('Error saving diesel log:', err);
+            setError(err.response?.data?.message || 'Server error. Please try again.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
 
     const totalExpenditure = busDiesel.reduce((sum, record) => sum + (parseFloat(record.total_amount) || 0), 0);
     const avgKMPL = busDiesel.length > 0

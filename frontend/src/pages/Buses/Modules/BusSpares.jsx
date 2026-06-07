@@ -62,35 +62,43 @@ export default function BusSpares() {
     }, [rc_plate_number]);
 
     const handleReplacementSubmit = async () => {
+        const payload = {
+            spare_id: selectedCategory,
+            item_ids: cart.map(c => c.item_id),
+            usage_date: usageForm.usage_date,
+            mechanic: usageForm.mechanic,
+            spare_cost: usageForm.spare_cost,
+            service_charge: usageForm.service_charge,
+            old_reading: usageForm.old_reading,
+            new_reading: usageForm.new_reading,
+        };
         try {
-            const res = await fetch(`http://localhost:5001/api/buses/${rc_plate_number}/spares`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(usageData)
-            });
-            const result = await res.json();
-            if (result.status) {
+            const result = await api.post(`/api/buses/${rc_plate_number}/spares`, payload);
+            if (result.data?.status) {
                 alert("Replacement logged and stock deducted!");
                 setIsAddModalOpen(false);
-                setUsageData({
-                    spare_id: '',
-                    product_code: '',
+                setCart([]);
+                setSelectedCategory('');
+                setUsageForm({
                     usage_date: new Date().toISOString().split('T')[0],
                     mechanic: '',
-                    amount: '',
-                    quantity: 1
+                    spare_cost: '',
+                    service_charge: '',
+                    old_reading: '',
+                    new_reading: ''
                 });
                 fetchData();
             } else {
-                alert(result.message || "Failed to log replacement.");
+                alert(result.data?.message || "Failed to log replacement.");
             }
         } catch (err) {
             console.error("Error logging replacement:", err);
-            alert("Error: Check console or insufficient stock.");
+            alert(err.response?.data?.message || "Error: Check console or insufficient stock.");
         }
     };
 
-    const totalExpenditure = spares.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
+
+    const totalExpenditure = sparesHistory.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
 
     if (loading) return <div className="p-20 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto"></div></div>;
 

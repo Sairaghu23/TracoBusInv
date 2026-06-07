@@ -50,24 +50,21 @@ export default function Routes() {
         if (!newRouteName) return;
         setRouteError('');
         try {
-            const response = await fetch('http://localhost:5001/api/routes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ route_name: newRouteName })
-            });
-            const result = await response.json();
-            if (result.status) {
+            const result = await api.post('/api/routes', { route_name: newRouteName });
+            if (result.data?.status) {
                 setNewRouteName('');
                 setActiveModal(null);
-                fetchRoutes(); // Refresh list
-            } else if (response.status === 409) {
-                setRouteError(result.message || "Route already exists");
+                fetchRoutes();
             } else {
-                setRouteError(result.message || "An error occurred");
+                setRouteError(result.data?.message || "An error occurred");
             }
         } catch (error) {
             console.error("Error adding route:", error);
-            setRouteError("Connection error. Please try again.");
+            if (error.response?.status === 409) {
+                setRouteError(error.response.data?.message || "Route already exists");
+            } else {
+                setRouteError("Connection error. Please try again.");
+            }
         }
     };
 
@@ -93,26 +90,21 @@ export default function Routes() {
     const handleSaveStop = async () => {
         if (!editingStop) return;
         try {
-            const res = await fetch(`http://localhost:5001/api/stops/${editingStop.stop_id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ stop_name: editingStop.name, fee: editingStop.fee })
+            const result = await api.put(`/api/routes/stops/${editingStop.stop_id}`, {
+                stop_name: editingStop.name,
+                fee: editingStop.fee
             });
-            const result = await res.json();
-            if (result.status) { setEditingStop(null); fetchRoutes(); }
+            if (result.data?.status) { setEditingStop(null); fetchRoutes(); }
         } catch (err) { console.error('Error updating stop:', err); }
     };
 
     const handleSaveRoute = async () => {
         if (!editingRoute) return;
         try {
-            const res = await fetch(`http://localhost:5001/api/routes/${editingRoute.route_id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ route_name: editingRoute.route_name })
+            const result = await api.put(`/api/routes/${editingRoute.route_id}`, {
+                route_name: editingRoute.route_name
             });
-            const result = await res.json();
-            if (result.status) { setEditingRoute(null); fetchRoutes(); }
+            if (result.data?.status) { setEditingRoute(null); fetchRoutes(); }
         } catch (err) { console.error('Error updating route:', err); }
     };
 
