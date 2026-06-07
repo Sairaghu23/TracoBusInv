@@ -1,0 +1,53 @@
+# Tracco Bus Management - Detailed Project Milestone Journal
+
+This document provides an in-depth technical narrative and chronological record of the development of the Tracco Bus Management system.
+
+---
+
+## 📅 Day 1: Foundation & Fleet Registry [2026-03-14]
+**Context**: The project goal was to move from static mock data to a centralized, database-driven fleet management system.
+- **Milestone 1.1: Core Infrastructure Setup (09:30 AM)**
+    - Initialized the React 19 Frontend with Vite and configured Tailwind CSS for a premium "Emerald/Navy" theme.
+    - Set up the Express.js backend with a modular Model-Controller-Route (MCR) architecture.
+- **Milestone 1.2: Database Integration (11:00 AM)**
+    - Configured the PostgreSQL connection pooling in [db.js](file:///tmp/check_db.js).
+    - Created the `buses` and `routes` tables, enabling the system to serve real vehicle data to the [BusList.jsx](file:///c:/Users/Mahadev/Desktop/TraccoBusManagement/src/pages/Buses/BusList.jsx) component.
+- **Milestone 1.3: Fleet Detail Module (02:00 PM)**
+    - Developed [BusDetails.jsx](file:///c:/Users/Mahadev/Desktop/TraccoBusManagement/src/pages/Buses/BusDetails.jsx) to fetch and display specific vehicle attributes (Insurance, Fitness, etc.) and connected it to the global routing system.
+
+## 📅 Day 2: Inventory & Maintenance [2026-03-16 / 17]
+**Context**: Maintenance had to be tracked as a logistical "flow"—parts added to stock must be deducted upon replacement.
+- **Milestone 2.1: Stock Management (10:00 AM)**
+    - Created `spare_stocks` and `spare_purchases` tables.
+    - Built the [Stocks.jsx](file:///c:/Users/Mahadev/Desktop/TraccoBusManagement/src/pages/Stocks.jsx) dashboard with live inventory counts and "Low Stock" indicators.
+- **Milestone 2.2: The Transactional Registry (01:30 PM)**
+    - Implemented a complex `registerReplacement` backend function which uses **PostgreSQL Transactions** (`BEGIN; ... COMMIT;`). 
+    - **How**: This ensures that when a part is replaced on a bus, the `spare_usage` log is created AND the `spare_stocks` quantity is decremented simultaneously. If either step fails, the whole process rolls back.
+- **Milestone 2.3: Purchase Auditing (04:00 PM)**
+    - Implemented [PurchaseHistory.jsx](file:///c:/Users/Mahadev/Desktop/TraccoBusManagement/src/pages/PurchaseHistory.jsx) (Batch Logs) allowing administrators to audit where parts came from, the unit cost, and the supplier.
+
+## 📅 Day 3: Fuel Efficiency & Operational Data [2026-03-19]
+**Context**: Odometer readings and refueling needed to be highly accurate for KMPL (Efficiency) analysis.
+- **Milestone 3.1: Generated Calculations (09:45 AM)**
+    - Updated `bus_readings` table with a **Stored Generated Column** for `distance`. This ensures the database always handles math, reducing frontend errors.
+- **Milestone 3.2: Bulk Entry & Key-Nav (11:15 AM)**
+    - Built [OdometerEntry.jsx](file:///c:/Users/Mahadev/Desktop/TraccoBusManagement/src/pages/Entry/OdometerEntry.jsx) with a custom "Enter-key" navigation cell system.
+    - **How**: By handling `onKeyDown`, users can quickly type readings and hit "Enter" to navigate to the next vehicle automatically, mimicking spreadsheet ergonomics.
+- **Milestone 3.3: Fuel Rate Orchestration (02:30 PM)**
+    - Created the `fuel_rates` daily registry.
+    - Developed the **Diesel Entry Validation**: The system now checks "Is there an odometer reading for today?" before allowing fuel logs, ensuring distance data is available for KMPL calculations.
+
+## 📅 Day 4: Logistics & Financial Oversight [2026-03-20]
+**Context**: Expanding the system to manage student fees and transportation paths in a single dashboard.
+- **Milestone 4.1: Nested Logistics (09:00 AM)**
+    - Created the **Routes Module** featuring a grouped view of transport paths.
+    - **How**: Implemented a "Route-centric" hierarchy where stopping points are nested under their respective routes with specific fees.
+- **Milestone 4.2: Student Batch Management (11:30 AM)**
+    - Built the **Student Registry** with "Batch Cards" (1st Year - Mtech).
+    - **How**: Clicking a card opens a detailed table with **Live Inputs**. Administrators can type "Concession" or "Paid" directly into table cells, triggering a real-time recalculation of the "Balance" field using React side-effects.
+- **Milestone 4.3: Full Database Decoupling (02:00 PM)**
+    - Systematically replaced all remaining `mockData` imports ([Dashboard](file:///c:/Users/Mahadev/Desktop/TraccoBusManagement/src/pages/Dashboard.jsx#140-243), [Analytics](file:///c:/Users/Mahadev/Desktop/TraccoBusManagement/src/pages/Analytics.jsx#4-99), `Reports`) with live SQL queries, achieving a 100% database-driven system.
+
+---
+
+*Log generated on: 2026-03-20 10:00:00*

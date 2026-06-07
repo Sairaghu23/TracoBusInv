@@ -1,0 +1,17 @@
+--- COLUMNS ---
+COL:route_id
+COL:created_at
+COL:purchase_date
+COL:capacity
+COL:status
+COL:serial_number
+COL:rc_plate_number
+COL:engine_no
+
+--- CONSTRAINTS ---
+CONST:buses_status_check => CHECK (((status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying, 'REPAIR'::character varying])::text[])))
+CONST:buses_rc_plate_number_not_null => NOT NULL rc_plate_number
+CONST:buses_serial_number_not_null => NOT NULL serial_number
+CONST:buses_pkey => PRIMARY KEY (rc_plate_number)
+CONST:buses_serial_number_key => UNIQUE (serial_number)
+CONST:buses_route_id_fkey => FOREIGN KEY (route_id) REFERENCES routes(route_id)
