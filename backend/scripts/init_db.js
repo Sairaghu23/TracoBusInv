@@ -60,11 +60,11 @@ const init = async () => {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS bus_readings (
                 reading_id SERIAL PRIMARY KEY,
-                rc_plate_number VARCHAR(20) REFERENCES buses(rc_plate_number) ON DELETE CASCADE,
+                bus_id INT NOT NULL REFERENCES buses(bus_id) ON DELETE CASCADE,
                 start_date DATE,
                 end_date DATE,
-                old_reading INT,
-                new_reading INT,
+                old_reading INT NOT NULL,
+                new_reading INT NOT NULL,
                 distance INT GENERATED ALWAYS AS (new_reading - old_reading) STORED,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -125,8 +125,8 @@ const init = async () => {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS diesel_logs (
                 diesel_id SERIAL PRIMARY KEY,
-                rc_plate_number VARCHAR(20) REFERENCES buses(rc_plate_number) ON DELETE CASCADE,
-                reading_id INT REFERENCES bus_readings(reading_id),
+                bus_id INT NOT NULL REFERENCES buses(bus_id) ON DELETE CASCADE,
+                reading_id INT UNIQUE REFERENCES bus_readings(reading_id),
                 rate_id INT REFERENCES fuel_rates(rate_id),
                 liters NUMERIC(10, 2) NOT NULL,
                 created_at DATE NOT NULL,

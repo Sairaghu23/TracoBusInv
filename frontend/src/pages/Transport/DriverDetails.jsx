@@ -15,6 +15,8 @@ export default function DriverDetails() {
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [selectedPhoto, setSelectedPhoto] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
     const [editData, setEditData] = useState({
         name: '', phone: '', license_number: '', status: 'ACTIVE', address: '', joining_date: ''
     });
@@ -44,13 +46,32 @@ export default function DriverDetails() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
-            const result = await api.put(`/api/drivers/${id}`, editData);
+            let updatedPhotoUrl = driver.photo_url;
+            if (selectedPhoto) {
+                setUploading(true);
+                const formData = new FormData();
+                formData.append('photo', selectedPhoto);
+                const photoResult = await api.post(`/api/drivers/${id}/photo`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                if (photoResult.data?.status) {
+                    updatedPhotoUrl = photoResult.data.data.photo_url;
+                }
+            }
+            const result = await api.put(`/api/drivers/${id}`, {
+                ...editData,
+                photo_url: updatedPhotoUrl
+            });
             if (result.data?.status) {
                 setDriver(result.data.data);
                 setIsEditing(false);
+                setSelectedPhoto(null);
+                setPhotoPreview(null);
             }
         } catch (error) {
             console.error("Error updating driver:", error);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -118,7 +139,7 @@ export default function DriverDetails() {
         return `${base}${url}`;
     };
 
-    const photoUrl = getPhotoUrl(driver.photo_url);
+    const photoUrl = photoPreview || getPhotoUrl(driver.photo_url);
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 animate-in zoom-in-95 duration-500">
@@ -150,7 +171,11 @@ export default function DriverDetails() {
                     {!isEditing ? (
                         <>
                             <button 
-                                onClick={() => setIsEditing(true)}
+                                onClick={() => {
+                                    setIsEditing(true);
+                                    setSelectedPhoto(null);
+                                    setPhotoPreview(null);
+                                }}
                                 className="btn bg-navy text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-bold shadow-lg"
                             >
                                 <Edit2 size={18} /> Edit Profile
@@ -171,7 +196,11 @@ export default function DriverDetails() {
                                 <Check size={18} /> Save Changes
                             </button>
                             <button 
-                                onClick={() => setIsEditing(false)}
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setSelectedPhoto(null);
+                                    setPhotoPreview(null);
+                                }}
                                 className="btn bg-white border border-slate-200 text-slate-500 px-5 py-2.5 rounded-xl flex items-center gap-2 font-bold"
                             >
                                 <X size={18} /> Discard
@@ -288,6 +317,21 @@ export default function DriverDetails() {
                                         className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3 outline-none focus:border-navy transition-all font-bold text-navy h-24"
                                         value={editData.address}
                                         onChange={(e) => setEditData({...editData, address: e.target.value})}
+                                    />
+                                </div>
+                                <div className="col-span-full space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Upload Photo</label>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3 outline-none focus:border-navy transition-all font-bold text-slate-600"
+                                        onChange={(e) => {
+                                            const file = e.target.files[0];
+                                            if (file) {
+                                                setSelectedPhoto(file);
+                                                setPhotoPreview(URL.createObjectURL(file));
+                                            }
+                                        }}
                                     />
                                 </div>
                             </div>

@@ -12,9 +12,18 @@ export default function Drivers() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeModal, setActiveModal] = useState(false);
+    const [selectedPhoto, setSelectedPhoto] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
     const [newDriver, setNewDriver] = useState({
         name: '', phone: '', license_number: '', status: 'ACTIVE', address: '', joining_date: new Date().toISOString().split('T')[0], license_expiry: ''
     });
+
+    const handleCloseModal = () => {
+        setActiveModal(false);
+        setSelectedPhoto(null);
+        setPhotoPreview(null);
+        setNewDriver({ name: '', phone: '', license_number: '', status: 'ACTIVE', address: '', joining_date: new Date().toISOString().split('T')[0], license_expiry: '' });
+    };
 
     useEffect(() => {
         fetchDrivers();
@@ -36,9 +45,16 @@ export default function Drivers() {
         try {
             const result = await api.post('/api/drivers', newDriver);
             if (result.data?.status) {
+                const createdDriver = result.data.data;
+                if (selectedPhoto) {
+                    const formData = new FormData();
+                    formData.append('photo', selectedPhoto);
+                    await api.post(`/api/drivers/${createdDriver.driver_id}/photo`, formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                }
                 fetchDrivers();
-                setActiveModal(false);
-                setNewDriver({ name: '', phone: '', license_number: '', status: 'ACTIVE', address: '', joining_date: new Date().toISOString().split('T')[0], license_expiry: '' });
+                handleCloseModal();
             }
         } catch (error) {
             console.error("Error adding driver:", error);
@@ -167,7 +183,7 @@ export default function Drivers() {
                 <div className="fixed inset-0 bg-navy/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
                     <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20">
                         <div className="p-8 bg-navy text-white relative">
-                            <button onClick={() => setActiveModal(false)} className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors">
+                            <button onClick={handleCloseModal} className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors">
                                 <X size={24} />
                             </button>
                             <div className="p-4 bg-navy-light rounded-2xl w-fit mb-4">
@@ -252,8 +268,28 @@ export default function Drivers() {
                                     onChange={(e) => setNewDriver({...newDriver, address: e.target.value})}
                                 />
                             </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Upload Photo</label>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 outline-none focus:border-navy transition-all font-medium text-slate-600"
+                                    onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            setSelectedPhoto(file);
+                                            setPhotoPreview(URL.createObjectURL(file));
+                                        }
+                                    }}
+                                />
+                                {photoPreview && (
+                                    <div className="mt-2 w-20 h-20 rounded-xl overflow-hidden border border-slate-200">
+                                        <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+                            </div>
                             <div className="pt-4 flex gap-3">
-                                <button type="button" onClick={() => setActiveModal(false)} className="flex-1 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
+                                <button type="button" onClick={handleCloseModal} className="flex-1 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
                                 <button type="submit" className="flex-1 bg-navy text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-navy-light transition-all shadow-lg shadow-navy/20">Onboard Driver</button>
                             </div>
                         </form>

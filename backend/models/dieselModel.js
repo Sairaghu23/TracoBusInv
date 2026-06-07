@@ -75,10 +75,10 @@ export const dieselModel = {
             const insertedLogs = [];
             
             for (const log of logs) {
-                const { rc_plate_number, reading_id, rate_id, liters, date } = log;
+                const { bus_id, reading_id, rate_id, liters, date } = log;
                 
                 const query = `
-                    INSERT INTO diesel_logs (rc_plate_number, reading_id, rate_id, liters, created_at)
+                    INSERT INTO diesel_logs (bus_id, reading_id, rate_id, liters, created_at)
                     VALUES ($1, $2, $3, $4, $5)
                     ON CONFLICT (reading_id) DO UPDATE SET 
                         liters = EXCLUDED.liters,
@@ -86,7 +86,7 @@ export const dieselModel = {
                     RETURNING *;
                 `;
                 const res = await client.query(query, [
-                    rc_plate_number ? String(rc_plate_number).trim().toUpperCase() : '',
+                    bus_id,
                     reading_id,
                     rate_id,
                     liters,
@@ -122,7 +122,7 @@ export const dieselModel = {
             FROM diesel_logs d
             JOIN bus_readings r ON d.reading_id = r.reading_id
             JOIN fuel_rates f ON d.rate_id = f.rate_id
-            JOIN buses b ON d.rc_plate_number = b.rc_plate_number
+            JOIN buses b ON d.bus_id = b.bus_id
             WHERE d.created_at = $1
             ORDER BY b.bus_no ASC;
         `;
@@ -146,7 +146,7 @@ export const dieselModel = {
             FROM diesel_logs d
             JOIN fuel_rates f ON d.rate_id = f.rate_id
             JOIN bus_readings r ON d.reading_id = r.reading_id
-            JOIN buses b ON d.rc_plate_number = b.rc_plate_number
+            JOIN buses b ON d.bus_id = b.bus_id
             WHERE b.rc_plate_number = $1
             ORDER BY d.created_at DESC;
         `;
@@ -185,12 +185,12 @@ export const dieselModel = {
 
             // Insert or Update diesel log (only valid columns)
             const dieselQuery = await client.query(`
-                INSERT INTO diesel_logs (rc_plate_number, reading_id, rate_id, liters, created_at)
+                INSERT INTO diesel_logs (bus_id, reading_id, rate_id, liters, created_at)
                 VALUES ($1, $2, $3, $4, $5)
                 ON CONFLICT (reading_id) DO UPDATE SET 
                     liters = EXCLUDED.liters, rate_id = EXCLUDED.rate_id
                 RETURNING *;
-            `, [rc_plate_number.trim().toUpperCase(), reading_id, rate_id, liters, refueling_date]);
+            `, [bus_id, reading_id, rate_id, liters, refueling_date]);
 
             await client.query('COMMIT');
             return dieselQuery.rows[0];
