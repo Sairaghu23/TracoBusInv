@@ -1,17 +1,17 @@
 # Tracco Bus Management — Database Schema & ER Diagram
 
-This document provides a comprehensive analysis of the PostgreSQL database schema for the **Tracco Bus Management** system. The schema houses 25 tables, covering features from student transport log[...]
+This document provides a comprehensive analysis of the PostgreSQL database schema for the **Tracco Bus Management** system. The schema houses 25 tables, covering features from student transport logistics, fee management, fleet operations, consumables tracking, spare parts inventory, and personnel management.
 
 ---
 
 ## 1. Entity-Relationship (ER) Diagram
 
-Below is the Mermaid-based ER diagram illustrating all major tables, columns, primary keys (PK), foreign keys (FK), and their logical relations.
+Below is the Mermaid-based ER diagram illustrating all major tables, their relationships, and cardinalities.
 
 ```mermaid
 erDiagram
   BRANCH ||--o{ BTECH_STUDENTS : "has students"
-  BRANCH ||--o{ MTECH_STUDENTS : "has students (logical)"
+  BRANCH ||--o{ MTECH_STUDENTS : "has students"
 
   ROUTES ||--o{ BUSES : "assigned to"
   ROUTES ||--o{ ROUTE_STOP_MAP : "contains"
@@ -21,7 +21,7 @@ erDiagram
   ROUTE_STOP_MAP ||--o{ MTECH_STUDENTS : "boarding point"
 
   BTECH_STUDENTS ||--o{ BTECH_STUDENTS_BUS_FEE_HISTORY : "fee history"
-  MTECH_STUDENTS ||--o{ MTECH_STUDENTS_BUS_FEE_HISTORY : "fee history (logical)"
+  MTECH_STUDENTS ||--o{ MTECH_STUDENTS_BUS_FEE_HISTORY : "fee history"
 
   BUSES ||--o{ BUS_READINGS : "has readings"
   BUSES ||--o{ DIESEL_LOGS : "logs diesel"
@@ -48,12 +48,12 @@ erDiagram
 
   BRANCH {
     int branch_id PK
-    string branch_name UNIQUE
+    string branch_name
   }
 
   BTECH_STUDENTS {
     int s_id PK
-    string roll_id UNIQUE
+    string roll_id
     string s_name
     int branch_id FK
     int admission_year
@@ -74,7 +74,7 @@ erDiagram
 
   MTECH_STUDENTS {
     int s_id PK
-    string roll_id UNIQUE
+    string roll_id
     string s_name
     int branch_id FK
     int admission_year
@@ -97,7 +97,7 @@ erDiagram
 
   ROUTES {
     int route_id PK
-    string route_name UNIQUE
+    string route_name
   }
 
   STOPPINGS {
@@ -114,9 +114,9 @@ erDiagram
 
   BUSES {
     int bus_id PK
-    string rc_plate_number UNIQUE
-    string engine_number UNIQUE
-    int bus_no UNIQUE
+    string rc_plate_number
+    string engine_number
+    int bus_no
     int seating_capacity
     string status
     date purchase_date
@@ -147,7 +147,7 @@ erDiagram
 
   FUEL_RATES {
     int rate_id PK
-    date rate_date UNIQUE
+    date rate_date
     float fuel_rate
     timestamp created_at
   }
@@ -181,14 +181,14 @@ erDiagram
 
   DOCUMENT_TYPES {
     int document_type_id PK
-    string document_name UNIQUE
+    string document_name
   }
 
   DRIVERS {
     int driver_id PK
     string name
     string phone
-    string license_number UNIQUE
+    string license_number
     string status
     date joining_date
     text address
@@ -224,7 +224,7 @@ erDiagram
     int item_id PK
     int spare_id FK
     int purchase_id FK
-    string product_code UNIQUE
+    string product_code
     string status
     timestamp created_at
   }
@@ -251,7 +251,7 @@ erDiagram
 
   USERS {
     int id PK
-    string username UNIQUE
+    string username
     string password
     string role
     timestamp created_at
@@ -317,7 +317,7 @@ Profiles for M.Tech students.
 * **s_id**: `integer` (PK, Auto-increment)
 * **roll_id**: `varchar(50)` (NOT NULL, UNIQUE)
 * **s_name**: `varchar(255)` (NOT NULL)
-* **branch_id**: `integer` (Logical reference to `branch.branch_id`)
+* **branch_id**: `integer` (FK referencing `branch.branch_id`)
 * **admission_year**: `integer`
 * **batch_start_year**: `integer`
 * **batch_end_year**: `integer`
@@ -327,9 +327,9 @@ Profiles for M.Tech students.
 #### 2.2.5 `mtech_students_bus_fee_history`
 History logs of fee collections for M.Tech student subscriptions.
 * **fee_id**: `integer` (PK, Auto-increment)
-* **s_id**: `integer` (Logical reference to `mtech_students.s_id`)
+* **s_id**: `integer` (FK referencing `mtech_students.s_id`)
 * **semester**: `integer` (NOT NULL)
-* **stop_id**: `integer` (Logical reference to `stoppings.stop_id`)
+* **stop_id**: `integer` (FK referencing `stoppings.stop_id`)
 * **amount_paid**: `numeric` (NOT NULL)
 * **concession**: `numeric` (Default: `0`)
 * **payment_mode**: `varchar(50)`
@@ -395,8 +395,8 @@ Refueling sessions logged to evaluate vehicle fuel efficiency.
 * **reading_id**: `integer` (FK referencing `bus_readings.reading_id`, UNIQUE, NOT NULL)
 * **rate_id**: `integer` (FK referencing `fuel_rates.rate_id`, NOT NULL)
 * **liters**: `integer` (NOT NULL)
-* **created_at**: `date`
-* **created_at_ts**: `timestamp` (Default: `CURRENT_TIMESTAMP`)
+* **created_date**: `date`
+* **created_at**: `timestamp` (Default: `CURRENT_TIMESTAMP`)
 
 #### 2.4.3 `oil_stocks`
 Oil stock types in the warehouse.
@@ -497,6 +497,7 @@ System accounts for admin portals.
 * **created_at**: `timestamp` (Default: `CURRENT_TIMESTAMP`)
 
 #### 2.6.4 `test_inventory`
+Test inventory table for legacy purposes.
 * **id**: `integer` (PK, Auto-increment)
 * **item_name**: `varchar(255)` (NOT NULL)
 * **quantity**: `integer` (Default: `0`)
