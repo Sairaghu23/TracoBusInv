@@ -1,6 +1,6 @@
 # Tracco Bus Management — Database Schema & ER Diagram
 
-This document provides a comprehensive analysis of the PostgreSQL database schema for the **Tracco Bus Management** system. The schema houses 25 tables, covering features from student transport logist[...]
+This document provides a comprehensive analysis of the PostgreSQL database schema for the **Tracco Bus Management** system. The schema houses 25 tables, covering features from student transport log[...]
 
 ---
 
@@ -501,5 +501,3 @@ System accounts for admin portals.
 * **item_name**: `varchar(255)` (NOT NULL)
 * **quantity**: `integer` (Default: `0`)
 * **created_at**: `timestamp` (Default: `CURRENT_TIMESTAMP`)
-
-```
