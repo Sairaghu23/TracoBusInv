@@ -1,6 +1,6 @@
 # Tracco Bus Management — Database Schema & ER Diagram
 
-This document provides a comprehensive analysis of the PostgreSQL database schema for the **Tracco Bus Management** system. The schema houses 25 tables, covering features from student transport logistics and fee structures to vehicle diagnostics, maintenance log tracking, and driver management.
+This document provides a comprehensive analysis of the PostgreSQL database schema for the **Tracco Bus Management** system. The schema houses 25 tables, covering features from student transport logist[...]
 
 ---
 
@@ -10,252 +10,252 @@ Below is the Mermaid-based ER diagram illustrating all major tables, columns, pr
 
 ```mermaid
 erDiagram
-    BRANCH ||--o{ BTECH_STUDENTS : "has students"
-    BRANCH ||--o{ MTECH_STUDENTS : "has students (logical)"
-    
-    ROUTES ||--o{ BUSES : "assigned to"
-    ROUTES ||--o{ ROUTE_STOP_MAP : "contains"
-    STOPPINGS ||--o{ ROUTE_STOP_MAP : "mapped in"
-    
-    ROUTE_STOP_MAP ||--o{ BTECH_STUDENTS_BUS_FEE_HISTORY : "boarding point"
-    ROUTE_STOP_MAP ||--o{ MTECH_STUDENTS : "boarding point"
-    
-    BTECH_STUDENTS ||--o{ BTECH_STUDENTS_BUS_FEE_HISTORY : "fee history"
-    MTECH_STUDENTS ||--o{ MTECH_STUDENTS_BUS_FEE_HISTORY : "fee history (logical)"
-    
-    BUSES ||--o{ BUS_READINGS : "has readings"
-    BUSES ||--o{ DIESEL_LOGS : "logs diesel"
-    BUSES ||--o{ OIL_LOGS : "logs oil"
-    BUSES ||--o{ BUS_DOCUMENTS : "has documents"
-    BUSES ||--o{ SPARE_USAGE : "consumes spares"
-    
-    BUS_READINGS ||--|| DIESEL_LOGS : "associated with"
-    BUS_READINGS ||--o{ OIL_LOGS : "associated with"
-    
-    FUEL_RATES ||--o{ DIESEL_LOGS : "applies rate"
-    OIL_STOCKS ||--o{ OIL_LOGS : "logs type"
-    DOCUMENT_TYPES ||--o{ BUS_DOCUMENTS : "defines type"
-    
-    DRIVERS ||--o{ DRIVERS_PHONE_NUMBER : "has numbers"
-    
-    SPARE_STOCKS ||--o{ SPARE_PURCHASES : "replenishes"
-    SPARE_STOCKS ||--o{ SPARE_ITEMS : "catalogued as"
-    SPARE_STOCKS ||--o{ SPARE_USAGE : "used in"
-    
-    SPARE_PURCHASES ||--o{ SPARE_ITEMS : "buys items"
-    SPARE_USAGE ||--o{ SPARE_USAGE_DETAILS : "details items used"
-    SPARE_ITEMS ||--|| SPARE_USAGE_DETAILS : "consumed item"
+  BRANCH ||--o{ BTECH_STUDENTS : "has students"
+  BRANCH ||--o{ MTECH_STUDENTS : "has students (logical)"
 
-    BRANCH {
-        integer branch_id PK
-        varchar branch_name UNIQUE
-    }
+  ROUTES ||--o{ BUSES : "assigned to"
+  ROUTES ||--o{ ROUTE_STOP_MAP : "contains"
+  STOPPINGS ||--o{ ROUTE_STOP_MAP : "mapped in"
 
-    BTECH_STUDENTS {
-        integer s_id PK
-        varchar roll_id UNIQUE
-        varchar s_name
-        integer branch_id FK
-        integer admission_year
-        integer batch_start_year
-        integer batch_end_year
-    }
+  ROUTE_STOP_MAP ||--o{ BTECH_STUDENTS_BUS_FEE_HISTORY : "boarding point"
+  ROUTE_STOP_MAP ||--o{ MTECH_STUDENTS : "boarding point"
 
-    BTECH_STUDENTS_BUS_FEE_HISTORY {
-        integer fee_id PK
-        integer s_id FK
-        integer semester UNIQUE
-        numeric amount_paid
-        numeric concession
-        varchar payment_mode
-        date payment_date
-        integer boarding FK
-    }
+  BTECH_STUDENTS ||--o{ BTECH_STUDENTS_BUS_FEE_HISTORY : "fee history"
+  MTECH_STUDENTS ||--o{ MTECH_STUDENTS_BUS_FEE_HISTORY : "fee history (logical)"
 
-    MTECH_STUDENTS {
-        integer s_id PK
-        varchar roll_id UNIQUE
-        varchar s_name
-        integer branch_id
-        integer admission_year
-        integer batch_start_year
-        integer batch_end_year
-        integer boarding FK
-        numeric concession
-    }
+  BUSES ||--o{ BUS_READINGS : "has readings"
+  BUSES ||--o{ DIESEL_LOGS : "logs diesel"
+  BUSES ||--o{ OIL_LOGS : "logs oil"
+  BUSES ||--o{ BUS_DOCUMENTS : "has documents"
+  BUSES ||--o{ SPARE_USAGE : "consumes spares"
 
-    MTECH_STUDENTS_BUS_FEE_HISTORY {
-        integer fee_id PK
-        integer s_id
-        integer semester UNIQUE
-        integer stop_id
-        numeric amount_paid
-        numeric concession
-        varchar payment_mode
-        date payment_date
-    }
+  BUS_READINGS ||--|| DIESEL_LOGS : "associated with"
+  BUS_READINGS ||--o{ OIL_LOGS : "associated with"
 
-    ROUTES {
-        integer route_id PK
-        varchar route_name UNIQUE
-    }
+  FUEL_RATES ||--o{ DIESEL_LOGS : "applies rate"
+  OIL_STOCKS ||--o{ OIL_LOGS : "logs type"
+  DOCUMENT_TYPES ||--o{ BUS_DOCUMENTS : "defines type"
 
-    STOPPINGS {
-        integer stop_id PK
-        varchar stop_name
-        numeric stop_fee
-    }
+  DRIVERS ||--o{ DRIVERS_PHONE_NUMBER : "has numbers"
 
-    ROUTE_STOP_MAP {
-        integer map_id PK
-        integer route_id FK
-        integer stop_id FK
-    }
+  SPARE_STOCKS ||--o{ SPARE_PURCHASES : "replenishes"
+  SPARE_STOCKS ||--o{ SPARE_ITEMS : "catalogued as"
+  SPARE_STOCKS ||--o{ SPARE_USAGE : "used in"
 
-    BUSES {
-        integer bus_id PK
-        varchar rc_plate_number UNIQUE
-        varchar engine_number UNIQUE
-        integer bus_no UNIQUE
-        integer seating_capacity
-        varchar status
-        date purchase_date
-        timestamp created_at
-        integer route_id FK
-    }
+  SPARE_PURCHASES ||--o{ SPARE_ITEMS : "buys items"
+  SPARE_USAGE ||--o{ SPARE_USAGE_DETAILS : "details items used"
+  SPARE_ITEMS ||--|| SPARE_USAGE_DETAILS : "consumed item"
 
-    BUS_READINGS {
-        integer reading_id PK
-        integer bus_id FK
-        date start_date
-        date end_date
-        integer old_reading
-        integer new_reading
-        integer distance
-        timestamp created_at
-    }
+  BRANCH {
+    int branch_id PK
+    string branch_name UNIQUE
+  }
 
-    DIESEL_LOGS {
-        integer diesel_id PK
-        integer bus_id FK
-        integer reading_id FK
-        integer rate_id FK
-        integer liters
-        date created_at
-        timestamp created_at_ts
-    }
+  BTECH_STUDENTS {
+    int s_id PK
+    string roll_id UNIQUE
+    string s_name
+    int branch_id FK
+    int admission_year
+    int batch_start_year
+    int batch_end_year
+  }
 
-    FUEL_RATES {
-        integer rate_id PK
-        date rate_date UNIQUE
-        numeric fuel_rate
-        timestamp created_at
-    }
+  BTECH_STUDENTS_BUS_FEE_HISTORY {
+    int fee_id PK
+    int s_id FK
+    int semester
+    float amount_paid
+    float concession
+    string payment_mode
+    date payment_date
+    int boarding FK
+  }
 
-    OIL_LOGS {
-        integer log_id PK
-        integer reading_id FK
-        integer bus_id FK
-        integer oil_id FK
-        date log_date
-        numeric quantity
-        numeric amount
-        integer old_reading
-        integer new_reading
-    }
+  MTECH_STUDENTS {
+    int s_id PK
+    string roll_id UNIQUE
+    string s_name
+    int branch_id FK
+    int admission_year
+    int batch_start_year
+    int batch_end_year
+    int boarding FK
+    float concession
+  }
 
-    OIL_STOCKS {
-        integer oil_id PK
-        varchar oil_type
-    }
+  MTECH_STUDENTS_BUS_FEE_HISTORY {
+    int fee_id PK
+    int s_id FK
+    int semester
+    int stop_id FK
+    float amount_paid
+    float concession
+    string payment_mode
+    date payment_date
+  }
 
-    BUS_DOCUMENTS {
-        integer bus_document_id PK
-        integer bus_id FK
-        integer document_type_id FK
-        text file_path
-        date start_date
-        date expiry_date
-        varchar provider
-    }
+  ROUTES {
+    int route_id PK
+    string route_name UNIQUE
+  }
 
-    DOCUMENT_TYPES {
-        integer document_type_id PK
-        varchar document_name UNIQUE
-    }
+  STOPPINGS {
+    int stop_id PK
+    string stop_name
+    float stop_fee
+  }
 
-    DRIVERS {
-        integer driver_id PK
-        varchar name
-        varchar phone
-        varchar license_number UNIQUE
-        varchar status
-        date joining_date
-        text address
-        text photo_url
-        date license_expiry
-        timestamp created_at
-    }
+  ROUTE_STOP_MAP {
+    int map_id PK
+    int route_id FK
+    int stop_id FK
+  }
 
-    DRIVERS_PHONE_NUMBER {
-        integer phone_id PK
-        integer driver_id FK
-        varchar phone_number
-    }
+  BUSES {
+    int bus_id PK
+    string rc_plate_number UNIQUE
+    string engine_number UNIQUE
+    int bus_no UNIQUE
+    int seating_capacity
+    string status
+    date purchase_date
+    timestamp created_at
+    int route_id FK
+  }
 
-    SPARE_STOCKS {
-        integer spare_id PK
-        varchar spare_name
-        integer quantity
-        timestamp created_at
-    }
+  BUS_READINGS {
+    int reading_id PK
+    int bus_id FK
+    date start_date
+    date end_date
+    int old_reading
+    int new_reading
+    int distance
+    timestamp created_at
+  }
 
-    SPARE_PURCHASES {
-        integer purchase_id PK
-        integer spare_id FK
-        date purchase_date
-        numeric quantity
-        numeric amount
-        varchar vendor
-        timestamp created_at
-    }
+  DIESEL_LOGS {
+    int diesel_id PK
+    int bus_id FK
+    int reading_id FK
+    int rate_id FK
+    int liters
+    date created_date
+    timestamp created_at
+  }
 
-    SPARE_ITEMS {
-        integer item_id PK
-        integer spare_id FK
-        integer purchase_id FK
-        varchar product_code UNIQUE
-        varchar status
-        timestamp created_at
-    }
+  FUEL_RATES {
+    int rate_id PK
+    date rate_date UNIQUE
+    float fuel_rate
+    timestamp created_at
+  }
 
-    SPARE_USAGE {
-        integer usage_id PK
-        integer spare_id FK
-        integer bus_id FK
-        integer quantity
-        date usage_date
-        varchar mechanic
-        timestamp created_at
-        integer old_reading
-        integer new_reading
-        numeric spare_cost
-        numeric service_charge
-    }
+  OIL_LOGS {
+    int log_id PK
+    int reading_id FK
+    int bus_id FK
+    int oil_id FK
+    date log_date
+    float quantity
+    float amount
+    int old_reading
+    int new_reading
+  }
 
-    SPARE_USAGE_DETAILS {
-        integer usage_item_id PK
-        integer usage_id FK
-        integer item_id FK
-    }
+  OIL_STOCKS {
+    int oil_id PK
+    string oil_type
+  }
 
-    USERS {
-        integer id PK
-        varchar username UNIQUE
-        varchar password
-        varchar role
-        timestamp created_at
-    }
+  BUS_DOCUMENTS {
+    int bus_document_id PK
+    int bus_id FK
+    int document_type_id FK
+    text file_path
+    date start_date
+    date expiry_date
+    string provider
+  }
+
+  DOCUMENT_TYPES {
+    int document_type_id PK
+    string document_name UNIQUE
+  }
+
+  DRIVERS {
+    int driver_id PK
+    string name
+    string phone
+    string license_number UNIQUE
+    string status
+    date joining_date
+    text address
+    text photo_url
+    date license_expiry
+    timestamp created_at
+  }
+
+  DRIVERS_PHONE_NUMBER {
+    int phone_id PK
+    int driver_id FK
+    string phone_number
+  }
+
+  SPARE_STOCKS {
+    int spare_id PK
+    string spare_name
+    int quantity
+    timestamp created_at
+  }
+
+  SPARE_PURCHASES {
+    int purchase_id PK
+    int spare_id FK
+    date purchase_date
+    float quantity
+    float amount
+    string vendor
+    timestamp created_at
+  }
+
+  SPARE_ITEMS {
+    int item_id PK
+    int spare_id FK
+    int purchase_id FK
+    string product_code UNIQUE
+    string status
+    timestamp created_at
+  }
+
+  SPARE_USAGE {
+    int usage_id PK
+    int spare_id FK
+    int bus_id FK
+    int quantity
+    date usage_date
+    string mechanic
+    timestamp created_at
+    int old_reading
+    int new_reading
+    float spare_cost
+    float service_charge
+  }
+
+  SPARE_USAGE_DETAILS {
+    int usage_item_id PK
+    int usage_id FK
+    int item_id FK
+  }
+
+  USERS {
+    int id PK
+    string username UNIQUE
+    string password
+    string role
+    timestamp created_at
+  }
 ```
 
 ---
@@ -501,3 +501,5 @@ System accounts for admin portals.
 * **item_name**: `varchar(255)` (NOT NULL)
 * **quantity**: `integer` (Default: `0`)
 * **created_at**: `timestamp` (Default: `CURRENT_TIMESTAMP`)
+
+```
