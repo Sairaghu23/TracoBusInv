@@ -28,7 +28,6 @@ export default function BusSpares() {
         mechanic: '',
         spare_cost: '',
         service_charge: '',
-        old_reading: '',
         new_reading: ''
     });
 
@@ -47,7 +46,6 @@ export default function BusSpares() {
                 setSparesHistory(historyRes.data.data);
                 const last = historyRes.data.data[0]?.new_reading || 0;
                 setLastOdometer(last);
-                setUsageForm(prev => ({ ...prev, old_reading: last }));
             }
             if (stocksRes.data?.status) setStocks(stocksRes.data.data);
         } catch (err) {
@@ -69,7 +67,6 @@ export default function BusSpares() {
             mechanic: usageForm.mechanic,
             spare_cost: usageForm.spare_cost,
             service_charge: usageForm.service_charge,
-            old_reading: usageForm.old_reading,
             new_reading: usageForm.new_reading,
         };
         try {
@@ -84,7 +81,6 @@ export default function BusSpares() {
                     mechanic: '',
                     spare_cost: '',
                     service_charge: '',
-                    old_reading: '',
                     new_reading: ''
                 });
                 fetchData();
@@ -337,13 +333,9 @@ export default function BusSpares() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1.5">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Previous Odometer</label>
-                                        <input
-                                            type="number"
-                                            className="w-full h-12 bg-slate-50 border-2 border-slate-100 rounded-xl px-4 font-bold text-slate-600 outline-none focus:border-navy transition-all"
-                                            value={usageForm.old_reading}
-                                            onChange={(e) => setUsageForm({ ...usageForm, old_reading: e.target.value })}
-                                            placeholder="0"
-                                        />
+                                        <div className="w-full h-12 bg-slate-50 border-2 border-slate-100 rounded-xl px-4 flex items-center font-bold text-slate-400 cursor-not-allowed">
+                                            {lastOdometer.toLocaleString()} KM
+                                        </div>
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[9px] font-black text-blue-500 uppercase tracking-widest px-1">Current Odometer *</label>

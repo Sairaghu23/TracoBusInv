@@ -218,8 +218,16 @@ export const getStudentCounts = async () => {
     };
 };
 
-export const getRouteStudentBreakdown = async (routeId) => {
+export const getRouteStudentBreakdown = async (routeId, month, year) => {
     const currentYear = new Date().getFullYear();
+    let filterCondition = "";
+    const values = [currentYear, routeId];
+    
+    if (month && year) {
+        filterCondition = `WHERE EXTRACT(MONTH FROM h.payment_date) = $3 AND EXTRACT(YEAR FROM h.payment_date) = $4`;
+        values.push(month, year);
+    }
+
     const query = `
         SELECT 
             s.stop_id, 
@@ -235,12 +243,12 @@ export const getRouteStudentBreakdown = async (routeId) => {
             SELECT h.*, st.batch_end_year 
             FROM btech_students_bus_fee_history h
             JOIN btech_students st ON h.s_id = st.s_id
-            -- We assume we're looking at current active semester based on breakdown logic
+            ${filterCondition}
         ) st ON rm.map_id = st.boarding
         WHERE rm.route_id = $2
         GROUP BY s.stop_id, s.stop_name
         ORDER BY s.stop_name;
     `;
-    const result = await pool.query(query, [currentYear, routeId]);
+    const result = await pool.query(query, values);
     return result.rows;
 };

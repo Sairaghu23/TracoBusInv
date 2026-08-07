@@ -10,7 +10,10 @@ export const getAllOilTypes = async () => {
 export const getOilLogsByBus = async (rc_plate_number) => {
     const result = await pool.query(`
         SELECT ol.*, os.oil_type,
-               (ol.new_reading - ol.old_reading) as distance
+               (ol.new_reading - COALESCE(
+                   LAG(ol.new_reading) OVER (PARTITION BY ol.bus_id ORDER BY ol.log_date ASC, ol.log_id ASC), 
+                   ol.new_reading
+               )) as distance
         FROM oil_logs ol
         JOIN oil_stocks os ON ol.oil_id = os.oil_id
         JOIN buses b ON ol.bus_id = b.bus_id
@@ -22,7 +25,7 @@ export const getOilLogsByBus = async (rc_plate_number) => {
 
 // Record a new oil log
 export const recordOilLog = async (logData) => {
-    const { rc_plate_number, oil_id, quantity, log_date, amount, old_reading, new_reading } = logData;
+    const { rc_plate_number, oil_id, quantity, log_date, amount, new_reading } = logData;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -37,8 +40,8 @@ export const recordOilLog = async (logData) => {
 
         // Insert oil log
         const result = await client.query(
-            'INSERT INTO oil_logs (bus_id, oil_id, quantity, log_date, amount, old_reading, new_reading) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-            [bus_id, oil_id, quantity, log_date, amount, old_reading, new_reading]
+            'INSERT INTO oil_logs (bus_id, oil_id, quantity, log_date, amount, new_reading) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [bus_id, oil_id, quantity, log_date, amount, new_reading]
         );
 
         await client.query('COMMIT');

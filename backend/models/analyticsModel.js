@@ -2,8 +2,12 @@ import pool from '../config/db.js';
 
 // Fee analytics grouped by batch_end_year (passing year)
 export const getFeeAnalyticsByYear = async (semester) => {
-    // Get current semester if not provided
-    const sem = semester || 1;
+    let semCondition = '';
+    const params = [];
+    if (semester && semester !== 'all') {
+        semCondition = 'AND h.semester = $1';
+        params.push(semester);
+    }
 
     const btechQuery = `
         SELECT 
@@ -15,7 +19,7 @@ export const getFeeAnalyticsByYear = async (semester) => {
             COALESCE(SUM(h.amount_paid), 0) as total_collected
         FROM btech_students s
         LEFT JOIN btech_students_bus_fee_history h 
-            ON s.s_id = h.s_id AND h.semester = $1
+            ON s.s_id = h.s_id ${semCondition}
         WHERE s.batch_end_year >= EXTRACT(YEAR FROM CURRENT_DATE)
         GROUP BY s.batch_end_year
         ORDER BY s.batch_end_year ASC
@@ -31,15 +35,15 @@ export const getFeeAnalyticsByYear = async (semester) => {
             COALESCE(SUM(h.amount_paid), 0) as total_collected
         FROM mtech_students s
         LEFT JOIN mtech_students_bus_fee_history h 
-            ON s.s_id = h.s_id AND h.semester = $1
+            ON s.s_id = h.s_id ${semCondition}
         WHERE s.batch_end_year >= EXTRACT(YEAR FROM CURRENT_DATE)
         GROUP BY s.batch_end_year
         ORDER BY s.batch_end_year ASC
     `;
 
     const [btech, mtech] = await Promise.all([
-        pool.query(btechQuery, [sem]),
-        pool.query(mtechQuery, [sem])
+        pool.query(btechQuery, params),
+        pool.query(mtechQuery, params)
     ]);
 
     return [...btech.rows, ...mtech.rows];

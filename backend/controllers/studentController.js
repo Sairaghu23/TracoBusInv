@@ -102,8 +102,11 @@ export const getBranchesController = async (req, res) => {
 
 export const getRouteStudentBreakdownController = async (req, res) => {
     const { id } = req.params;
+    const { month, year } = req.query;
     try {
-        const breakdown = await studentModel.getRouteStudentBreakdown(parseInt(id));
+        const m = month ? parseInt(month) : null;
+        const y = year ? parseInt(year) : null;
+        const breakdown = await studentModel.getRouteStudentBreakdown(parseInt(id), m, y);
         res.status(200).json({ status: true, data: breakdown });
     } catch (err) {
         console.error("Error fetching route student breakdown:", err.message);

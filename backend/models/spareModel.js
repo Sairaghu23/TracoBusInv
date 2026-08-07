@@ -67,7 +67,10 @@ export const recordPurchase = async (purchaseData) => {
 export const getUsageByBus = async (rc_plate_number) => {
     const result = await pool.query(`
         SELECT u.*, s.spare_name,
-               (u.new_reading - u.old_reading) as distance,
+               (u.new_reading - COALESCE(
+                   LAG(u.new_reading) OVER (PARTITION BY u.bus_id ORDER BY u.usage_date ASC, u.usage_id ASC),
+                   u.new_reading
+               )) as distance,
                string_agg(i.product_code, ', ') as product_codes,
                (u.spare_cost + u.service_charge) as total_amount
         FROM spare_usage u
@@ -83,7 +86,7 @@ export const getUsageByBus = async (rc_plate_number) => {
 };
 
 export const recordUsage = async (usageData) => {
-    const { rc_plate_number, spare_id, item_ids, usage_date, mechanic, service_charge, spare_cost, quantity, old_reading, new_reading } = usageData;
+    const { rc_plate_number, spare_id, item_ids, usage_date, mechanic, service_charge, spare_cost, quantity, new_reading } = usageData;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -95,7 +98,7 @@ export const recordUsage = async (usageData) => {
 
         // 1. Record the usage
         const usageResult = await client.query(
-            'INSERT INTO spare_usage (bus_id, spare_id, usage_date, mechanic, quantity, service_charge, spare_cost, old_reading, new_reading) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+            'INSERT INTO spare_usage (bus_id, spare_id, usage_date, mechanic, quantity, service_charge, spare_cost, new_reading) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
             [
                 parseInt(active_bus), 
                 parseInt(spare_id), 
@@ -104,7 +107,6 @@ export const recordUsage = async (usageData) => {
                 parseInt(quantity), 
                 parseFloat(service_charge || 0), 
                 parseFloat(spare_cost || 0), 
-                parseInt(old_reading), 
                 parseInt(new_reading)
             ]
         );

@@ -69,6 +69,15 @@ const runMigrations = async () => {
             }
         });
 
+        // 5. Drop old_reading from oil_logs and spare_usage
+        await pool.query(`
+            ALTER TABLE oil_logs DROP COLUMN IF EXISTS old_reading;
+        `).catch(err => console.log("oil_logs drop old_reading error:", err.message));
+
+        await pool.query(`
+            ALTER TABLE spare_usage DROP COLUMN IF EXISTS old_reading;
+        `).catch(err => console.log("spare_usage drop old_reading error:", err.message));
+
         console.log("Database self-healing migrations finished.");
     } catch (err) {
         console.error("Database self-healing migrations failed:", err.message);

@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Plus, X, Check, Route as RouteIcon, Pencil, Trash2, Users, BarChart3, GraduationCap, ChevronLeft } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import api from '../../utils/api';
+
+const MONTHS = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+];
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 6 }, (_, i) => currentYear - i);
 
 export default function Routes() {
     // State for live data
@@ -43,6 +51,8 @@ export default function Routes() {
     const [breakdownData, setBreakdownData] = useState([]);
     const [breakdownLoading, setBreakdownLoading] = useState(false);
     const [currentView, setCurrentView] = useState('list'); // 'list' | 'breakdown'
+    const [breakdownMonth, setBreakdownMonth] = useState(new Date().getMonth() + 1);
+    const [breakdownYear, setBreakdownYear] = useState(currentYear);
 
     // Handlers
     const handleAddRoute = async (e) => {
@@ -108,12 +118,13 @@ export default function Routes() {
         } catch (err) { console.error('Error updating route:', err); }
     };
 
-    const fetchBreakdown = async (route) => {
-        setBreakdownRoute(route);
+    const fetchBreakdown = async (route, month = breakdownMonth, year = breakdownYear) => {
+        if (route) setBreakdownRoute(route);
         setCurrentView('breakdown');
         setBreakdownLoading(true);
         try {
-            const result = await api.get(`/api/routes/${route.route_id}/student-breakdown`);
+            const currentRouteId = route ? route.route_id : breakdownRoute?.route_id;
+            const result = await api.get(`/api/routes/${currentRouteId}/student-breakdown?month=${month}&year=${year}`);
             if (result.data?.status) {
                 setBreakdownData(result.data.data);
             }
@@ -123,6 +134,12 @@ export default function Routes() {
             setBreakdownLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (currentView === 'breakdown' && breakdownRoute) {
+            fetchBreakdown(null, breakdownMonth, breakdownYear);
+        }
+    }, [breakdownMonth, breakdownYear]);
 
     const handleBackToList = () => {
         setCurrentView('list');
@@ -220,7 +237,15 @@ export default function Routes() {
                             <p className="text-slate-500 font-medium mt-1 uppercase tracking-widest text-xs">Year-wise Student Distribution per Stop</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
+                        <div className="flex items-center gap-3">
+                            <select className="form-input py-2 text-sm font-bold text-navy bg-slate-50 border-slate-100 rounded-xl w-36" value={breakdownMonth} onChange={e => setBreakdownMonth(e.target.value)}>
+                                {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                            </select>
+                            <select className="form-input py-2 text-sm font-bold text-navy bg-slate-50 border-slate-100 rounded-xl w-24" value={breakdownYear} onChange={e => setBreakdownYear(e.target.value)}>
+                                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                        </div>
                         <div className="px-6 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Total Fleet Presence</span>
                             <span className="text-xl font-black text-navy italic">{breakdownData.reduce((acc, d) => acc + parseInt(d.total || 0), 0)} Students</span>
@@ -398,52 +423,84 @@ export default function Routes() {
                                     <p className="text-slate-400 text-sm mt-2">Associate students with stops to populate this registry.</p>
                                 </div>
                             ) : (
-                                    <div className="table-container rounded-3xl border border-slate-100 overflow-hidden shadow-sm bg-white">
-                                        <table className="admin-table w-full border-collapse">
-                                            <thead>
-                                                <tr className="bg-slate-50/80 backdrop-blur-sm border-b border-slate-100">
-                                                    <th className="py-4 pl-8 text-left uppercase tracking-[0.2em] text-[9px] font-black text-slate-500 border-r border-slate-100">Transit Station</th>
-                                                    <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-slate-400 w-20">1st Yr</th>
-                                                    <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-slate-400 w-20">2nd Yr</th>
-                                                    <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-slate-400 w-20">3rd Yr</th>
-                                                    <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-slate-400 w-20">4th Yr</th>
-                                                    <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-navy bg-orange-50/50 pr-8 w-24 border-l border-slate-100">Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {breakdownData.map((data, idx) => (
-                                                    <tr key={data.stop_id} className="hover:bg-slate-50 transition-all duration-300 group">
-                                                        <td className="py-4 pl-8 border-r border-slate-100">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-navy font-black text-[10px] shadow-sm group-hover:rotate-6 transition-transform">
-                                                                    {idx + 1}
+                                    <div className="space-y-6">
+                                        <div className="table-container rounded-3xl border border-slate-100 overflow-hidden shadow-sm bg-white">
+                                            <table className="admin-table w-full border-collapse">
+                                                <thead>
+                                                    <tr className="bg-slate-50/80 backdrop-blur-sm border-b border-slate-100">
+                                                        <th className="py-4 pl-8 text-left uppercase tracking-[0.2em] text-[9px] font-black text-slate-500 border-r border-slate-100">Transit Station</th>
+                                                        <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-slate-400 w-20">1st Yr</th>
+                                                        <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-slate-400 w-20">2nd Yr</th>
+                                                        <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-slate-400 w-20">3rd Yr</th>
+                                                        <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-slate-400 w-20">4th Yr</th>
+                                                        <th className="py-4 text-center uppercase tracking-[0.2em] text-[9px] font-black text-navy bg-orange-50/50 pr-8 w-24 border-l border-slate-100">Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {breakdownData.map((data, idx) => (
+                                                        <tr key={data.stop_id} className="hover:bg-slate-50 transition-all duration-300 group">
+                                                            <td className="py-4 pl-8 border-r border-slate-100">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-navy font-black text-[10px] shadow-sm group-hover:rotate-6 transition-transform">
+                                                                        {idx + 1}
+                                                                    </div>
+                                                                    <span className="font-black text-navy text-sm">{data.stop_name}</span>
                                                                 </div>
-                                                                <span className="font-black text-navy text-sm">{data.stop_name}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4 text-center font-bold text-slate-600 font-mono text-sm w-20">{data.year1 || 0}</td>
-                                                        <td className="py-4 text-center font-bold text-slate-600 font-mono text-sm w-20">{data.year2 || 0}</td>
-                                                        <td className="py-4 text-center font-bold text-slate-600 font-mono text-sm w-20">{data.year3 || 0}</td>
-                                                        <td className="py-4 text-center font-bold text-slate-600 font-mono text-sm w-20">{data.year4 || 0}</td>
-                                                        <td className="py-4 text-center font-black text-orange-600 bg-orange-50/20 pr-8 italic text-lg w-24 border-l border-slate-100">
-                                                            {data.total || 0}
+                                                            </td>
+                                                            <td className="py-4 text-center font-bold text-slate-600 font-mono text-sm w-20">{data.year1 || 0}</td>
+                                                            <td className="py-4 text-center font-bold text-slate-600 font-mono text-sm w-20">{data.year2 || 0}</td>
+                                                            <td className="py-4 text-center font-bold text-slate-600 font-mono text-sm w-20">{data.year3 || 0}</td>
+                                                            <td className="py-4 text-center font-bold text-slate-600 font-mono text-sm w-20">{data.year4 || 0}</td>
+                                                            <td className="py-4 text-center font-black text-orange-600 bg-orange-50/20 pr-8 italic text-lg w-24 border-l border-slate-100">
+                                                                {data.total || 0}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                                <tfoot className="bg-navy text-white text-xs">
+                                                    <tr className="border-t border-navy-light/10">
+                                                        <td className="py-6 pl-8 font-black uppercase tracking-[0.2em] text-[9px] italic border-r border-white/5">Aggregate Metrics</td>
+                                                        <td className="py-6 text-center font-black font-mono w-20 bg-white/5">{breakdownData.reduce((acc, d) => acc + parseInt(d.year1 || 0), 0)}</td>
+                                                        <td className="py-6 text-center font-black font-mono w-20 bg-white/5">{breakdownData.reduce((acc, d) => acc + parseInt(d.year2 || 0), 0)}</td>
+                                                        <td className="py-6 text-center font-black font-mono w-20 bg-white/5">{breakdownData.reduce((acc, d) => acc + parseInt(d.year3 || 0), 0)}</td>
+                                                        <td className="py-6 text-center font-black font-mono w-20 bg-white/5">{breakdownData.reduce((acc, d) => acc + parseInt(d.year4 || 0), 0)}</td>
+                                                        <td className="py-6 text-center font-black text-white pr-8 text-xl italic tracking-tighter w-24 bg-orange-600 shadow-inner">
+                                                            {breakdownData.reduce((acc, d) => acc + parseInt(d.total || 0), 0)}
                                                         </td>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                            <tfoot className="bg-navy text-white text-xs">
-                                                <tr className="border-t border-navy-light/10">
-                                                    <td className="py-6 pl-8 font-black uppercase tracking-[0.2em] text-[9px] italic border-r border-white/5">Aggregate Metrics</td>
-                                                    <td className="py-6 text-center font-black font-mono w-20 bg-white/5">{breakdownData.reduce((acc, d) => acc + parseInt(d.year1 || 0), 0)}</td>
-                                                    <td className="py-6 text-center font-black font-mono w-20 bg-white/5">{breakdownData.reduce((acc, d) => acc + parseInt(d.year2 || 0), 0)}</td>
-                                                    <td className="py-6 text-center font-black font-mono w-20 bg-white/5">{breakdownData.reduce((acc, d) => acc + parseInt(d.year3 || 0), 0)}</td>
-                                                    <td className="py-6 text-center font-black font-mono w-20 bg-white/5">{breakdownData.reduce((acc, d) => acc + parseInt(d.year4 || 0), 0)}</td>
-                                                    <td className="py-6 text-center font-black text-white pr-8 text-xl italic tracking-tighter w-24 bg-orange-600 shadow-inner">
-                                                        {breakdownData.reduce((acc, d) => acc + parseInt(d.total || 0), 0)}
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+
+                                        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
+                                            <h3 className="text-lg font-black text-navy italic mb-6">Students per Stop (Total)</h3>
+                                            <div className="h-72 w-full">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <BarChart data={breakdownData} margin={{ top: 10, right: 10, left: -20, bottom: 40 }}>
+                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                        <XAxis 
+                                                            dataKey="stop_name" 
+                                                            axisLine={false} 
+                                                            tickLine={false} 
+                                                            tick={{ fontSize: 10, fill: '#64748b', fontWeight: 700 }}
+                                                            angle={-45}
+                                                            textAnchor="end"
+                                                        />
+                                                        <YAxis 
+                                                            axisLine={false} 
+                                                            tickLine={false} 
+                                                            tick={{ fontSize: 10, fill: '#64748b', fontWeight: 700 }}
+                                                        />
+                                                        <Tooltip 
+                                                            cursor={{ fill: '#f8fafc' }}
+                                                            contentStyle={{ borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                            labelStyle={{ fontWeight: 900, color: '#0f172a', marginBottom: '4px' }}
+                                                        />
+                                                        <Bar dataKey="total" fill="#f97316" radius={[4, 4, 0, 0]} />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
                                     </div>
                             )}
                         </div>

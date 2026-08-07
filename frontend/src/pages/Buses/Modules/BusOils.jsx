@@ -23,7 +23,6 @@ export default function BusOils() {
         log_date: new Date().toISOString().split('T')[0],
         quantity: '',
         amount: '',
-        old_reading: '',
         new_reading: ''
     });
     const [lastOdometer, setLastOdometer] = useState(0);
@@ -58,11 +57,10 @@ export default function BusOils() {
             if (busRes.data?.status) setBus(busRes.data.data);
             if (logsRes.data?.status) {
                 setOilLogs(logsRes.data.data);
-                // Pre-fill old_reading from last recorded new_reading
+                // Set last odometer
                 if (logsRes.data.data.length > 0) {
                     const last = logsRes.data.data[0].new_reading || 0;
                     setLastOdometer(last);
-                    setLogData(prev => ({ ...prev, old_reading: last }));
                 }
             }
             if (typesRes.data?.status) setOilTypes(typesRes.data.data);
@@ -196,7 +194,7 @@ export default function BusOils() {
                                     {record.new_reading ? record.new_reading.toLocaleString() : 0}
                                 </td>
                                 <td className="py-4 font-black text-emerald-600 text-xs">
-                                    {(record.new_reading && record.old_reading) ? (record.new_reading - record.old_reading).toLocaleString() + ' km' : 0}
+                                    {record.distance ? record.distance.toLocaleString() + ' km' : 0}
                                 </td>
                                 <td className="py-4">
                                     <span className="font-bold text-blue-700 uppercase text-[10px] tracking-wide px-2 py-1 bg-blue-50 rounded">
@@ -253,34 +251,23 @@ export default function BusOils() {
                                     <AlertCircle size={16} /> {error}
                                 </div>
                             )}
-                            {/* Odometer Readings Grid */}
-
-                            {/* Odometer Readings Grid */}
-                            <div className="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Previous ODO</label>
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            className="form-input bg-white font-bold text-navy border-slate-200"
-                                            value={logData.old_reading}
-                                            onChange={(e) => setLogData({ ...logData, old_reading: e.target.value })}
-                                        />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase">KM</span>
+                            {/* Odometer Readings */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 mb-1 block">Previous Reading</label>
+                                    <div className="w-full form-input bg-slate-50 text-slate-400 font-bold border-slate-200 cursor-not-allowed">
+                                        {lastOdometer.toLocaleString()} KM
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">Current ODO</label>
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            className="form-input bg-white font-bold text-navy border-blue-200 focus:border-blue-500"
-                                            placeholder="Enter reading"
-                                            value={logData.new_reading}
-                                            onChange={(e) => setLogData({ ...logData, new_reading: e.target.value })}
-                                        />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-blue-300 uppercase">KM</span>
-                                    </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-700 mb-1 block">Current Reading (KM)</label>
+                                    <input
+                                        type="number"
+                                        className="w-full form-input"
+                                        placeholder="e.g. 45200"
+                                        value={logData.new_reading}
+                                        onChange={e => setLogData({ ...logData, new_reading: e.target.value })}
+                                    />
                                 </div>
                             </div>
 

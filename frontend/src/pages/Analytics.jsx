@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Fuel, Droplet, Settings, BarChart3, IndianRupee, ChevronLeft, Users, CheckCircle2, XCircle, GraduationCap, Bus } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import api from '../utils/api';
 
 const MONTHS = [
@@ -8,7 +9,7 @@ const MONTHS = [
 ];
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 6 }, (_, i) => currentYear - i);
-const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
+const SEMESTERS = [1, 2];
 
 const SECTIONS = [
     { key: 'diesel',  label: 'Diesel & Fuel',           icon: Fuel,          color: 'orange',  unit: 'L',     qtyLabel: 'Fuel Used' },
@@ -32,6 +33,12 @@ export default function Analytics() {
     const [loading, setLoading] = useState(false);
     const [activeView, setActiveView] = useState('overview'); // 'overview' | 'diesel' | 'oils' | 'spares' | 'fees'
 
+    // New Filter States
+    const [feeAcademicYear, setFeeAcademicYear] = useState(`${currentYear}-${currentYear + 1}`);
+    const [feeYearOfStudy, setFeeYearOfStudy] = useState('all'); // 'all', '1', '2', '3', '4'
+    const [feeSemester, setFeeSemester] = useState('all'); // 'all', 1, 2, ...
+    const [fleetBusFilter, setFleetBusFilter] = useState('all'); // 'all' or bus_no
+
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
@@ -39,7 +46,7 @@ export default function Analytics() {
                 api.get(`/api/analytics/diesel?month=${month}&year=${year}`),
                 api.get(`/api/analytics/oils?month=${month}&year=${year}`),
                 api.get(`/api/analytics/spares?month=${month}&year=${year}`),
-                api.get(`/api/analytics/fees?semester=${semester}`),
+                api.get(`/api/analytics/fees?semester=${feeSemester}`), // use feeSemester instead of semester
             ]);
             setSectionData({
                 diesel: dieselRes.data?.status ? dieselRes.data.data : [],
@@ -52,13 +59,24 @@ export default function Analytics() {
         } finally {
             setLoading(false);
         }
-    }, [month, year, semester]);
+    }, [month, year, feeSemester]);
 
     useEffect(() => { fetchAll(); }, [fetchAll]);
 
     const totalOf = (key) => sectionData[key].reduce((s, r) => s + (parseFloat(r.amount || r.total_collected) || 0), 0);
     const totalStudents = sectionData.fees.reduce((s, r) => s + parseInt(r.total_students || 0), 0);
     const totalPaid = sectionData.fees.reduce((s, r) => s + parseInt(r.paid_students || 0), 0);
+
+    // Get unique buses from diesel/oils/spares for fleet filtering
+    const uniqueBuses = useMemo(() => {
+        const buses = new Set();
+        ['diesel', 'oils', 'spares'].forEach(key => {
+            sectionData[key].forEach(item => {
+                if (item.bus_no) buses.add(item.bus_no);
+            });
+        });
+        return Array.from(buses).sort();
+    }, [sectionData]);
 
     // ── DETAIL VIEW: Diesel / Oils / Spares ─────────────────────────────────
     if (activeView !== 'overview' && activeView !== 'fees') {
@@ -165,12 +183,13 @@ export default function Analytics() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-black text-navy italic">Bus Fee Collection</h1>
-                            <p className="text-slate-500 text-sm">Year-wise breakdown by Passing Year · Semester {semester}</p>
+                            <p className="text-slate-500 text-sm">Year-wise breakdown by Passing Year</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Semester</label>
-                        <select className="form-input py-2 text-sm font-bold text-navy bg-slate-50 border-slate-100 rounded-xl w-36" value={semester} onChange={e => setSemester(e.target.value)}>
+                        <select className="form-input py-2 text-sm font-bold text-navy bg-slate-50 border-slate-100 rounded-xl w-36" value={feeSemester} onChange={e => setFeeSemester(e.target.value)}>
+                            <option value="all">All Semesters</option>
                             {SEMESTERS.map(s => <option key={s} value={s}>Semester {s}</option>)}
                         </select>
                     </div>
@@ -182,7 +201,7 @@ export default function Analytics() {
                         <IndianRupee size={32} />
                     </div>
                     <div className="flex-1">
-                        <p className="text-white/70 text-xs font-black uppercase tracking-widest">Total Revenue · Semester {semester}</p>
+                        <p className="text-white/70 text-xs font-black uppercase tracking-widest">Total Revenue</p>
                         <p className="text-4xl font-black">₹{totalOf('fees').toLocaleString()}</p>
                     </div>
                     <div className="flex gap-8 text-center">
@@ -279,11 +298,45 @@ export default function Analytics() {
         );
     }
 
-    // ── OVERVIEW: 4 Summary Cards ────────────────────────────────────────────
-    const grandTotal = ['diesel','oils','spares'].reduce((s, k) => s + totalOf(k), 0);
+    // Filter fees based on Year of Study relative to current feeAcademicYear
+    const filteredFees = useMemo(() => {
+        let filtered = sectionData.fees;
+        if (feeYearOfStudy !== 'all') {
+            const startYear = parseInt(feeAcademicYear.split('-')[0]); // e.g. 2026
+            const expectedBatchEndYear = startYear + 4 - parseInt(feeYearOfStudy); // 1st year = 2026 + 4 - 1 = 2029
+            filtered = filtered.filter(f => parseInt(f.batch_end_year) === expectedBatchEndYear);
+        }
+        return filtered;
+    }, [sectionData.fees, feeAcademicYear, feeYearOfStudy]);
+
+    const feeTotalStudents = filteredFees.reduce((s, r) => s + parseInt(r.total_students || 0), 0);
+    const feePaidStudents = filteredFees.reduce((s, r) => s + parseInt(r.paid_students || 0), 0);
+    const feeUnpaidStudents = feeTotalStudents - feePaidStudents;
+    
+    const feePieData = [
+        { name: 'Paid', value: feePaidStudents, color: '#10b981' }, // emerald-500
+        { name: 'Unpaid', value: feeUnpaidStudents, color: '#f43f5e' } // rose-500
+    ];
+
+    // Compute fleet operation data for Pie Chart based on fleetBusFilter
+    const getFilteredTotal = (key) => {
+        if (fleetBusFilter === 'all') return totalOf(key);
+        return sectionData[key].reduce((sum, item) => {
+            if (item.bus_no === fleetBusFilter) return sum + (parseFloat(item.amount) || 0);
+            return sum;
+        }, 0);
+    };
+
+    const fleetPieData = [
+        { name: 'Diesel & Fuel', value: getFilteredTotal('diesel'), color: '#f97316' }, // orange-500
+        { name: 'Oil Maintenance', value: getFilteredTotal('oils'), color: '#3b82f6' }, // blue-500
+        { name: 'Spare Parts', value: getFilteredTotal('spares'), color: '#10b981' }, // emerald-500
+    ].filter(d => d.value > 0);
+
+    const filteredFleetTotal = fleetPieData.reduce((acc, curr) => acc + curr.value, 0);
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -291,78 +344,198 @@ export default function Analytics() {
                         <BarChart3 size={30} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-black text-navy">Fleet Operations Analytics</h1>
-                        <p className="text-slate-500 text-sm italic mt-0.5">Click any card to view the detailed breakdown</p>
+                        <h1 className="text-2xl font-black text-navy">Overall Analytics</h1>
+                        <p className="text-slate-500 text-sm italic mt-0.5">Comprehensive overview of Fleet and Fees</p>
                     </div>
                 </div>
-                {/* Shared Month / Year filter */}
-                <div className="flex items-center gap-3">
-                    <select className="form-input py-2 text-sm font-bold text-navy bg-slate-50 border-slate-100 rounded-xl w-36" value={month} onChange={e => setMonth(e.target.value)}>
-                        {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-                    </select>
-                    <select className="form-input py-2 text-sm font-bold text-navy bg-slate-50 border-slate-100 rounded-xl w-24" value={year} onChange={e => setYear(e.target.value)}>
-                        {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                </div>
             </div>
 
-            {/* 4 Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {SECTIONS.map(({ key, label, icon: Icon, color, unit }) => {
-                    const c = COLOR[color];
-                    const total = totalOf(key);
-                    const qty = sectionData[key].reduce((s, r) => s + (parseFloat(r.quantity) || 0), 0);
-                    const count = sectionData[key].length;
-                    return (
-                        <button
-                            key={key}
-                            onClick={() => setActiveView(key)}
-                            className={`w-full text-left bg-white rounded-3xl border-2 border-slate-100 hover:border-slate-200 transition-all duration-200 shadow-sm hover:shadow-lg p-7 group active:scale-[0.98]`}
-                        >
-                            <div className="flex items-start justify-between mb-6">
-                                <div className={`w-14 h-14 ${c.iconBg} rounded-2xl flex items-center justify-center ${c.iconText} group-hover:scale-105 transition-transform`}>
-                                    <Icon size={28} />
-                                </div>
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${c.badge}`}>
-                                    {key === 'fees' ? `${count} groups` : `${count} buses`}
-                                </span>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {/* 1. Fleet Operations Analytics Card */}
+                <div className="bg-white border-2 border-slate-100 rounded-[2rem] overflow-hidden shadow-xl flex flex-col h-full">
+                    {/* Card Header */}
+                    <div className="bg-slate-50 p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-navy text-white rounded-xl flex items-center justify-center shadow-sm">
+                                <Bus size={20} />
                             </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</p>
-                            <p className={`text-4xl font-black ${c.accent}`}>₹{total.toLocaleString()}</p>
-                            {key !== 'fees' && (
-                                <p className="text-xs text-slate-400 font-medium mt-2">
-                                    {qty.toFixed(unit === 'L' ? 1 : 0)} {unit} consumed this period
-                                </p>
-                            )}
-                            {key === 'fees' && (
-                                <p className="text-xs text-slate-400 font-medium mt-2">
-                                    {totalStudents} students · {totalPaid} paid · {totalStudents - totalPaid} unpaid
-                                </p>
-                            )}
-                            {loading && <div className="mt-3 h-1 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full ${c.iconBg} animate-pulse w-1/2`} /></div>}
-                        </button>
-                    );
-                })}
-            </div>
-
-            {/* Grand Total */}
-            <div className="bg-navy rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-2xl shadow-slate-200 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 pointer-events-none" />
-                <div className="p-4 bg-white/10 rounded-2xl">
-                    <IndianRupee size={36} className="text-orange-400" />
-                </div>
-                <div className="flex-1 text-center md:text-left">
-                    <p className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-1">Operational Total — {MONTHS[month - 1]} {year}</p>
-                    <p className="text-4xl font-black text-white italic">₹{grandTotal.toLocaleString()}</p>
-                    <p className="text-blue-200 text-xs mt-1 opacity-60">Diesel + Oils + Spare Parts</p>
-                </div>
-                <div className="flex gap-8 text-center">
-                    {SECTIONS.filter(s => s.key !== 'fees').map(({ key, label, icon: Icon }) => (
-                        <div key={key}>
-                            <p className="text-[9px] font-black text-blue-300 uppercase tracking-widest mb-1">{label.split(' ')[0]}</p>
-                            <p className="text-lg font-black text-white">₹{totalOf(key).toLocaleString()}</p>
+                            <h2 className="text-xl font-black text-navy italic tracking-tight">Fleet Operations</h2>
                         </div>
-                    ))}
+                        <div className="flex items-center gap-2">
+                            <select className="form-input py-2 px-3 text-xs font-bold text-navy bg-white border-slate-200 rounded-xl" value={month} onChange={e => setMonth(e.target.value)}>
+                                {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                            </select>
+                            <select className="form-input py-2 px-3 text-xs font-bold text-navy bg-white border-slate-200 rounded-xl w-24" value={year} onChange={e => setYear(e.target.value)}>
+                                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div className="p-6 flex-1 flex flex-col gap-6">
+                        {/* Summary Metrics (Clickable) */}
+                        <div className="grid grid-cols-3 gap-3">
+                            {SECTIONS.filter(s => s.key !== 'fees').map(({ key, label, icon: Icon, color }) => {
+                                const c = COLOR[color];
+                                const total = totalOf(key);
+                                return (
+                                    <button 
+                                        key={key} 
+                                        onClick={() => setActiveView(key)}
+                                        className={`bg-white border border-slate-100 hover:${c.activeBorder} p-3 rounded-2xl text-left shadow-sm hover:shadow-md transition-all group`}
+                                    >
+                                        <div className={`w-8 h-8 ${c.iconBg} ${c.iconText} rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
+                                            <Icon size={16} />
+                                        </div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-tight h-6">{label}</p>
+                                        <p className={`text-sm sm:text-base font-black ${c.accent} mt-1`}>₹{total.toLocaleString()}</p>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        
+                        {/* Pie Chart Section */}
+                        <div className="flex-1 bg-slate-50 border border-slate-100 rounded-3xl p-6 flex flex-col">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="text-sm font-black text-navy uppercase tracking-widest">Expenditure Breakdown</h3>
+                                    <p className="text-xl font-black text-navy italic mt-1">₹{filteredFleetTotal.toLocaleString()}</p>
+                                </div>
+                                <select 
+                                    className="form-input py-2 px-3 text-xs font-bold text-navy bg-white border-slate-200 rounded-xl shadow-sm"
+                                    value={fleetBusFilter}
+                                    onChange={e => setFleetBusFilter(e.target.value)}
+                                >
+                                    <option value="all">Overall Bus</option>
+                                    {uniqueBuses.map(b => <option key={b} value={b}>Bus {b}</option>)}
+                                </select>
+                            </div>
+                            
+                            <div className="flex-1 min-h-[250px] relative">
+                                {fleetPieData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={fleetPieData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={90}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {fleetPieData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <RechartsTooltip 
+                                                formatter={(value) => `₹${value.toLocaleString()}`}
+                                                contentStyle={{ borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            />
+                                            <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center text-slate-400 font-black text-sm uppercase tracking-widest">
+                                        No Data Available
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Student Fee Payment Analytics Card */}
+                <div className="bg-white border-2 border-slate-100 rounded-[2rem] overflow-hidden shadow-xl flex flex-col h-full">
+                    {/* Card Header */}
+                    <div className="bg-slate-50 p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-violet-600 text-white rounded-xl flex items-center justify-center shadow-sm">
+                                <IndianRupee size={20} />
+                            </div>
+                            <h2 className="text-xl font-black text-navy italic tracking-tight">Student Fees</h2>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <select className="form-input py-2 px-3 text-xs font-bold text-navy bg-white border-slate-200 rounded-xl" value={feeAcademicYear} onChange={e => setFeeAcademicYear(e.target.value)}>
+                                <option value={`${currentYear-1}-${currentYear}`}>{currentYear-1}-{currentYear}</option>
+                                <option value={`${currentYear}-${currentYear+1}`}>{currentYear}-{currentYear+1}</option>
+                                <option value={`${currentYear+1}-${currentYear+2}`}>{currentYear+1}-{currentYear+2}</option>
+                            </select>
+                            <select className="form-input py-2 px-3 text-xs font-bold text-navy bg-white border-slate-200 rounded-xl" value={feeSemester} onChange={e => setFeeSemester(e.target.value)}>
+                                <option value="all">All Semesters</option>
+                                {SEMESTERS.map(s => <option key={s} value={s}>Sem {s}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="p-6 flex-1 flex flex-col gap-6">
+                        {/* Summary Metrics */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100 shadow-sm">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total</p>
+                                <p className="text-xl font-black text-navy">{feeTotalStudents}</p>
+                            </div>
+                            <div className="bg-emerald-50 rounded-2xl p-4 text-center border border-emerald-100 shadow-sm">
+                                <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Paid</p>
+                                <p className="text-xl font-black text-emerald-700">{feePaidStudents}</p>
+                            </div>
+                            <div className="bg-rose-50 rounded-2xl p-4 text-center border border-rose-100 shadow-sm">
+                                <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-1">Unpaid</p>
+                                <p className="text-xl font-black text-rose-600">{feeUnpaidStudents}</p>
+                            </div>
+                        </div>
+
+                        {/* Pie Chart Section */}
+                        <div className="flex-1 bg-slate-50 border border-slate-100 rounded-3xl p-6 flex flex-col">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="text-sm font-black text-navy uppercase tracking-widest">Payment Distribution</h3>
+                                    <p className="text-xl font-black text-navy italic mt-1">₹{filteredFees.reduce((s, r) => s + (parseFloat(r.total_collected) || 0), 0).toLocaleString()} Collected</p>
+                                </div>
+                                <select 
+                                    className="form-input py-2 px-3 text-xs font-bold text-navy bg-white border-slate-200 rounded-xl shadow-sm"
+                                    value={feeYearOfStudy}
+                                    onChange={e => setFeeYearOfStudy(e.target.value)}
+                                >
+                                    <option value="all">All Years</option>
+                                    <option value="1">1st Year Students</option>
+                                    <option value="2">2nd Year Students</option>
+                                    <option value="3">3rd Year Students</option>
+                                    <option value="4">4th Year Students</option>
+                                </select>
+                            </div>
+                            
+                            <div className="flex-1 min-h-[250px] relative">
+                                {feeTotalStudents > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={feePieData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={90}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {feePieData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <RechartsTooltip 
+                                                formatter={(value) => `${value} Students`}
+                                                contentStyle={{ borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            />
+                                            <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center text-slate-400 font-black text-sm uppercase tracking-widest">
+                                        No Data Available
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
