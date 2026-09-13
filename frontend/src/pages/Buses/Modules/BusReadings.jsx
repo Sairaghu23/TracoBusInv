@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, Gauge, Calendar, Navigation } from 'lucide-react';
+import { ChevronLeft, Plus, Gauge, Calendar, Navigation, Trash2, X } from 'lucide-react';
 import api from '../../../utils/api';
 
 export default function BusReadings() {
@@ -93,6 +93,38 @@ export default function BusReadings() {
         }
     };
 
+    const handleDeleteReading = async (reading_id) => {
+        if (!window.confirm("Are you sure you want to delete this trip reading? If any diesel or oil logs are linked to this reading, they will also be removed.")) {
+            return;
+        }
+        try {
+            const res = await api.delete(`/api/readings/${reading_id}`);
+            if (res.data?.status) {
+                alert("Odometer reading deleted successfully!");
+                // Refresh data
+                const readingsRes = await api.get(`/api/buses/${rc_plate_number}/readings`);
+                if (readingsRes.data?.status) setReadings(readingsRes.data.data);
+
+                // Refresh latest
+                const latestRes = await api.get(`/api/buses/${rc_plate_number}/readings/latest`);
+                if (latestRes.data?.status && latestRes.data.data) {
+                    setNewReadingData(prev => ({ 
+                        ...prev, 
+                        old_reading: latestRes.data.data.new_reading,
+                        trip_start_date: latestRes.data.data.end_date || prev.trip_start_date
+                    }));
+                } else {
+                    setNewReadingData(prev => ({ ...prev, old_reading: 0 }));
+                }
+            } else {
+                alert(res.data?.message || "Failed to delete reading");
+            }
+        } catch (err) {
+            console.error("Error deleting reading:", err);
+            alert(err.response?.data?.message || "Failed to delete reading.");
+        }
+    };
+
     const totalDistanceRecorded = readings.reduce((sum, record) => sum + (record.new_reading - record.old_reading), 0);
 
     if (loading) return (
@@ -152,7 +184,8 @@ export default function BusReadings() {
                             <th>Start Odometer</th>
                             <th>End Odometer</th>
                             <th>Net Distance</th>
-                            <th className="text-right">Logged At</th>
+                            <th>Logged At</th>
+                            <th className="text-right pr-6">Action</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -175,19 +208,28 @@ export default function BusReadings() {
                                             {distance.toLocaleString()} km
                                         </span>
                                     </td>
-                                    <td className="text-right">
+                                    <td>
                                         <span className="text-xs text-slate-400 font-mono">
                                             {record.created_at
                                                 ? new Date(record.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                                                 : '—'}
                                         </span>
                                     </td>
+                                    <td className="text-right pr-6">
+                                        <button
+                                            onClick={() => handleDeleteReading(record.reading_id)}
+                                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                            title="Delete wrong entry"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </td>
                                 </tr>
                             )
                         })}
                         {readings.length === 0 && (
                             <tr>
-                                <td colSpan="5" className="py-20 text-center">
+                                <td colSpan="6" className="py-20 text-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <Gauge size={48} className="text-slate-200" />
                                         <p className="text-slate-400 font-medium">No trip records found for this vehicle.</p>
@@ -202,20 +244,24 @@ export default function BusReadings() {
 
             {/* Add Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100">
-                        <div className="bg-navy p-8 text-white relative">
-                            <h2 className="text-2xl font-bold">Log New Trip Reading</h2>
-                            <p className="text-blue-200 text-sm mt-1 opacity-80">Enter precise odometer values for accuracy.</p>
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden border border-slate-100 my-auto">
+                        <div className="bg-navy p-6 text-white flex justify-between items-center shrink-0 z-10">
+                            <div>
+                                <h2 className="text-xl font-bold">Log New Trip Reading</h2>
+                                <p className="text-blue-200 text-xs mt-0.5 opacity-80">Enter precise odometer values for accuracy.</p>
+                            </div>
                             <button
+                                type="button"
                                 onClick={() => setIsAddModalOpen(false)}
-                                className="absolute right-6 top-6 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all font-bold"
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
                             >
-                                ×
+                                <X size={20} />
                             </button>
                         </div>
 
-                        <div className="p-8 space-y-6">
+                        <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Trip Start Date</label>
@@ -281,11 +327,12 @@ export default function BusReadings() {
                             )}
                         </div>
 
-                        <div className="p-8 pt-4 flex justify-between gap-4">
-                            <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                        <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-between gap-4 shrink-0">
+                            <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-2.5 font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
                             <button
+                                type="button"
                                 onClick={handleSaveReading}
-                                className="btn btn-primary px-10 py-3 rounded-2xl shadow-xl shadow-blue-100"
+                                className="btn btn-primary px-8 py-2.5 rounded-2xl shadow-xl shadow-blue-100"
                                 disabled={!newReadingData.new_reading || parseInt(newReadingData.new_reading) <= parseInt(newReadingData.old_reading)}
                             >
                                 Submit Log Record

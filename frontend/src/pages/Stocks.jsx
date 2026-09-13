@@ -178,13 +178,23 @@ export default function Stocks() {
 
             {/* New Purchase Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-6 bg-navy text-white">
-                            <h2 className="text-xl font-bold">Record Cargo Stock Purchase</h2>
-                            <p className="text-blue-100 text-xs opacity-75">Update inventory after supply arrival.</p>
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 overflow-y-auto p-3 sm:p-6 flex items-center justify-center">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto animate-in zoom-in-95 duration-200">
+                        <div className="p-6 bg-navy text-white flex justify-between items-center shrink-0 z-10">
+                            <div>
+                                <h2 className="text-xl font-bold">Record Cargo Stock Purchase</h2>
+                                <p className="text-blue-100 text-xs opacity-75 mt-0.5">Update inventory after supply arrival.</p>
+                            </div>
+                            <button 
+                                type="button"
+                                onClick={() => setIsAddModalOpen(false)} 
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
+                            >
+                                <X size={20} />
+                            </button>
                         </div>
-                        <div className="p-8 space-y-4">
+                        <div className="p-6 sm:p-8 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
                             <div>
                                 <label className="form-label">Part Classification</label>
                                 <select 
@@ -238,11 +248,12 @@ export default function Stocks() {
                                 />
                             </div>
                         </div>
-                        <div className="p-6 pt-0 border-t border-slate-50 flex justify-end gap-3">
-                            <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-2 font-bold text-slate-400">Cancel</button>
+                        <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 shrink-0">
+                            <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-2.5 font-bold text-slate-400 hover:text-slate-600">Cancel</button>
                             <button 
+                                type="button"
                                 onClick={handlePurchaseSubmit} 
-                                className="btn btn-primary px-8"
+                                className="btn btn-primary px-8 py-2.5"
                                 disabled={!purchaseData.spare_id || !purchaseData.quantity || !purchaseData.amount}
                             >
                                 Confirm Purchase
@@ -254,27 +265,39 @@ export default function Stocks() {
 
             {/* MODAL: New Category (Mini) */}
             {isNewTypeModalOpen && (
-                <div className="fixed inset-0 bg-navy/60 backdrop-blur-md z-[60] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden p-8 animate-in zoom-in-95 duration-300">
-                        <div className="flex justify-between items-center mb-6">
+                <div className="fixed inset-0 bg-navy/60 backdrop-blur-md z-[60] overflow-y-auto p-3 sm:p-6 flex items-center justify-center">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden p-6 sm:p-8 my-auto animate-in zoom-in-95 duration-300">
+                        <div className="flex justify-between items-center mb-6 shrink-0">
                             <h3 className="text-xl font-black text-navy italic tracking-tighter">Add Category</h3>
-                            <button onClick={() => setIsNewTypeModalOpen(false)} className="text-slate-300 hover:text-navy transition-colors"><X size={20} /></button>
+                            <button 
+                                type="button"
+                                onClick={() => setIsNewTypeModalOpen(false)} 
+                                className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
+                                title="Close"
+                            >
+                                <X size={20} />
+                            </button>
                         </div>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6">Initialize a new part classification in the master log.</p>
-                        <input 
-                            type="text" 
-                            className="w-full h-14 bg-slate-50 border-none rounded-2xl px-6 font-bold text-navy shadow-inner mb-6"
-                            placeholder="e.g. Rear Spring"
-                            value={newSpareName}
-                            onChange={(e) => setNewSpareName(e.target.value)}
-                        />
-                        <button 
-                            onClick={handleAddNewType}
-                            disabled={!newSpareName.trim()}
-                            className="w-full py-4 bg-navy text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-navy/20 hover:scale-[1.02] active:scale-95 transition-all disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
-                        >
-                            Register New Classification
-                        </button>
+                        <div className="overflow-y-auto flex-1 custom-scrollbar">
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6">Initialize a new part classification in the master log.</p>
+                            <input 
+                                type="text" 
+                                className="w-full h-14 bg-slate-50 border-none rounded-2xl px-6 font-bold text-navy shadow-inner mb-6"
+                                placeholder="e.g. Rear Spring"
+                                value={newSpareName}
+                                onChange={(e) => setNewSpareName(e.target.value)}
+                            />
+                        </div>
+                        <div className="shrink-0 pt-2">
+                            <button 
+                                type="button"
+                                onClick={handleAddNewType}
+                                disabled={!newSpareName.trim()}
+                                className="w-full py-4 bg-navy text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-navy/20 hover:scale-[1.02] active:scale-95 transition-all disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+                            >
+                                Register New Classification
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

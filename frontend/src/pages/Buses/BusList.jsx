@@ -113,8 +113,15 @@ export default function BusList() {
     const inactiveBuses = buses.filter(b => b.status === 'INACTIVE').length;
     const repairBuses = buses.filter(b => b.status === 'REPAIR').length;
 
-    // Filter Logic
-    const filteredBuses = buses.filter(bus => {
+    // Sort & Filter Logic (Ascending Order of Bus Number)
+    const sortedBuses = [...buses].sort((a, b) => {
+        const numA = a.bus_no !== null && a.bus_no !== undefined && a.bus_no !== '' ? Number(a.bus_no) : Infinity;
+        const numB = b.bus_no !== null && b.bus_no !== undefined && b.bus_no !== '' ? Number(b.bus_no) : Infinity;
+        if (numA !== numB) return numA - numB;
+        return String(a.rc_plate_number || '').localeCompare(String(b.rc_plate_number || ''));
+    });
+
+    const filteredBuses = sortedBuses.filter(bus => {
         if (!searchTerm) return true;
         const valueToSearch = bus[searchField]?.toString().toLowerCase() || '';
         return valueToSearch.includes(searchTerm.toLowerCase());
@@ -175,6 +182,7 @@ export default function BusList() {
                         value={searchField}
                         onChange={(e) => setSearchField(e.target.value)}
                     >
+                        <option value="bus_no">Bus Number</option>
                         <option value="rc_plate_number">RC Plate Number</option>
                         <option value="route_name">Route</option>
                         <option value="engine_number">Engine Number</option>
@@ -260,13 +268,18 @@ export default function BusList() {
 
             {/* Add Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden">
-                        <div className="flex justify-between items-center p-6 border-b border-slate-200 shrink-0">
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 overflow-y-auto p-3 sm:p-6 flex items-center justify-center">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto">
+                        <div className="flex justify-between items-center px-6 py-5 border-b border-slate-200 shrink-0 bg-white z-10">
                             <h2 className="text-lg font-bold text-navy">
                                 {isEditMode ? 'Update Vehicle Details' : 'Register New Vehicle'}
                             </h2>
-                            <button onClick={resetForm} className="text-slate-400 hover:text-slate-600">
+                            <button 
+                                type="button"
+                                onClick={resetForm} 
+                                className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 border border-slate-200 transition-all"
+                                title="Close"
+                            >
                                 <X size={20} />
                             </button>
                         </div>

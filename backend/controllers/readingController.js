@@ -1,4 +1,14 @@
-import { getReadingsByBus, addReading, getLatestReading, getAllFleetReadings, addBulkReadings, getReadingByDate } from '../models/readingModel.js';
+import { 
+    getReadingsByBus, 
+    addReading, 
+    getLatestReading, 
+    getAllFleetReadings, 
+    getFleetReadingsByDate,
+    getRecentFleetReadings,
+    addBulkReadings, 
+    getReadingByDate,
+    deleteReading
+} from '../models/readingModel.js';
 import { getBusByRcPlate } from '../models/busModel.js';
 
 const handleResponse = (res, statusCode, status, message, data = null) => {
@@ -83,12 +93,46 @@ export const getAllFleetReadingsController = async (req, res, next) => {
     }
 };
 
+export const getFleetReadingsByDateController = async (req, res, next) => {
+    try {
+        const { date } = req.params;
+        const readings = await getFleetReadingsByDate(date);
+        handleResponse(res, 200, true, `Fleet readings for ${date} retrieved`, readings);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getRecentFleetReadingsController = async (req, res, next) => {
+    try {
+        const limit = parseInt(req.query.limit) || 25;
+        const readings = await getRecentFleetReadings(limit);
+        handleResponse(res, 200, true, "Recent fleet readings retrieved", readings);
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const addBulkReadingsController = async (req, res, next) => {
     try {
         const { readings } = req.body; // Expects array of reading objects
 
         const results = await addBulkReadings(readings);
         handleResponse(res, 201, true, `${results.length} readings logged successfully`, results);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// Delete reading controller
+export const deleteReadingController = async (req, res, next) => {
+    try {
+        const { reading_id } = req.params;
+        const deleted = await deleteReading(reading_id);
+        if (!deleted) {
+            return handleResponse(res, 404, false, "Reading record not found or already deleted");
+        }
+        handleResponse(res, 200, true, "Odometer reading deleted successfully", deleted);
     } catch (err) {
         next(err);
     }

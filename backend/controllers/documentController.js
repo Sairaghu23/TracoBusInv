@@ -2,7 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { getDocumentTypes, getBusDocuments, createBusDocument, deleteBusDocument, getExpiringDocumentsInfo, getComplianceMatrix } from '../models/documentModel.js';
+import { getDocumentTypes, getBusDocuments, createBusDocument, deleteBusDocument, getExpiringDocumentsInfo, getComplianceMatrix, getTodayRemindersStatus } from '../models/documentModel.js';
 
 // Resolve absolute path to the uploads directory at the project root
 // This file is at: backend/controllers/documentController.js
@@ -146,6 +146,15 @@ export const getComplianceMatrixController = async (req, res, next) => {
     try {
         const matrix = await getComplianceMatrix();
         handleResponse(res, 200, "Compliance matrix fetched successfully", matrix);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getTodayRemindersStatusController = async (req, res, next) => {
+    try {
+        const statusData = await getTodayRemindersStatus();
+        handleResponse(res, 200, "Today reminders status fetched successfully", statusData);
     } catch (err) {
         next(err);
     }

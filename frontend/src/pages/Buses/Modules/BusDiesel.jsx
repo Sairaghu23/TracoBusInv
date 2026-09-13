@@ -179,24 +179,29 @@ export default function BusDiesel() {
 
         {/* Add Modal */}
         {isAddModalOpen && (
-            <div className="fixed inset-0 bg-navy/60 backdrop-blur-md flex items-center justify-center z-[110] p-4 animate-in fade-in duration-300">
-                <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                    <div className="p-8 bg-orange-600 text-white flex justify-between items-start">
-                        <div className="flex gap-4">
-                            <div className="p-4 bg-white/10 rounded-2xl">
-                                <Fuel size={32} className="text-orange-200" />
+            <div className="fixed inset-0 bg-navy/60 backdrop-blur-md z-[110] overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto animate-in zoom-in-95 duration-300">
+                    <div className="p-6 bg-orange-600 text-white flex justify-between items-center shrink-0 z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-white/10 rounded-2xl">
+                                <Fuel size={28} className="text-orange-200" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black italic tracking-tight">Record Refueling</h2>
+                                <h2 className="text-xl font-black italic tracking-tight">Record Refueling</h2>
                                 <p className="text-orange-100 text-xs font-bold uppercase tracking-widest">{bus?.rc_plate_number} • {bus?.bus_no}</p>
                             </div>
                         </div>
-                        <button onClick={() => setIsAddModalOpen(false)} className="text-white/40 hover:text-white transition-colors">
-                            <X size={24} />
+                        <button 
+                            type="button"
+                            onClick={() => setIsAddModalOpen(false)} 
+                            className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                            title="Close"
+                        >
+                            <X size={20} />
                         </button>
                     </div>
 
-                    <div className="p-8 space-y-6">
+                    <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                         {error && (
                             <div className="bg-amber-50 text-amber-600 p-4 rounded-2xl flex gap-3 text-sm font-bold items-center border border-amber-100">
                                 <AlertCircle size={20} /> {error}
@@ -249,8 +254,11 @@ export default function BusDiesel() {
                                 </div>
                             </div>
                         </div>
+                    </div>
 
+                    <div className="p-6 border-t border-slate-100 bg-slate-50/50 shrink-0">
                         <button
+                            type="button"
                             onClick={handleSubmit}
                             disabled={saving}
                             className={`w-full py-4 text-white rounded-2xl font-black italic tracking-tight transition-all text-lg flex items-center justify-center gap-2

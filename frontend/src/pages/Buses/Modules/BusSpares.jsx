@@ -59,30 +59,93 @@ export default function BusSpares() {
         fetchData();
     }, [rc_plate_number]);
 
+    useEffect(() => {
+        if (!selectedCategory) {
+            setAvailableItems([]);
+            setCart([]);
+            return;
+        }
+
+        const fetchCategoryInventory = async () => {
+            setLoadingItems(true);
+            try {
+                const res = await api.get(`/api/spares/inventory/${selectedCategory}?status=AVAILABLE`);
+                if (res.data?.status) {
+                    setAvailableItems(res.data.data || []);
+                } else {
+                    setAvailableItems([]);
+                }
+            } catch (err) {
+                console.error("Error loading inventory items:", err);
+                setAvailableItems([]);
+            } finally {
+                setLoadingItems(false);
+            }
+        };
+
+        fetchCategoryInventory();
+        setCart([]);
+    }, [selectedCategory]);
+
+    const filteredItems = availableItems.filter(item => 
+        (item.product_code || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const toggleItem = (item) => {
+        setCart(prev => {
+            const exists = prev.some(c => c.item_id === item.item_id);
+            if (exists) {
+                return prev.filter(c => c.item_id !== item.item_id);
+            } else {
+                return [...prev, item];
+            }
+        });
+    };
+
+    const resetModal = () => {
+        setIsAddModalOpen(false);
+        setSelectedCategory('');
+        setCart([]);
+        setSearchQuery('');
+        setAvailableItems([]);
+        setUsageForm({
+            usage_date: new Date().toISOString().split('T')[0],
+            mechanic: '',
+            spare_cost: '',
+            service_charge: '',
+            new_reading: ''
+        });
+    };
+
     const handleReplacementSubmit = async () => {
+        if (cart.length === 0) {
+            alert("Please select at least one product code.");
+            return;
+        }
+        if (!usageForm.mechanic) {
+            alert("Please enter the mechanic name.");
+            return;
+        }
+        if (!usageForm.new_reading) {
+            alert("Please enter the current odometer reading.");
+            return;
+        }
+
         const payload = {
             spare_id: selectedCategory,
             item_ids: cart.map(c => c.item_id),
+            quantity: cart.length,
             usage_date: usageForm.usage_date,
             mechanic: usageForm.mechanic,
-            spare_cost: usageForm.spare_cost,
-            service_charge: usageForm.service_charge,
-            new_reading: usageForm.new_reading,
+            spare_cost: parseFloat(usageForm.spare_cost) || 0,
+            service_charge: parseFloat(usageForm.service_charge) || 0,
+            new_reading: parseInt(usageForm.new_reading),
         };
         try {
             const result = await api.post(`/api/buses/${rc_plate_number}/spares`, payload);
             if (result.data?.status) {
                 alert("Replacement logged and stock deducted!");
-                setIsAddModalOpen(false);
-                setCart([]);
-                setSelectedCategory('');
-                setUsageForm({
-                    usage_date: new Date().toISOString().split('T')[0],
-                    mechanic: '',
-                    spare_cost: '',
-                    service_charge: '',
-                    new_reading: ''
-                });
+                resetModal();
                 fetchData();
             } else {
                 alert(result.data?.message || "Failed to log replacement.");
@@ -92,6 +155,8 @@ export default function BusSpares() {
             alert(err.response?.data?.message || "Error: Check console or insufficient stock.");
         }
     };
+
+    const handleConfirmUsage = handleReplacementSubmit;
 
 
     const totalExpenditure = sparesHistory.reduce((sum, record) => sum + parseFloat(record.amount || 0), 0);
@@ -215,17 +280,22 @@ export default function BusSpares() {
 
             {/* MODAL — Vertical single-column layout */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xl z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-2xl max-h-[92vh] flex flex-col rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 duration-300">
+                <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xl z-50 overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col rounded-3xl shadow-[0_40px_80px_rgba(0,0,0,0.4)] overflow-hidden my-auto animate-in zoom-in-95 duration-300">
 
                         {/* Modal Header */}
-                        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center shrink-0">
+                        <div className="px-6 sm:px-8 py-5 border-b border-slate-100 flex justify-between items-center shrink-0 bg-white z-10">
                             <div>
                                 <h2 className="text-xl font-black text-navy uppercase tracking-tight">Record Spare Usage</h2>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{bus?.rc_plate_number}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{bus?.rc_plate_number}</p>
                             </div>
-                            <button onClick={resetModal} className="p-3 rounded-full hover:bg-red-50 hover:text-red-500 transition-all text-slate-400 border border-slate-100">
-                                <X size={18} />
+                            <button 
+                                type="button"
+                                onClick={resetModal} 
+                                className="p-2.5 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all border border-slate-200"
+                                title="Close"
+                            >
+                                <X size={20} />
                             </button>
                         </div>
 

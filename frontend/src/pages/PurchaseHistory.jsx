@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ShoppingBag, Calendar, User, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Calendar, User, ArrowRight, X } from 'lucide-react';
 import api from '../utils/api';
 
 export default function PurchaseHistory() {
@@ -156,22 +156,27 @@ export default function PurchaseHistory() {
 
             {/* Codes Modal */}
             {viewCodesPurchase && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-6 bg-navy text-white flex justify-between items-center">
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 overflow-y-auto p-3 sm:p-6 flex items-center justify-center">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto animate-in zoom-in-95 duration-200">
+                        <div className="p-6 bg-navy text-white flex justify-between items-center shrink-0 z-10">
                             <div>
                                 <h2 className="text-xl font-bold">Inbound Tracking Codes</h2>
-                                <p className="text-blue-100 text-[10px] uppercase font-black tracking-widest opacity-75">Batch: {new Date(viewCodesPurchase.purchase_date).toLocaleDateString()}</p>
+                                <p className="text-blue-100 text-[10px] uppercase font-black tracking-widest opacity-75 mt-0.5">Batch: {new Date(viewCodesPurchase.purchase_date).toLocaleDateString()}</p>
                             </div>
-                            <button onClick={() => setViewCodesPurchase(null)} className="text-blue-100 hover:text-white">
-                                <ArrowRight size={20} className="rotate-180" />
+                            <button 
+                                type="button"
+                                onClick={() => setViewCodesPurchase(null)} 
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
+                            >
+                                <X size={20} />
                             </button>
                         </div>
-                        <div className="p-8">
+                        <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
                             {loadingCodes ? (
                                 <div className="py-12 text-center text-slate-400 italic">Fetching codes...</div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
+                                <div className="grid grid-cols-2 gap-3 pr-1">
                                     {codesInModal.map((item, idx) => (
                                         <div key={item.item_id} className={`p-4 rounded-xl border flex flex-col gap-1 ${item.status === 'USED' ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-emerald-50/30 border-emerald-100 shadow-sm'}`}>
                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Code #{idx + 1}</span>
@@ -185,8 +190,8 @@ export default function PurchaseHistory() {
                                 </div>
                             )}
                         </div>
-                        <div className="p-6 bg-slate-50 text-right">
-                            <button onClick={() => setViewCodesPurchase(null)} className="px-10 py-3 bg-navy text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em]">Close Log</button>
+                        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end shrink-0">
+                            <button type="button" onClick={() => setViewCodesPurchase(null)} className="px-10 py-3 bg-navy text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em]">Close Log</button>
                         </div>
                     </div>
                 </div>

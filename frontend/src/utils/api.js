@@ -1,7 +1,20 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:5003';
+        }
+    }
+    return 'https://tracobusinvcicd.duckdns.org';
+};
+
 const api = axios.create({
-    baseURL: 'https://tracobusinvcicd.duckdns.org'
+    baseURL: getBaseURL()
 });
 
 // Add a request interceptor to attach the JWT token

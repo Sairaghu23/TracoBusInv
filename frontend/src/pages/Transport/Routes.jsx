@@ -510,18 +510,25 @@ export default function Routes() {
 
             {/* Modals */}
             {activeModal === 'route' && (
-                <div className="fixed inset-0 bg-navy/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-white/20 scale-in-center">
-                        <div className="p-8 bg-navy text-white relative">
-                            <button onClick={() => { setActiveModal(null); setRouteError(''); }} className="absolute top-6 right-6 text-navy-light hover:text-white transition-colors">
-                                <X size={24} />
-                            </button>
-                            <div className="p-4 bg-navy-light rounded-2xl w-fit mb-4">
-                                <RouteIcon size={32} />
+                <div className="fixed inset-0 bg-navy/40 backdrop-blur-md z-[100] overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden border border-white/20 my-auto">
+                        <div className="p-6 bg-navy text-white flex justify-between items-center shrink-0 z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-navy-light rounded-xl">
+                                    <RouteIcon size={24} />
+                                </div>
+                                <h2 className="text-xl font-black italic tracking-tight">Create New Route</h2>
                             </div>
-                            <h2 className="text-2xl font-black italic tracking-tight">Create New Route</h2>
+                            <button 
+                                type="button"
+                                onClick={() => { setActiveModal(null); setRouteError(''); }} 
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
+                            >
+                                <X size={20} />
+                            </button>
                         </div>
-                        <form onSubmit={handleAddRoute} className="p-8 space-y-6">
+                        <form onSubmit={handleAddRoute} className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Route Identifier / Name</label>
                                 <input
@@ -548,18 +555,25 @@ export default function Routes() {
             )}
 
             {activeModal === 'stop' && (
-                <div className="fixed inset-0 bg-navy/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-white/20 scale-in-center">
-                        <div className="p-8 bg-orange-600 text-white relative">
-                            <button onClick={() => setActiveModal(null)} className="absolute top-6 right-6 text-orange-400 hover:text-white transition-colors">
-                                <X size={24} />
-                            </button>
-                            <div className="p-4 bg-orange-500 rounded-2xl w-fit mb-4">
-                                <MapPin size={32} />
+                <div className="fixed inset-0 bg-navy/40 backdrop-blur-md z-[100] overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden border border-white/20 my-auto">
+                        <div className="p-6 bg-orange-600 text-white flex justify-between items-center shrink-0 z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-orange-500 rounded-xl">
+                                    <MapPin size={24} />
+                                </div>
+                                <h2 className="text-xl font-black italic tracking-tight">Add Stopping Point</h2>
                             </div>
-                            <h2 className="text-2xl font-black italic tracking-tight">Add Stopping Point</h2>
+                            <button 
+                                type="button"
+                                onClick={() => setActiveModal(null)} 
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
+                            >
+                                <X size={20} />
+                            </button>
                         </div>
-                        <form onSubmit={handleAddStop} className="p-8 space-y-5">
+                        <form onSubmit={handleAddStop} className="p-6 sm:p-8 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Assigned Route</label>
                                 <select

@@ -231,21 +231,26 @@ export default function BusOils() {
 
             {/* Add Oil Log Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 animate-in zoom-in-95">
+                <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden border border-slate-100 my-auto animate-in zoom-in-95">
                         {/* Modal Header */}
-                        <div className="bg-navy p-8 text-white flex justify-between items-start">
+                        <div className="bg-navy p-6 text-white flex justify-between items-center shrink-0 z-10">
                             <div>
-                                <h2 className="text-2xl font-bold">Log Oil Service</h2>
-                                <p className="text-blue-200 text-sm mt-1 opacity-80 italic">Record fluid replacement for this vehicle.</p>
+                                <h2 className="text-xl font-bold">Log Oil Service</h2>
+                                <p className="text-blue-200 text-xs mt-0.5 opacity-80 italic">Record fluid replacement for this vehicle.</p>
                             </div>
-                            <button onClick={() => setIsAddModalOpen(false)} className="text-blue-200 hover:text-white transition-colors mt-1">
+                            <button 
+                                type="button"
+                                onClick={() => setIsAddModalOpen(false)} 
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
+                            >
                                 <X size={20} />
                             </button>
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-8 space-y-6">
+                        <div className="p-6 sm:p-8 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
                             {error && (
                                 <div className="bg-red-50 border border-red-100 text-red-700 text-sm p-3 rounded-xl flex items-center gap-2">
                                     <AlertCircle size={16} /> {error}
@@ -328,12 +333,13 @@ export default function BusOils() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-8 pt-0 flex justify-between gap-4">
-                            <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 font-bold text-slate-400 hover:text-slate-600">Discard</button>
+                        <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-between gap-4 shrink-0">
+                            <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-2.5 font-bold text-slate-400 hover:text-slate-600">Discard</button>
                             <button
+                                type="button"
                                 onClick={handleSubmit}
                                 disabled={saving || !logData.oil_id || !logData.quantity || !logData.amount || !logData.new_reading}
-                                className={`btn px-10 rounded-2xl transition-all ${saving || !logData.oil_id || !logData.quantity || !logData.amount || !logData.new_reading
+                                className={`btn px-8 py-2.5 rounded-2xl transition-all ${saving || !logData.oil_id || !logData.quantity || !logData.amount || !logData.new_reading
                                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
                                         : 'btn-primary shadow-xl shadow-blue-100 hover:scale-[1.02]'
                                     }`}

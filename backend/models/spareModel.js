@@ -104,7 +104,7 @@ export const recordUsage = async (usageData) => {
                 parseInt(spare_id), 
                 usage_date, 
                 mechanic?.trim().toUpperCase(), 
-                parseInt(quantity), 
+                parseInt(quantity) || (Array.isArray(item_ids) ? item_ids.length : 1), 
                 parseFloat(service_charge || 0), 
                 parseFloat(spare_cost || 0), 
                 parseInt(new_reading)

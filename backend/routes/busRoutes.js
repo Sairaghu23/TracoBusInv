@@ -1,6 +1,6 @@
 import express from 'express';
 import { getAllBusesController, addBusController, updateBusController, deleteBusController, getBusByRcPlateController } from '../controllers/busControllers.js';
-import { getBusReadingsController, addBusReadingController, getLatestReadingController, getBusReadingByDateController } from '../controllers/readingController.js';
+import { getBusReadingsController, addBusReadingController, getLatestReadingController, getBusReadingByDateController, deleteReadingController } from '../controllers/readingController.js';
 import { getBusSparesController, recordUsageController } from '../controllers/spareController.js';
 import { getBusDieselHistoryController, addSingleBusDieselController } from '../controllers/dieselController.js';
 import { getBusOilLogsController, recordOilLogController } from '../controllers/oilController.js';
@@ -23,6 +23,7 @@ router.get('/:rc_plate_number/readings', getBusReadingsController);
 router.get('/:rc_plate_number/readings/latest', getLatestReadingController);
 router.get('/:rc_plate_number/readings/date/:date', getBusReadingByDateController);
 router.post('/:rc_plate_number/readings', addBusReadingController);
+router.delete('/:rc_plate_number/readings/:reading_id', deleteReadingController);
 
 router.get('/:rc_plate_number/spares', getBusSparesController);
 router.post('/:rc_plate_number/spares', recordUsageController);

@@ -34,16 +34,28 @@ export default function DieselEntry() {
 
             if (valResult.data?.status) {
                 setValidationStatus({ missing: false, checked: true, list: [] });
-                setFleetData(valResult.data.data);
+                const sortedFleet = (valResult.data.data || []).sort((a, b) => {
+                    const numA = a.bus_no !== null && a.bus_no !== undefined && a.bus_no !== '' ? Number(a.bus_no) : Infinity;
+                    const numB = b.bus_no !== null && b.bus_no !== undefined && b.bus_no !== '' ? Number(b.bus_no) : Infinity;
+                    if (numA !== numB) return numA - numB;
+                    return String(a.rc_plate_number || '').localeCompare(String(b.rc_plate_number || ''));
+                });
+                setFleetData(sortedFleet);
 
                 // Initialize liters input
                 const initial = {};
-                valResult.data.data.forEach(bus => {
+                sortedFleet.forEach(bus => {
                     initial[bus.rc_plate_number] = bus.liters || '';
                 });
                 setLitersData(initial);
             } else if (valResult.data?.missing) {
-                setValidationStatus({ missing: true, checked: true, list: valResult.data.data });
+                const sortedMissing = (valResult.data.data || []).sort((a, b) => {
+                    const numA = a.bus_no !== null && a.bus_no !== undefined && a.bus_no !== '' ? Number(a.bus_no) : Infinity;
+                    const numB = b.bus_no !== null && b.bus_no !== undefined && b.bus_no !== '' ? Number(b.bus_no) : Infinity;
+                    if (numA !== numB) return numA - numB;
+                    return String(a.rc_plate_number || '').localeCompare(String(b.rc_plate_number || ''));
+                });
+                setValidationStatus({ missing: true, checked: true, list: sortedMissing });
             }
 
             // Check Fuel Rate
@@ -397,7 +409,7 @@ export default function DieselEntry() {
                             <tr>
                                 <th className="py-6 pl-10 uppercase tracking-widest text-[10px] font-black text-slate-400 text-left">Bus No</th>
                                 <th className="py-6 uppercase tracking-widest text-[10px] font-black text-slate-400 text-left">Vehicle Specification</th>
-                                <th className="uppercase tracking-widest text-[10px] font-black text-slate-400 text-left">Activity Range</th>
+                                <th className="uppercase tracking-widest text-[10px] font-black text-slate-400 text-left">Trip & Odometer Log</th>
                                 <th className="uppercase tracking-widest text-[10px] font-black text-slate-400">Refueling Volume (Liters)</th>
                                 <th className="text-center pr-10 uppercase tracking-widest text-[10px] font-black text-slate-400">Economy (KMPL)</th>
                             </tr>
@@ -420,15 +432,19 @@ export default function DieselEntry() {
                                             </div>
                                         </td>
                                         <td className="py-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Distance Gain</span>
-                                                    <span className="font-black text-slate-700 italic">{bus.distance} <span className="text-[10px]">KM</span></span>
+                                            <div className="flex flex-col gap-1.5">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="font-black text-slate-800 text-base">{bus.distance} <span className="text-xs font-semibold text-slate-400">KM</span></span>
+                                                    <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                        {bus.old_reading} → {bus.new_reading}
+                                                    </span>
                                                 </div>
-                                                <div className="h-4 w-px bg-slate-200" />
-                                                <div className="flex flex-col">
-                                                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Odometer</span>
-                                                    <span className="text-xs font-mono text-slate-400">{bus.old_reading} → {bus.new_reading}</span>
+                                                <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                                                    <Calendar size={12} className="text-slate-400" />
+                                                    <span>{bus.odometer_date ? new Date(bus.odometer_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                                                    {bus.odometer_logged_time && (
+                                                        <span className="text-[10px] text-slate-400 font-mono">({bus.odometer_logged_time.split(', ')[1] || bus.odometer_logged_time})</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>

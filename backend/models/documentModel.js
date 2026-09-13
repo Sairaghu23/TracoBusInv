@@ -104,3 +104,53 @@ export const getComplianceMatrix = async () => {
         throw error;
     }
 };
+
+// Check if any reminders are active for today (documents or driver licenses expiring today or overdue)
+export const getTodayRemindersStatus = async () => {
+    try {
+        const qDocs = `
+            SELECT 
+                COUNT(CASE WHEN bd.expiry_date = CURRENT_DATE THEN 1 END) as today_docs,
+                COUNT(CASE WHEN bd.expiry_date <= CURRENT_DATE THEN 1 END) as due_or_overdue_docs,
+                COUNT(CASE WHEN bd.expiry_date <= CURRENT_DATE + INTERVAL '30 days' THEN 1 END) as total_active_docs
+            FROM bus_documents bd
+        `;
+        const qDrivers = `
+            SELECT 
+                COUNT(CASE WHEN d.license_expiry = CURRENT_DATE THEN 1 END) as today_drivers,
+                COUNT(CASE WHEN d.license_expiry <= CURRENT_DATE THEN 1 END) as due_or_overdue_drivers,
+                COUNT(CASE WHEN d.license_expiry <= CURRENT_DATE + INTERVAL '30 days' THEN 1 END) as total_active_drivers
+            FROM drivers d 
+            WHERE d.license_expiry IS NOT NULL
+        `;
+        const [docsRes, driversRes] = await Promise.all([
+            pool.query(qDocs),
+            pool.query(qDrivers)
+        ]);
+
+        const todayDocs = parseInt(docsRes.rows[0]?.today_docs || 0);
+        const dueOrOverdueDocs = parseInt(docsRes.rows[0]?.due_or_overdue_docs || 0);
+        const totalActiveDocs = parseInt(docsRes.rows[0]?.total_active_docs || 0);
+
+        const todayDrivers = parseInt(driversRes.rows[0]?.today_drivers || 0);
+        const dueOrOverdueDrivers = parseInt(driversRes.rows[0]?.due_or_overdue_drivers || 0);
+        const totalActiveDrivers = parseInt(driversRes.rows[0]?.total_active_drivers || 0);
+
+        const todayCount = todayDocs + todayDrivers;
+        const overdueCount = dueOrOverdueDocs + dueOrOverdueDrivers;
+        const totalAlerts = totalActiveDocs + totalActiveDrivers;
+
+        const hasActiveToday = overdueCount > 0 || todayCount > 0;
+
+        return {
+            has_active_today: hasActiveToday,
+            today_count: todayCount,
+            overdue_count: overdueCount,
+            active_today_count: overdueCount,
+            total_active_count: totalAlerts
+        };
+    } catch (error) {
+        console.error("Error fetching today reminders status:", error);
+        throw error;
+    }
+};

@@ -242,10 +242,10 @@ export default function BusDocuments() {
 
             {/* Upload Modal Overlay */}
             {isUploadModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/40 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden scale-in-center border-2 border-white/20">
+                <div className="fixed inset-0 z-50 overflow-y-auto p-3 sm:p-6 flex items-center justify-center bg-navy/40 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto border-2 border-white/20">
                         {/* Modal Header */}
-                        <div className="bg-navy p-6 flex items-center justify-between text-white shrink-0 relative overflow-hidden">
+                        <div className="bg-navy p-6 flex items-center justify-between text-white shrink-0 relative overflow-hidden z-10">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 pointer-events-none" />
                             <div className="flex items-center gap-3 relative z-10">
                                 <div className="p-2 bg-white/10 rounded-xl">
@@ -257,19 +257,21 @@ export default function BusDocuments() {
                                 </div>
                             </div>
                             <button 
+                                type="button"
                                 onClick={() => {
                                     setIsUploadModalOpen(false);
                                     setUploadError('');
                                     setFormData({ document_type_id: '', provider: '', start_date: '', expiry_date: '', file: null });
                                 }}
-                                className="text-blue-200 hover:text-white transition-colors p-2 bg-white/5 rounded-xl hover:bg-white/20 relative z-10"
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors relative z-10"
+                                title="Close"
                             >
                                 <X size={20} />
                             </button>
                         </div>
                         
                         {/* Form */}
-                        <div className="p-8 overflow-y-auto flex-1 custom-scrollbar">
+                        <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
                             {uploadError && (
                                 <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-2xl text-sm font-bold flex items-center gap-3 animate-in slide-in-from-top-2">
                                     <AlertCircle size={18} className="shrink-0" />

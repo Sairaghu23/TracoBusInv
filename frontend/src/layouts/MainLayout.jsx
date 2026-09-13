@@ -1,15 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Bus, Users, UserSquare2, 
   BarChart3, Bell, Settings2, LogOut, Menu, X, Building,
   Gauge, Fuel, MapPin
 } from 'lucide-react';
+import api from '../utils/api';
 
 export default function MainLayout() {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [hasActiveReminders, setHasActiveReminders] = useState(false);
+  const [activeRemindersCount, setActiveRemindersCount] = useState(0);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkReminders = async () => {
+      try {
+        const res = await api.get('/api/documents/today-status');
+        if (isMounted && res.data?.status && res.data?.data) {
+          setHasActiveReminders(!!res.data.data.has_active_today);
+          setActiveRemindersCount(res.data.data.active_today_count || res.data.data.today_count || 0);
+        }
+      } catch (err) {
+        console.warn("Could not fetch today reminders status:", err);
+      }
+    };
+
+    checkReminders();
+    const interval = setInterval(checkReminders, 120000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -57,7 +82,7 @@ export default function MainLayout() {
               to={link.path}
               end={link.exact}
               className={({ isActive }) => `
-                flex items-center px-4 py-3 mx-2 rounded-lg transition-colors
+                flex items-center px-4 py-3 mx-2 rounded-lg transition-colors relative
                 ${isActive ? 'bg-navy-light text-white' : 'text-slate-300 hover:bg-navy-light hover:text-white'}
                 ${isCollapsed ? 'justify-center mx-3' : 'gap-3'}
               `}
@@ -65,6 +90,9 @@ export default function MainLayout() {
             >
               <link.icon size={20} className="flex-shrink-0" />
               {!isCollapsed && <span className="font-medium whitespace-nowrap">{link.name}</span>}
+              {link.path === '/reminders' && hasActiveReminders && (
+                <span className={`w-2 h-2 bg-red-500 rounded-full ${isCollapsed ? 'absolute top-2 right-2' : 'ml-auto'}`}></span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -96,9 +124,16 @@ export default function MainLayout() {
           </div>
           
           <div className="flex items-center gap-4">
-            <button className="relative text-slate-500 hover:text-navy transition-colors">
+            <button 
+              onClick={() => navigate('/reminders')}
+              className="relative text-slate-500 hover:text-navy transition-colors p-1.5 rounded-xl hover:bg-slate-100 focus:outline-none"
+              title={hasActiveReminders ? `${activeRemindersCount} active reminder${activeRemindersCount === 1 ? '' : 's'} for today` : 'No active reminders for today'}
+              aria-label="Compliance reminders"
+            >
               <Bell size={20} />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+              {hasActiveReminders && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+              )}
             </button>
             <div className="h-8 w-px bg-slate-200 mx-2"></div>
             <div className="flex items-center gap-3">

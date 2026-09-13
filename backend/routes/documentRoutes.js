@@ -5,7 +5,8 @@ import {
     uploadBusDocumentController, 
     deleteBusDocumentController,
     getExpiringDocumentsController, 
-    getComplianceMatrixController 
+    getComplianceMatrixController,
+    getTodayRemindersStatusController
 } from '../controllers/documentController.js';
 
 const router = express.Router();
@@ -13,6 +14,7 @@ const router = express.Router();
 router.get('/types', getDocumentTypesController);
 router.get('/', getDocumentTypesController); // Alias for flat /api/document-types
 router.get('/reminders', getExpiringDocumentsController);
+router.get('/today-status', getTodayRemindersStatusController);
 router.get('/compliance-matrix', getComplianceMatrixController);
 router.post('/upload', uploadBusDocumentController);
 router.delete('/:documentId', deleteBusDocumentController);

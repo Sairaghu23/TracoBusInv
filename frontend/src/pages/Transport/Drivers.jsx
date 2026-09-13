@@ -180,20 +180,30 @@ export default function Drivers() {
 
             {/* Add Driver Modal */}
             {activeModal && (
-                <div className="fixed inset-0 bg-navy/40 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20">
-                        <div className="p-8 bg-navy text-white relative">
-                            <button onClick={handleCloseModal} className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors">
-                                <X size={24} />
-                            </button>
-                            <div className="p-4 bg-navy-light rounded-2xl w-fit mb-4">
-                                <UserPlus size={32} />
+                <div className="fixed inset-0 bg-navy/40 backdrop-blur-md z-[100] overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden border border-white/20 my-auto">
+                        <div className="p-6 bg-navy text-white flex justify-between items-center shrink-0 z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-navy-light rounded-xl">
+                                    <UserPlus size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-black italic tracking-tight">Onboard New Driver</h2>
+                                    <p className="text-blue-200 text-[10px] font-black uppercase tracking-widest opacity-80">Institutional Fleet Employment</p>
+                                </div>
                             </div>
-                            <h2 className="text-2xl font-black italic tracking-tight">Onboard New Driver</h2>
-                            <p className="text-blue-200 text-[10px] font-black uppercase tracking-widest opacity-80">Institutional Fleet Employment</p>
+                            <button 
+                                type="button"
+                                onClick={handleCloseModal} 
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
+                            >
+                                <X size={20} />
+                            </button>
                         </div>
                         
-                        <form onSubmit={handleAddDriver} className="p-8 space-y-4">
+                        <form onSubmit={handleAddDriver} className="p-6 sm:p-8 space-y-4 overflow-y-auto flex-1 custom-scrollbar flex flex-col justify-between">
+                            <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
@@ -288,7 +298,8 @@ export default function Drivers() {
                                     </div>
                                 )}
                             </div>
-                            <div className="pt-4 flex gap-3">
+                            </div>
+                            <div className="pt-4 border-t border-slate-100 flex gap-3 shrink-0">
                                 <button type="button" onClick={handleCloseModal} className="flex-1 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
                                 <button type="submit" className="flex-1 bg-navy text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-navy-light transition-all shadow-lg shadow-navy/20">Onboard Driver</button>
                             </div>

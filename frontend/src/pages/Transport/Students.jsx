@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { 
     School, BookOpen, Award, GraduationCap, Users, Search, 
     Plus, X, ChevronLeft, FileText, Download, UserPlus, 
@@ -281,7 +283,18 @@ export default function Students() {
         fetchStudents(yearObj.type, selectedYear, newSem);
     };
 
-    // 5. Export Logic
+    // 5. Filtering
+    const filteredStudents = students.filter(s => {
+        const matchSearch = searchField === 'roll_id'
+            ? s.roll_id?.toLowerCase().includes(searchQuery.toLowerCase())
+            : s.s_name?.toLowerCase().includes(searchQuery.toLowerCase());
+        const isPaid = parseFloat(s.amount_paid || 0) > 0;
+        const matchPayment = paymentFilter === 'all' ? true : paymentFilter === 'paid' ? isPaid : !isPaid;
+        const matchBranch = branchFilter === 'all' ? true : s.branch_id?.toString() === branchFilter.toString();
+        return matchSearch && matchPayment && matchBranch;
+    });
+
+    // 6. Export Logic
     const exportToExcel = () => {
         const data = filteredStudents.map((s, idx) => ({
             "S.No": idx + 1,
@@ -318,7 +331,7 @@ export default function Students() {
     };
 
 
-    // 6. Filtering (filteredStudents is defined in the detail view section below with payment status support)
+    // 7. Alumni Filtering
 
     const filteredAlumni = students.filter(s => {
         const query = searchQuery.toLowerCase();
@@ -501,16 +514,6 @@ export default function Students() {
         '4th': [7, 8]
     }[selectedYear] || [];
 
-    // Filter: search + payment status
-    const filteredStudents = students.filter(s => {
-        const matchSearch = searchField === 'roll_id'
-            ? s.roll_id?.toLowerCase().includes(searchQuery.toLowerCase())
-            : s.s_name?.toLowerCase().includes(searchQuery.toLowerCase());
-        const isPaid = parseFloat(s.amount_paid || 0) > 0;
-        const matchPayment = paymentFilter === 'all' ? true : paymentFilter === 'paid' ? isPaid : !isPaid;
-        const matchBranch = branchFilter === 'all' ? true : s.branch_id?.toString() === branchFilter.toString();
-        return matchSearch && matchPayment && matchBranch;
-    });
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 animate-in slide-in-from-bottom-10 duration-500">
@@ -713,23 +716,28 @@ export default function Students() {
 
             {/* Payment History Modal */}
             {historyModal && selectedStudent && (
-                <div className="fixed inset-0 bg-navy/60 backdrop-blur-md flex items-center justify-center z-[110] p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="p-8 bg-navy text-white flex justify-between items-start">
-                            <div className="flex gap-4">
-                                <div className="p-4 bg-white/10 rounded-2xl">
-                                    <CreditCard size={32} className="text-orange-400" />
+                <div className="fixed inset-0 bg-navy/60 backdrop-blur-md z-[110] overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto animate-in zoom-in-95 duration-300">
+                        <div className="p-6 bg-navy text-white flex justify-between items-center shrink-0 z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-white/10 rounded-2xl">
+                                    <CreditCard size={28} className="text-orange-400" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black italic tracking-tight">{selectedStudent.s_name}</h2>
-                                    <p className="text-blue-200 text-xs font-bold uppercase tracking-widest">Roll ID: {selectedStudent.roll_id} • {selectedStudent.branch_name}</p>
+                                    <h2 className="text-xl font-black italic tracking-tight">{selectedStudent.s_name}</h2>
+                                    <p className="text-blue-200 text-xs font-bold uppercase tracking-widest mt-0.5">Roll ID: {selectedStudent.roll_id} • {selectedStudent.branch_name}</p>
                                 </div>
                             </div>
-                            <button onClick={() => setHistoryModal(false)} className="text-white/40 hover:text-white transition-colors">
-                                <X size={24} />
+                            <button 
+                                type="button"
+                                onClick={() => setHistoryModal(false)} 
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
+                            >
+                                <X size={20} />
                             </button>
                         </div>
-                        <div className="p-8 max-h-[500px] overflow-y-auto">
+                        <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
                             <table className="w-full">
                                 <thead>
                                     <tr className="text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
@@ -764,24 +772,29 @@ export default function Students() {
 
             {/* Record Payment Modal */}
             {paymentModal && selectedStudent && (
-                <div className="fixed inset-0 bg-navy/60 backdrop-blur-md flex items-center justify-center z-[110] p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="p-8 bg-orange-600 text-white flex justify-between items-start">
-                            <div className="flex gap-4">
-                                <div className="p-4 bg-white/10 rounded-2xl">
-                                    <CreditCard size={32} className="text-orange-200" />
+                <div className="fixed inset-0 bg-navy/60 backdrop-blur-md z-[110] overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto animate-in zoom-in-95 duration-300">
+                        <div className="p-6 bg-orange-600 text-white flex justify-between items-center shrink-0 z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-white/10 rounded-2xl">
+                                    <CreditCard size={28} className="text-orange-200" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black italic tracking-tight">Record Fee</h2>
-                                    <p className="text-orange-100 text-xs font-bold uppercase tracking-widest">{selectedStudent.s_name} • Sem {selectedSemester}</p>
+                                    <h2 className="text-xl font-black italic tracking-tight">Record Fee</h2>
+                                    <p className="text-orange-100 text-xs font-bold uppercase tracking-widest mt-0.5">{selectedStudent.s_name} • Sem {selectedSemester}</p>
                                 </div>
                             </div>
-                            <button onClick={() => setPaymentModal(false)} className="text-white/40 hover:text-white transition-colors">
-                                <X size={24} />
+                            <button 
+                                type="button"
+                                onClick={() => setPaymentModal(false)} 
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
+                            >
+                                <X size={20} />
                             </button>
                         </div>
                         
-                        <form onSubmit={handleRecordPayment} className="p-8 space-y-6">
+                        <form onSubmit={handleRecordPayment} className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Route</label>
@@ -863,24 +876,29 @@ export default function Students() {
 
             {/* Add Student Modal */}
             {activeModal && (
-                <div className="fixed inset-0 bg-navy/60 backdrop-blur-md flex items-center justify-center z-[110] p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="p-8 bg-blue-600 text-white flex justify-between items-start">
-                            <div className="flex gap-4">
-                                <div className="p-4 bg-white/10 rounded-2xl">
-                                    <UserPlus size={32} className="text-blue-200" />
+                <div className="fixed inset-0 bg-navy/60 backdrop-blur-md z-[110] overflow-y-auto p-3 sm:p-6 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto animate-in zoom-in-95 duration-300">
+                        <div className="p-6 bg-blue-600 text-white flex justify-between items-center shrink-0 z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-white/10 rounded-2xl">
+                                    <UserPlus size={28} className="text-blue-200" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black italic tracking-tight">{isEditMode ? 'Edit Student' : 'Register Student'}</h2>
-                                    <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">{isEditMode ? 'Update Profile' : 'New Enrollment'} • {selectedYear?.toUpperCase()} Year</p>
+                                    <h2 className="text-xl font-black italic tracking-tight">{isEditMode ? 'Edit Student' : 'Register Student'}</h2>
+                                    <p className="text-blue-100 text-xs font-bold uppercase tracking-widest mt-0.5">{isEditMode ? 'Update Profile' : 'New Enrollment'} • {selectedYear?.toUpperCase()} Year</p>
                                 </div>
                             </div>
-                            <button onClick={() => setActiveModal(false)} className="text-white/40 hover:text-white transition-colors">
-                                <X size={24} />
+                            <button 
+                                type="button"
+                                onClick={() => setActiveModal(false)} 
+                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                                title="Close"
+                            >
+                                <X size={20} />
                             </button>
                         </div>
                         
-                        <form onSubmit={handleAddStudent} className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+                        <form onSubmit={handleAddStudent} className="p-6 sm:p-8 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Roll ID (Unique)</label>

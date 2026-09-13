@@ -32,7 +32,8 @@ export const dieselModel = {
                 WHERE end_date <= $1
                 ORDER BY bus_id, end_date DESC
             ) r ON b.bus_id = r.bus_id
-            WHERE r.reading_id IS NULL;
+            WHERE r.reading_id IS NULL
+            ORDER BY b.bus_no ASC NULLS LAST, b.rc_plate_number ASC;
         `;
         const result = await pool.query(query, [date]);
         return result.rows;
@@ -49,19 +50,35 @@ export const dieselModel = {
                 COALESCE(r.old_reading, lr.old_reading) as old_reading,
                 COALESCE(r.new_reading, lr.new_reading) as new_reading,
                 COALESCE(r.distance, lr.distance, 0) as distance,
+                COALESCE(TO_CHAR(r.end_date, 'YYYY-MM-DD'), TO_CHAR(lr.end_date, 'YYYY-MM-DD')) as odometer_date,
+                COALESCE(r.created_at, lr.created_at) as odometer_created_at,
+                TO_CHAR(COALESCE(r.created_at, lr.created_at), 'DD Mon YYYY, HH12:MI AM') as odometer_logged_time,
                 d.liters,
                 d.diesel_id,
-                (r.reading_id IS NOT NULL) as exact_match
+                (r.reading_id IS NOT NULL) as exact_match,
+                prev_d.liters as last_diesel_liters,
+                prev_d.last_diesel_date,
+                prev_d.last_diesel_logged_time
             FROM buses b
             LEFT JOIN bus_readings r ON b.bus_id = r.bus_id AND r.end_date = $1
             LEFT JOIN (
-                SELECT DISTINCT ON (bus_id) bus_id, reading_id, old_reading, new_reading, distance
+                SELECT DISTINCT ON (bus_id) bus_id, reading_id, old_reading, new_reading, distance, end_date, created_at
                 FROM bus_readings
                 WHERE end_date < $1
                 ORDER BY bus_id, end_date DESC, reading_id DESC
             ) lr ON b.bus_id = lr.bus_id
             LEFT JOIN diesel_logs d ON COALESCE(r.reading_id, lr.reading_id) = d.reading_id
-            ORDER BY b.bus_no ASC;
+            LEFT JOIN (
+                SELECT DISTINCT ON (bus_id) 
+                    bus_id, 
+                    liters, 
+                    TO_CHAR(created_at, 'YYYY-MM-DD') as last_diesel_date,
+                    TO_CHAR(COALESCE(created_at_ts, created_at::timestamp), 'DD Mon YYYY, HH12:MI AM') as last_diesel_logged_time
+                FROM diesel_logs
+                WHERE created_at < $1
+                ORDER BY bus_id, created_at DESC, diesel_id DESC
+            ) prev_d ON b.bus_id = prev_d.bus_id
+            ORDER BY b.bus_no ASC NULLS LAST, b.rc_plate_number ASC;
         `;
         const result = await pool.query(query, [date]);
         return result.rows;
@@ -124,7 +141,7 @@ export const dieselModel = {
             JOIN fuel_rates f ON d.rate_id = f.rate_id
             JOIN buses b ON d.bus_id = b.bus_id
             WHERE d.created_at = $1
-            ORDER BY b.bus_no ASC;
+            ORDER BY b.bus_no ASC NULLS LAST, b.rc_plate_number ASC;
         `;
         const result = await pool.query(query, [date]);
         return result.rows;

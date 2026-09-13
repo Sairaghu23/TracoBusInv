@@ -14,7 +14,7 @@ export const getAllBuses = async () => {
             SELECT b.*, r.route_name 
             FROM buses b 
             LEFT JOIN routes r ON b.route_id = r.route_id
-            ORDER BY b.created_at DESC
+            ORDER BY b.bus_no ASC NULLS LAST, b.rc_plate_number ASC
         `);
         return result.rows;
     } catch (error) {
